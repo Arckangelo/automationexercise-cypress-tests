@@ -1,5 +1,7 @@
 # Automation Exercise - Testes E2E com Cypress
 
+[![Cypress Tests](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml)
+
 Suíte de testes automatizados end-to-end para o site [AutomationExercise](https://automationexercise.com), um e-commerce fictício criado para prática de automação de testes.
 
 ## 🎯 Objetivo
@@ -71,4 +73,4 @@ npx cypress open
 
 ## 👤 Autor
 
-Angelo Roque
+Angelo Roque https://github.com/Arckangelo 
