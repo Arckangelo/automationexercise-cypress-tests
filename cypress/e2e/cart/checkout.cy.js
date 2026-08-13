@@ -5,16 +5,21 @@ describe('Carrinho e Checkout', () => {
     })
 
     // função auxiliar pra esvaziar o carrinho antes de cada teste
+    // usa recursão: remove um item, espera o DOM atualizar, checa de novo, repete até esvaziar
     const limparCarrinho = () => {
         cy.visit('/view_cart')
-        cy.get('body').then($body => {
-            // só tenta remover se houver itens no carrinho
-            if ($body.find('.cart_quantity_delete').length > 0) {
-                cy.get('.cart_quantity_delete').each(() => {
+
+        const removerProximo = () => {
+            cy.get('body').then($body => {
+                if ($body.find('.cart_quantity_delete').length > 0) {
                     cy.get('.cart_quantity_delete').first().click()
-                })
-            }
-        })
+                    cy.wait(300) // pequena espera pro DOM atualizar antes de checar de novo
+                    removerProximo()
+                }
+            })
+        }
+
+        removerProximo()
     }
 
     it('deve adicionar produtos ao carrinho e visualizar no carrinho', function () {
