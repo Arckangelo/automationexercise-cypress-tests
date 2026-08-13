@@ -1,0 +1,14 @@
+{
+  "validUser": {
+    "email": "usuario.removido@teste.com",
+    "password": "***REMOVIDA***"
+  },
+  "invalidUser": {
+    "email": "usuario.removido@teste.com",
+    "password": "senhaerrada"
+  },
+  "notRegisteredUser": {
+    "email": "usuario_nao_existe_teste123@teste.com",
+    "password": "qualquercoisa123"
+  }
+}
