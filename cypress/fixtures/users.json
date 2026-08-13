@@ -1,0 +1,14 @@
+{
+  "validUser": {
+    "email": "arc.angelo.roque@gmail.com",
+    "password": "123456"
+  },
+  "invalidUser": {
+    "email": "arc.angelo.roque@gmail.com",
+    "password": "senhaerrada"
+  },
+  "notRegisteredUser": {
+    "email": "usuario_nao_existe_teste123@teste.com",
+    "password": "qualquercoisa123"
+  }
+}
