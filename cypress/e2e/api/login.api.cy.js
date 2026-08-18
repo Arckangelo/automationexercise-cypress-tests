@@ -34,7 +34,7 @@ describe('API - Verificação de login', () => {
 
     // O endpoint só aceita POST; DELETE deve ser rejeitado.
     it('deve rejeitar DELETE na verificação de login (só aceita POST)', () => {
-        cy.request({ method: 'DELETE', url: '/api/verifyLogin', failOnStatusCode: false }).then((response) => {
+        cy.apiRequest({ method: 'DELETE', url: '/api/verifyLogin' }).then((response) => {
             expect(response.body.responseCode).to.eq(405)
             expect(response.body.message).to.eq('This request method is not supported.')
         })
