@@ -18,11 +18,10 @@ describe('API - Conta de usuário', () => {
             expect(response.body.message).to.eq('User created!')
         })
 
-        cy.request({
+        cy.apiRequest({
             method: 'GET',
             url: '/api/getUserDetailByEmail',
             qs: { email },
-            failOnStatusCode: false,
         }).then((response) => {
             expect(response.body.responseCode).to.eq(200)
             expect(response.body.user.email).to.eq(email)
