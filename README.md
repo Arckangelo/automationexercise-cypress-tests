@@ -2,6 +2,8 @@
 
 [![Cypress Tests](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml)
 
+📋 [Laudo da última execução da suíte (UI + API)](https://claude.ai/code/artifact/d87fec01-ae32-451b-8cee-2b580e8ee72a) — 25/25 testes aprovados
+
 Suíte de testes automatizados end-to-end para o site [AutomationExercise](https://automationexercise.com), um e-commerce fictício criado para prática de automação de testes.
 
 ## 🎯 Objetivo
