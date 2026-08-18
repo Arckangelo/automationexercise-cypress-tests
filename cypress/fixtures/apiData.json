@@ -1,0 +1,22 @@
+{
+  "busca": {
+    "termoValido": "top"
+  },
+  "novaConta": {
+    "name": "QA Automatizado",
+    "title": "Mr",
+    "birth_date": "10",
+    "birth_month": "5",
+    "birth_year": "1995",
+    "firstname": "QA",
+    "lastname": "Automatizado",
+    "company": "Projeto Curricular",
+    "address1": "Rua de Teste, 123",
+    "address2": "",
+    "country": "Brazil",
+    "state": "SP",
+    "city": "Sao Paulo",
+    "zipcode": "00000-000",
+    "mobile_number": "11999999999"
+  }
+}
