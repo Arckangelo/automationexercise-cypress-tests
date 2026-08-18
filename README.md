@@ -13,8 +13,11 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 - [Cypress](https://www.cypress.io/) - Framework de testes E2E
 - JavaScript
 - Mocha/Chai (assertions, nativos do Cypress)
+- Testes de API com `cy.request` (nativo do Cypress, sem lib extra)
 
 ## ✅ O que é testado
+
+### UI
 
 | Arquivo | Cobertura |
 |---|---|
@@ -26,9 +29,29 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 
 **Total: 11 testes automatizados**
 
+### API
+
+A [API pública do AutomationExercise](https://automationexercise.com/api_list) responde sempre com HTTP 200,
+mesmo em erro — quem indica sucesso ou falha é o campo `responseCode` do corpo da resposta. Os testes abaixo
+validam isso explicitamente, em vez de confiar no status HTTP.
+
+| Arquivo | Cobertura |
+|---|---|
+| `products.api.cy.js` | Listagem de produtos e marcas, e rejeição de método HTTP não suportado |
+| `search.api.cy.js` | Busca de produto por termo, e erro 400 quando o parâmetro não é enviado |
+| `login.api.cy.js` | Verificação de login: credenciais válidas, senha incorreta, usuário inexistente, campo faltando e método não suportado |
+| `account.api.cy.js` | Criar, consultar e remover uma conta descartável (fluxo completo e autolimpo), além de cenários de erro (dados incompletos, conta inexistente) |
+
+**Total: 13 testes automatizados**
+
 ## 📁 Estrutura do projeto
 cypress/
 ├── e2e/
+│ ├── api/
+│ │ ├── account.api.cy.js
+│ │ ├── login.api.cy.js
+│ │ ├── products.api.cy.js
+│ │ └── search.api.cy.js
 │ ├── auth/
 │ │ ├── login.cy.js
 │ │ └── signup.cy.js
@@ -38,6 +61,7 @@ cypress/
 │ ├── filter.cy.js
 │ └── search.cy.js
 ├── fixtures/
+│ ├── apiData.json
 │ └── users.json
 └── support/
 ├── commands.js
