@@ -75,5 +75,9 @@ describe('Carrinho e Checkout', () => {
         cy.get('.check_out').click()
 
         cy.url().should('include', '/checkout')
+
+        // valida que a página de checkout carregou de fato, não só que a URL mudou
+        cy.contains('Address Details').should('be.visible')
+        cy.contains('Review Your Order').should('be.visible')
     })
 })
