@@ -1,5 +1,16 @@
 describe('API - Produtos e marcas', () => {
 
+    // DIAGNÓSTICO TEMPORÁRIO — remover depois de entender por que o CI
+    // recebe responseCode undefined em todos os testes de API.
+    it('DIAGNÓSTICO: inspecionar resposta crua', () => {
+        cy.apiGetProductsList().then((response) => {
+            const preview = typeof response.body === 'string'
+                ? response.body.slice(0, 300)
+                : JSON.stringify(response.body).slice(0, 300)
+            expect(response.status, `status=${response.status} headers=${JSON.stringify(response.headers)} bodyPreview=${preview}`).to.eq(-1)
+        })
+    })
+
     it('deve listar todos os produtos', () => {
         cy.apiGetProductsList().then((response) => {
             expect(response.body.responseCode).to.eq(200)
