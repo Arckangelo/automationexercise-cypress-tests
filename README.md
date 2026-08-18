@@ -47,27 +47,29 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 **Total: 13 testes automatizados**
 
 ## 📁 Estrutura do projeto
+```
 cypress/
 ├── e2e/
-│ ├── api/
-│ │ ├── account.api.cy.js
-│ │ ├── login.api.cy.js
-│ │ ├── products.api.cy.js
-│ │ └── search.api.cy.js
-│ ├── auth/
-│ │ ├── login.cy.js
-│ │ └── signup.cy.js
-│ ├── cart/
-│ │ └── checkout.cy.js
-│ └── products/
-│ ├── filter.cy.js
-│ └── search.cy.js
+│   ├── api/
+│   │   ├── account.api.cy.js    # cenários de teste da API de conta
+│   │   ├── login.api.cy.js      # cenários de login via API
+│   │   ├── products.api.cy.js   # cenários de produtos via API
+│   │   └── search.api.cy.js     # cenários de busca via API
+│   ├── auth/
+│   │   ├── login.cy.js          # cenários de teste de login via UI
+│   │   └── signup.cy.js         # cenários de teste de cadastro via UI
+│   ├── cart/
+│   │   └── checkout.cy.js       # cenários de teste do checkout
+│   └── products/
+│       ├── filter.cy.js         # cenários de teste de filtro de produtos
+│       └── search.cy.js         # cenários de teste de busca de produtos
 ├── fixtures/
-│ ├── apiData.json
-│ └── users.json
+│   ├── apiData.json             # massa de dados dos testes de API
+│   └── users.json               # massa de dados de usuários para os testes
 └── support/
-├── commands.js
-└── e2e.js
+    ├── commands.js               # comandos customizados do Cypress
+    └── e2e.js                    # configurações globais carregadas antes dos testes
+```
 
 ## 🚀 Como rodar o projeto
 
