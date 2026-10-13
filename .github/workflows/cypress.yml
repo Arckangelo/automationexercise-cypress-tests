@@ -16,4 +16,4 @@ jobs:
       - name: Rodar testes Cypress
         uses: cypress-io/github-action@v6
         with:
-          browser: chrome
+          build: npm install
