@@ -25,11 +25,4 @@ describe('API - Produtos e marcas', () => {
             expect(response.body.brands[0]).to.have.all.keys('id', 'brand')
         })
     })
-it('deve listar todas as marcas', () => {
-        cy.apiGetBrandsList().then((response) => {
-            expect(response.body.responseCode).to.eq(200)
-            expect(response.body.brands.length).to.be.greaterThan(0)
-            expect(response.body.brands[0]).to.have.all.keys('id', 'brand')
-        })
-    })
 })
