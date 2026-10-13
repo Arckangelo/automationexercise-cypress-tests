@@ -5,6 +5,18 @@ Cypress.Commands.add('login', (email, password) => {
   cy.get('[data-qa="login-button"]').click()
 })
 
+Cypress.Commands.add('limparCarrinho', () => {
+  cy.request('/view_cart').then(({ body }) => {
+    const doc = new DOMParser().parseFromString(body, 'text/html')
+    const ids = [...doc.querySelectorAll('.cart_quantity_delete')]
+      .map(el => el.dataset.productId)
+
+    ids.forEach(id => {
+      cy.request(`/delete_cart/${id}`).its('status').should('eq', 200)
+    })
+  })
+})
+
 // --- Comandos de API ---
 // A API do automationexercise.com sempre responde com HTTP 200, mesmo em
 // cenários de erro (método não suportado, parâmetro faltando, etc.) — quem
