@@ -47,9 +47,9 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 | `login.api.cy.js` | Verificação de login: credenciais válidas, senha incorreta, usuário inexistente, campo faltando e método não suportado |
 | `account.api.cy.js` | Criar, consultar e remover uma conta descartável (fluxo completo e autolimpo), além de cenários de erro (dados incompletos, conta inexistente) |
 
-**Total: 13 testes automatizados**
+**Total: 12 testes automatizados**
 
-**Suíte completa: 25 testes (12 de UI + 13 de API)**
+**Suíte completa: 24 testes (12 de UI + 12 de API)**
 
 ## 📁 Estrutura do projeto
 ```
