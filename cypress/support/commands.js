@@ -1,8 +1,19 @@
 Cypress.Commands.add('login', (email, password) => {
-  cy.visit('/login')
-  cy.get('[data-qa="login-email"]').type(email)
-  cy.get('[data-qa="login-password"]').type(password)
-  cy.get('[data-qa="login-button"]').click()
+  cy.session([email, password], () => {
+    cy.visit('/login')
+    cy.get('[data-qa="login-email"]').type(email)
+    cy.get('[data-qa="login-password"]').type(password, { log: false })
+    cy.get('[data-qa="login-button"]').click()
+
+    // garante que o login funcionou antes de salvar a sessão
+    cy.contains('Logged in as').should('be.visible')
+  }, {
+    // a cada teste, confere se a sessão salva ainda é válida
+    validate() {
+      cy.request('/').its('body').should('include', 'Logged in as')
+    },
+    cacheAcrossSpecs: true,
+  })
 })
 
 Cypress.Commands.add('limparCarrinho', () => {
