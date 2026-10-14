@@ -1,0 +1,29 @@
+version: 2
+
+updates:
+  # dependências do projeto (Cypress e reporter)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      # atualizações menores e de correção chegam num PR só; majors vêm separadas
+      npm-menores:
+        update-types: [minor, patch]
+
+  # actions usadas nos workflows (mantém os SHAs fixados atualizados)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions-menores:
+        update-types: [minor, patch]
