@@ -10,22 +10,28 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
+# mínimo por padrão; só o job de publicação recebe permissões extras
+permissions:
+  contents: read
+
 jobs:
   suite:
     name: Suíte principal
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Rodar testes Cypress
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         with:
           build: npm install
 
       - name: Salvar screenshots das falhas
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: screenshots-suite
           path: cypress/screenshots
@@ -33,7 +39,7 @@ jobs:
 
       - name: Salvar relatório HTML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: relatorio-suite
           path: cypress/reports/suite
@@ -43,22 +49,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       # Estes testes falham enquanto os bugs existirem; o job não quebra o
       # pipeline e serve para acompanhar o estado dos bugs no relatório.
       - name: Rodar testes de bugs conhecidos
         id: bugs
         continue-on-error: true
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         with:
           build: npm install
           command: npm run test:bugs
 
       - name: Resumo
         if: always()
+        env:
+          RESULTADO: ${{ steps.bugs.outcome }}
         run: |
-          if [ "${{ steps.bugs.outcome }}" = "success" ]; then
+          if [ "$RESULTADO" = "success" ]; then
             echo "### ✅ Todos os bugs conhecidos parecem corrigidos — mova os testes para a suíte principal" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "### 🐞 Bugs conhecidos continuam reproduzindo (resultado esperado). Ver relatório." >> "$GITHUB_STEP_SUMMARY"
@@ -66,7 +76,7 @@ jobs:
 
       - name: Salvar relatório HTML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: relatorio-known-bugs
           path: cypress/reports/known-bugs
@@ -78,19 +88,21 @@ jobs:
     if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
+      pages: write      # publicar o site no GitHub Pages
+      id-token: write   # token OIDC exigido pelo deploy-pages
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - name: Baixar relatórios
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: relatorio-*
           path: site
 
       - name: Montar página inicial
+        env:
+          REPOSITORIO: ${{ github.repository }}
         run: |
           cat > site/index.html <<'EOF'
           <!doctype html>
@@ -108,19 +120,20 @@ jobs:
           </head>
           <body>
             <h1>AutomationExercise · Relatórios de testes</h1>
-            <p><small>Gerado pelo CI em __DATA__ · <a style="display:inline;border:0;padding:0;color:#2563eb" href="https://github.com/${{ github.repository }}">repositório</a></small></p>
+            <p><small>Gerado pelo CI em __DATA__ · <a style="display:inline;border:0;padding:0;color:#2563eb" href="https://github.com/__REPOSITORIO__">repositório</a></small></p>
             <a href="relatorio-suite/index.html"><strong>Suíte principal</strong><br><small>Testes de UI e API (devem passar)</small></a>
             <a href="relatorio-known-bugs/index.html"><strong>Bugs conhecidos</strong><br><small>Testes de regressão que falham enquanto os bugs existirem</small></a>
           </body>
           </html>
           EOF
           sed -i "s/__DATA__/$(date -u '+%d\/%m\/%Y %H:%M UTC')/" site/index.html
+          sed -i "s|__REPOSITORIO__|${REPOSITORIO}|" site/index.html
 
       - name: Enviar artefato do Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: site
 
       - name: Publicar
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
