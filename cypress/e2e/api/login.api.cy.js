@@ -1,18 +1,23 @@
+import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+
 describe('API - Verificação de login', () => {
+
+    // conta descartável criada via API antes dos testes e removida no final
+    const usuario = usarUsuarioDeTeste()
 
     beforeEach(() => {
         cy.fixture('users').as('users')
     })
 
-    it('deve confirmar que o usuário existe com credenciais válidas', function () {
-        cy.apiVerifyLogin(this.users.validUser.email, this.users.validUser.password).then((response) => {
+    it('deve confirmar que o usuário existe com credenciais válidas', () => {
+        cy.apiVerifyLogin(usuario.email, usuario.password).then((response) => {
             expect(response.body.responseCode).to.eq(200)
             expect(response.body.message).to.eq('User exists!')
         })
     })
 
     it('deve retornar 404 para senha incorreta', function () {
-        cy.apiVerifyLogin(this.users.invalidUser.email, this.users.invalidUser.password).then((response) => {
+        cy.apiVerifyLogin(usuario.email, this.users.senhaIncorreta).then((response) => {
             expect(response.body.responseCode).to.eq(404)
             expect(response.body.message).to.eq('User not found!')
         })
@@ -25,8 +30,8 @@ describe('API - Verificação de login', () => {
         })
     })
 
-    it('deve retornar 400 quando o email não é informado', function () {
-        cy.apiVerifyLogin(undefined, this.users.validUser.password).then((response) => {
+    it('deve retornar 400 quando o email não é informado', () => {
+        cy.apiVerifyLogin(undefined, usuario.password).then((response) => {
             expect(response.body.responseCode).to.eq(400)
             expect(response.body.message).to.eq('Bad request, email or password parameter is missing in POST request.')
         })

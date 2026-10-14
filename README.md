@@ -99,10 +99,11 @@ cypress/
 │       └── search.cy.js         # cenários de teste de busca de produtos
 ├── fixtures/
 │   ├── apiData.json             # massa de dados dos testes de API
-│   └── users.json               # massa de dados de usuários para os testes
+│   └── users.json               # dados de cenários negativos (senha incorreta, usuário inexistente)
 └── support/
     ├── commands.js              # comandos customizados do Cypress
-    └── e2e.js                   # configurações globais carregadas antes dos testes
+    ├── e2e.js                   # configurações globais carregadas antes dos testes
+    └── usuarioDeTeste.js        # cria e remove a conta descartável usada nos testes com login
 ```
 
 ## 🚀 Como rodar o projeto
@@ -150,7 +151,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 - Seletores robustos (baseados em atributos `data-qa` e `href`) foram priorizados para reduzir flakiness
 - Só exceções de scripts de anúncio de terceiros são ignoradas (`cypress/support/e2e.js`); qualquer outro erro JavaScript do site falha o teste
 - O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem até 2 novas tentativas (`retries`) — exceto os de bugs conhecidos, em que a falha é o resultado esperado
-- O usuário de teste em `users.json` é uma conta descartável criada só para esta suíte
+- **Os testes provisionam os próprios dados:** os specs que precisam de login criam uma conta descartável via API num `before()` e a removem num `after()` (`cypress/support/usuarioDeTeste.js`). Nenhuma credencial fica no repositório e a suíte não depende de uma conta fixa
 
 ## 👤 Autor
 
