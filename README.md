@@ -47,9 +47,26 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 | `login.api.cy.js` | Verificação de login: credenciais válidas, senha incorreta, usuário inexistente, campo faltando e método não suportado |
 | `account.api.cy.js` | Criar, consultar e remover uma conta descartável (fluxo completo e autolimpo), além de cenários de erro (dados incompletos, conta inexistente) |
 
-**Total: 12 testes automatizados**
+**Total: 13 testes automatizados**
 
-**Suíte completa: 24 testes (12 de UI + 12 de API)**
+**Suíte completa: 25 testes (12 de UI + 13 de API)**
+
+### 🐞 Bugs conhecidos
+
+Durante a exploração foram encontrados **5 bugs** no site e na API, documentados com passos de
+reprodução, resultado esperado e obtido em **[BUGS.md](BUGS.md)**.
+
+| ID | Severidade | Resumo |
+|---|---|---|
+| BUG-01 | Alta | Carrinho aceita quantidade negativa (total negativo) |
+| BUG-02 | Média | Carrinho aceita quantidade zero |
+| BUG-03 | Baixa | Fontes bloqueadas por Mixed Content (`@import http://` no CSS) |
+| BUG-04 | Média | API retorna HTTP 200 em respostas de erro |
+| BUG-05 | Baixa | API serve JSON com `Content-Type: text/html` |
+
+Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (8 testes). Esses testes descrevem
+o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles ficam fora da suíte
+padrão e do CI e rodam sob demanda com `npm run test:bugs`.
 
 ## 📁 Estrutura do projeto
 ```
@@ -65,6 +82,10 @@ cypress/
 │   │   └── signup.cy.js         # cenários de teste de cadastro via UI
 │   ├── cart/
 │   │   └── checkout.cy.js       # cenários de teste do checkout
+│   ├── known-bugs/              # testes de regressão de bugs conhecidos (fora da suíte padrão)
+│   │   ├── api-http-status.cy.js  # BUG-04/05: status HTTP e Content-Type da API
+│   │   ├── cart-quantity.cy.js    # BUG-01/02: quantidade negativa/zero no carrinho
+│   │   └── mixed-content.cy.js    # BUG-03: @import http:// nas folhas de estilo
 │   └── products/
 │       ├── filter.cy.js         # cenários de teste de filtro de produtos
 │       └── search.cy.js         # cenários de teste de busca de produtos
@@ -96,6 +117,7 @@ npm install
 ```bash
 npm test             # roda toda a suíte sem abrir o navegador (como no CI)
 npx cypress open     # abre a interface do Cypress
+npm run test:bugs    # roda só os testes de bugs conhecidos (falham enquanto os bugs existirem)
 ```
 
 Na interface, escolha **E2E Testing** → selecione um navegador → clique em qualquer arquivo `.cy.js` para rodar.
