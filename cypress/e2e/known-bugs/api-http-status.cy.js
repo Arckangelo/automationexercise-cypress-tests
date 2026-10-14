@@ -9,12 +9,22 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
         { method: 'POST', url: '/api/productsList', esperado: 405 },
         { method: 'PUT', url: '/api/brandsList', esperado: 405 },
         { method: 'DELETE', url: '/api/verifyLogin', esperado: 405 },
-        { method: 'POST', url: '/api/searchProduct', esperado: 400 },
+        { method: 'POST', url: '/api/searchProduct', cenario: 'sem parâmetro', esperado: 400 },
+        // a API só lê os campos do corpo do formulário; na query string eles são ignorados
+        {
+            method: 'POST',
+            url: '/api/verifyLogin',
+            qs: { email: 'qa@teste.com', password: 'qualquercoisa' },
+            cenario: 'com parâmetros na query string',
+            esperado: 400,
+        },
     ]
 
-    requisicoesDeErro.forEach(({ method, url, esperado }) => {
-        it(`[BUG-04] ${method} ${url} deve retornar HTTP ${esperado}`, () => {
-            cy.apiRequest({ method, url }).then((response) => {
+    requisicoesDeErro.forEach(({ method, url, qs, cenario, esperado }) => {
+        const titulo = [method, url, cenario].filter(Boolean).join(' ')
+
+        it(`[BUG-04] ${titulo} deve retornar HTTP ${esperado}`, () => {
+            cy.apiRequest({ method, url, qs }).then((response) => {
                 // garante que a API realmente sinaliza esse erro no corpo,
                 // para o teste falhar só pelo status HTTP
                 expect(response.body.responseCode, 'responseCode no corpo').to.eq(esperado)
@@ -23,7 +33,7 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
         })
     })
 
-    it('[BUG-05] GET /api/productsList deve declarar Content-Type application/json', () => {
+    it('[BUG-05] GET /api/productsList deve declarar Content-Type JSON', () => {
         cy.apiGetProductsList().then((response) => {
             expect(response.body.responseCode).to.eq(200)
             expect(response.headers['content-type'], 'Content-Type').to.include('application/json')

@@ -3,6 +3,9 @@
 Bugs identificados durante a exploração do site e da API pública, cada um coberto por um teste
 automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs/).
 
+> 📄 Relatório completo, com análise de causa raiz, soluções propostas e plano de correção:
+> **[docs/Relatorio_de_Bugs.pdf](docs/Relatorio_de_Bugs.pdf)**
+
 **Última verificação:** 14/10/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome/Electron)
 
 | ID | Severidade | Área | Resumo | Teste |
@@ -118,6 +121,7 @@ an insecure stylesheet 'http://fonts.googleapis.com/css?family=Roboto...'. This 
 | `PUT /api/brandsList` | 200 | 405 |
 | `DELETE /api/verifyLogin` | 200 | 405 |
 | `POST /api/searchProduct` (sem `search_product`) | 200 | 400 |
+| `POST /api/verifyLogin` (parâmetros na query string) | 200 | 400 |
 
 ## BUG-05 — API declara Content-Type incorreto
 
@@ -139,12 +143,14 @@ Os testes em `cypress/e2e/known-bugs/` descrevem o **comportamento correto**. Po
 **falham enquanto o bug existir** e passam a passar quando o bug é corrigido, o que avisa que o
 teste pode ir para a suíte principal.
 
-Eles ficam fora da suíte padrão (`npm test` e CI) para que bugs conhecidos do site não
-mascarem regressões reais. Para rodá-los:
+Eles ficam fora da suíte principal (`npm test`) para que bugs conhecidos do site não
+mascarem regressões reais. No CI, rodam num job separado que não quebra o pipeline, a cada
+push e diariamente, e o relatório HTML fica publicado no
+[GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/). Para rodá-los localmente:
 
 ```bash
 npm run test:bugs        # headless
 npm run test:bugs:open   # interface do Cypress
 ```
 
-Resultado esperado atualmente: **8 testes, 8 falhas**, todas pelas asserções que descrevem os bugs.
+Resultado esperado atualmente: **9 testes, 9 falhas**, todas pelas asserções que descrevem os bugs.
