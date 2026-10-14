@@ -1,10 +1,10 @@
 {
   "validUser": {
-    "email": "arc.angelo.roque@gmail.com",
-    "password": "123456"
+    "email": "qa.automation.be17ae40@teste.com",
+    "password": "Qa@f3e8f98d3758"
   },
   "invalidUser": {
-    "email": "arc.angelo.roque@gmail.com",
+    "email": "qa.automation.be17ae40@teste.com",
     "password": "senhaerrada"
   },
   "notRegisteredUser": {
