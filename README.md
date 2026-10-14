@@ -1,6 +1,8 @@
 # Automation Exercise - Testes E2E com Cypress
 
 [![Cypress Tests](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml)
+[![Security](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/security.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/security.yml)
+[![CodeQL](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/codeql.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/codeql.yml)
 
 📊 [Relatório HTML da última execução](https://arckangelo.github.io/automationexercise-cypress-tests/) (gerado e publicado pelo CI) · 🐞 [Relatório de bugs (PDF)](docs/Relatorio_de_Bugs.pdf) · [BUGS.md](BUGS.md)
 
@@ -20,6 +22,7 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 - Testes de API com `cy.request` (nativo do Cypress, sem lib extra)
 - [cypress-mochawesome-reporter](https://github.com/LironEr/cypress-mochawesome-reporter) - Relatório HTML com screenshots das falhas
 - GitHub Actions para integração contínua e GitHub Pages para publicar o relatório
+- gitleaks, npm audit, Dependabot e CodeQL para a segurança do pipeline (DevSecOps)
 
 ## ✅ O que é testado
 
@@ -75,9 +78,17 @@ principal (`npm test`) e rodam num job separado do CI, que não quebra o pipelin
 
 ## 📁 Estrutura do projeto
 ```
-.github/workflows/cypress.yml    # CI: suíte principal, bugs conhecidos e publicação do relatório
+.github/
+├── dependabot.yml               # atualizações semanais de dependências npm e das actions
+└── workflows/
+    ├── cypress.yml              # CI: suíte principal, bugs conhecidos e publicação do relatório
+    ├── security.yml             # segredos (gitleaks) e dependências vulneráveis (npm audit)
+    └── codeql.yml               # análise estática do JavaScript e dos workflows
 docs/Relatorio_de_Bugs.pdf       # relatório completo de bugs
+.gitleaks.toml                   # regras do gitleaks e exceções comentadas para falsos positivos
+.pre-commit-config.yaml          # hook local opcional que bloqueia segredos antes do commit
 BUGS.md                          # resumo dos bugs encontrados
+SECURITY.md                      # política de reporte de vulnerabilidades
 cypress/
 ├── e2e/
 │   ├── api/
@@ -142,6 +153,38 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Suíte principal | Roda os 25 testes; salva as screenshots das falhas e o relatório HTML como artefatos |
 | Bugs conhecidos | Roda os 9 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
 | Publicar relatório | Publica os dois relatórios HTML no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
+
+## 🔒 Segurança do pipeline
+
+Além dos testes, o CI aplica práticas de DevSecOps para proteger o próprio repositório:
+
+| Ferramenta | O que detecta | Quando roda |
+|---|---|---|
+| [gitleaks](https://github.com/gitleaks/gitleaks) ([`security.yml`](.github/workflows/security.yml)) | Segredos (tokens, chaves, senhas) em **todo o histórico** do git; resultados também na aba *Security* | Push e PR na `main`, semanalmente e no hook local opcional |
+| `npm audit` ([`security.yml`](.github/workflows/security.yml)) | Dependências com vulnerabilidade conhecida; falha só em severidade **alta ou crítica** | Push e PR na `main` e semanalmente |
+| [Dependabot](.github/dependabot.yml) | Versões desatualizadas ou vulneráveis de pacotes npm e das GitHub Actions; abre PRs agrupando atualizações menores | Semanalmente |
+| [CodeQL](https://codeql.github.com/) ([`codeql.yml`](.github/workflows/codeql.yml)) | Falhas de segurança no JavaScript e nos próprios workflows (ex.: injeção de expressões, permissões excessivas) | Push e PR na `main` e semanalmente |
+
+**Endurecimento dos workflows**
+
+- `permissions: contents: read` no topo de cada workflow; permissões extras só no job que precisa
+  (ex.: `security-events: write` no CodeQL e no gitleaks, `pages`/`id-token` no deploy do Pages).
+- Todas as actions fixadas pelo **SHA completo do commit**, com a versão em comentário. Uma tag
+  pode ser movida para código malicioso; um SHA não. O Dependabot mantém esses SHAs atualizados.
+- O gitleaks roda pelo binário oficial com versão e checksum SHA-256 fixos.
+- Falsos positivos ficam em [`.gitleaks.toml`](.gitleaks.toml), com exceções específicas (arquivo **e** valor) e comentadas.
+
+**Hook local (opcional)**
+
+Para barrar um segredo antes mesmo do commit:
+
+```bash
+pip install pre-commit
+pre-commit install            # instala o hook neste clone
+pre-commit run --all-files    # (opcional) varre o repositório inteiro uma vez
+```
+
+Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 
 ## 📝 Observações
 
