@@ -1,13 +1,16 @@
+import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+
 describe('Carrinho e Checkout', () => {
+
+    // conta descartável criada via API antes dos testes e removida no final
+    const usuario = usarUsuarioDeTeste()
  
     beforeEach(() => {
         // intercepts registrados antes de qualquer ação, para os aliases existirem quando o teste esperar por eles
         cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
         cy.intercept('GET', '/delete_cart/*').as('removerDoCarrinho')
  
-        cy.fixture('users').then(users => {
-            cy.login(users.validUser.email, users.validUser.password)
-        })
+        cy.login(usuario.email, usuario.password)
  
         // setup via HTTP, sem passar pela interface (ver cypress/support/commands.js)
         cy.limparCarrinho()

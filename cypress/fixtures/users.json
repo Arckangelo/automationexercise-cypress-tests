@@ -1,12 +1,5 @@
 {
-  "validUser": {
-    "email": "qa.automation.be17ae40@teste.com",
-    "password": "Qa@f3e8f98d3758"
-  },
-  "invalidUser": {
-    "email": "qa.automation.be17ae40@teste.com",
-    "password": "senhaerrada"
-  },
+  "senhaIncorreta": "senhaerrada",
   "notRegisteredUser": {
     "email": "usuario_nao_existe_teste123@teste.com",
     "password": "qualquercoisa123"

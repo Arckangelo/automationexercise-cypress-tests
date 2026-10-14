@@ -1,4 +1,9 @@
+import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+
 describe('Login', () => {
+
+    // conta descartável criada via API antes dos testes e removida no final
+    const usuario = usarUsuarioDeTeste()
 
     // Hook que roda antes de CADA teste (it) deste describe
     // Garante que cada teste começa do zero, na página de login
@@ -9,8 +14,8 @@ describe('Login', () => {
 
     // Teste 1: login com email e senha corretos (caminho feliz)
     it('deve logar com credenciais válidas', function () {
-        cy.get('[data-qa="login-email"]').type(this.users.validUser.email)
-        cy.get('[data-qa="login-password"]').type(this.users.validUser.password)
+        cy.get('[data-qa="login-email"]').type(usuario.email)
+        cy.get('[data-qa="login-password"]').type(usuario.password, { log: false })
         cy.get('[data-qa="login-button"]').click()
 
         // valida que o login foi bem-sucedido checando o link de logout
@@ -20,8 +25,8 @@ describe('Login', () => {
 
     // Teste 2: login com senha errada pra um email que existe
     it('não deve logar com credenciais inválidas', function () {
-        cy.get('[data-qa="login-email"]').type(this.users.invalidUser.email)
-        cy.get('[data-qa="login-password"]').type(this.users.invalidUser.password)
+        cy.get('[data-qa="login-email"]').type(usuario.email)
+        cy.get('[data-qa="login-password"]').type(this.users.senhaIncorreta)
         cy.get('[data-qa="login-button"]').click()
 
         // valida que a mensagem de erro apareceu
