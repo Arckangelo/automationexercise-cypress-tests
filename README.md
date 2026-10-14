@@ -2,7 +2,7 @@
 
 [![Cypress Tests](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml)
 
-📋 [Laudo da última execução da suíte (UI + API)](https://claude.ai/code/artifact/d87fec01-ae32-451b-8cee-2b580e8ee72a) — 25/25 testes aprovados
+📊 [Relatório HTML da última execução](https://arckangelo.github.io/automationexercise-cypress-tests/) (gerado e publicado pelo CI) · 🐞 [Relatório de bugs (PDF)](docs/Relatorio_de_Bugs.pdf) · [BUGS.md](BUGS.md)
 
 Suíte de testes automatizados end-to-end para o site [AutomationExercise](https://automationexercise.com), um e-commerce fictício criado para prática de automação de testes.
 
@@ -14,11 +14,12 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 
 ## 🛠️ Tecnologias
 
-- [Cypress](https://www.cypress.io/) - Framework de testes E2E
+- [Cypress](https://www.cypress.io/) 15 - Framework de testes E2E
 - JavaScript
 - Mocha/Chai (assertions, nativos do Cypress)
 - Testes de API com `cy.request` (nativo do Cypress, sem lib extra)
-- GitHub Actions para integração contínua
+- [cypress-mochawesome-reporter](https://github.com/LironEr/cypress-mochawesome-reporter) - Relatório HTML com screenshots das falhas
+- GitHub Actions para integração contínua e GitHub Pages para publicar o relatório
 
 ## ✅ O que é testado
 
@@ -27,9 +28,9 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 | Arquivo | Cobertura |
 |---|---|
 | `login.cy.js` | Login com credenciais válidas, senha incorreta e email não cadastrado |
-| `signup.cy.js` | Cadastro completo de novo usuário com todos os campos do formulário |
+| `signup.cy.js` | Cadastro completo de novo usuário com todos os campos do formulário (a conta é removida via API ao final) |
 | `search.cy.js` | Busca de produtos com e sem resultados |
-| `filter.cy.js` | Filtro de produtos por categoria (Men > Jeans, Women > Dress) e por marca (Polo) |
+| `filter.cy.js` | Filtro de produtos por categoria (Men > Jeans, Women > Dress) e por marca (Polo), validando o título da listagem |
 | `checkout.cy.js` | Adicionar/remover produtos do carrinho e fluxo de checkout autenticado |
 
 **Total: 12 testes automatizados**
@@ -54,7 +55,10 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 ### 🐞 Bugs conhecidos
 
 Durante a exploração foram encontrados **5 bugs** no site e na API, documentados com passos de
-reprodução, resultado esperado e obtido em **[BUGS.md](BUGS.md)**.
+reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
+
+- **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
+- **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção
 
 | ID | Severidade | Resumo |
 |---|---|---|
@@ -64,12 +68,16 @@ reprodução, resultado esperado e obtido em **[BUGS.md](BUGS.md)**.
 | BUG-04 | Média | API retorna HTTP 200 em respostas de erro |
 | BUG-05 | Baixa | API serve JSON com `Content-Type: text/html` |
 
-Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (8 testes). Esses testes descrevem
+Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (9 testes). Esses testes descrevem
 o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles ficam fora da suíte
-padrão e do CI e rodam sob demanda com `npm run test:bugs`.
+principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
+**diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
 
 ## 📁 Estrutura do projeto
 ```
+.github/workflows/cypress.yml    # CI: suíte principal, bugs conhecidos e publicação do relatório
+docs/Relatorio_de_Bugs.pdf       # relatório completo de bugs
+BUGS.md                          # resumo dos bugs encontrados
 cypress/
 ├── e2e/
 │   ├── api/
@@ -122,12 +130,27 @@ npm run test:bugs    # roda só os testes de bugs conhecidos (falham enquanto os
 
 Na interface, escolha **E2E Testing** → selecione um navegador → clique em qualquer arquivo `.cy.js` para rodar.
 
+Cada execução headless gera um relatório HTML em `cypress/reports/` (`suite/` ou `known-bugs/`).
+
+## ⚙️ Integração contínua
+
+O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pull request na `main`, e diariamente às 06:00 UTC:
+
+| Job | O que faz |
+|---|---|
+| Suíte principal | Roda os 25 testes; salva as screenshots das falhas e o relatório HTML como artefatos |
+| Bugs conhecidos | Roda os 9 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
+| Publicar relatório | Publica os dois relatórios HTML no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
+
 ## 📝 Observações
 
 - Os testes usam geração de emails aleatórios para evitar conflitos de dados duplicados
 - O carrinho é limpo automaticamente antes de cada teste via requisição HTTP direta (`cy.request`), sem passar pela interface — mais rápido e estável que remover item por item na UI
 - Os testes de carrinho aguardam a confirmação real do servidor (`cy.intercept`/`cy.wait`) em vez de usar esperas fixas (`cy.wait(ms)`)
 - Seletores robustos (baseados em atributos `data-qa` e `href`) foram priorizados para reduzir flakiness
+- Só exceções de scripts de anúncio de terceiros são ignoradas (`cypress/support/e2e.js`); qualquer outro erro JavaScript do site falha o teste
+- O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem até 2 novas tentativas (`retries`) — exceto os de bugs conhecidos, em que a falha é o resultado esperado
+- O usuário de teste em `users.json` é uma conta descartável criada só para esta suíte
 
 ## 👤 Autor
 
