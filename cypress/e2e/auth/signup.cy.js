@@ -1,8 +1,19 @@
 describe('Cadastro de usuário', () => {
 
+    // gera um email único a cada execução, evitando conflito de "email já existe"
+    const randomEmail = `teste_qa_${Date.now()}@teste.com`
+    const senha = 'Senha123!'
+
+    // remove a conta criada pelo teste via API, mesmo se o teste falhar no meio,
+    // para não deixar contas de teste acumuladas no site (mesmo padrão autolimpo
+    // do account.api.cy.js); 404 significa que a conta nem chegou a ser criada
+    afterEach(() => {
+        cy.apiDeleteAccount(randomEmail, senha)
+            .its('body.responseCode')
+            .should('be.oneOf', [200, 404])
+    })
+
     it('deve cadastrar um novo usuário com sucesso', () => {
-        // gera um email único a cada execução, evitando conflito de "email já existe"
-        const randomEmail = `teste_qa_${Date.now()}@teste.com`
         const nome = 'Angelo Teste'
 
         cy.visit('/login')
@@ -22,7 +33,7 @@ describe('Cadastro de usuário', () => {
         cy.get('#id_gender1').click()
 
         // senha
-        cy.get('#password').type('Senha123!')
+        cy.get('#password').type(senha)
 
         // data de nascimento
         cy.get('#days').select('15')
