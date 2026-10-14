@@ -1,10 +1,10 @@
 {
   "validUser": {
-    "email": "usuario.removido@teste.com",
-    "password": "***REMOVIDA***"
+    "email": "qa.automation.be17ae40@teste.com",
+    "password": "Qa@f3e8f98d3758"
   },
   "invalidUser": {
-    "email": "usuario.removido@teste.com",
+    "email": "qa.automation.be17ae40@teste.com",
     "password": "senhaerrada"
   },
   "notRegisteredUser": {
