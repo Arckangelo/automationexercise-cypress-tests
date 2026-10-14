@@ -1,0 +1,9 @@
+# Hooks locais opcionais (ver "Segurança do pipeline" no README).
+# Instalação: pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      # varre só o que está em stage e bloqueia o commit se achar um segredo;
+      # usa o mesmo .gitleaks.toml do CI
+      - id: gitleaks
