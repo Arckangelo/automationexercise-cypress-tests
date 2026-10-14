@@ -1,8 +1,8 @@
 {
   "name": "automationexercise-tests",
   "version": "1.0.0",
-  "description": "Projeto de automação de testes com Cypress",
-  "main": "index.js",
+  "description": "Testes E2E e de API do AutomationExercise com Cypress, incluindo testes de regressão para bugs conhecidos do site",
+  "private": true,
   "scripts": {
     "test": "cypress run",
     "test:open": "cypress open",
@@ -10,11 +10,16 @@
     "test:bugs": "cypress run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\"",
     "test:bugs:open": "cypress open --e2e --env knownBugs=true"
   },
-  "keywords": ["cypress", "automation", "tests"],
-  "author": "",
+  "keywords": ["cypress", "e2e", "api-testing", "qa", "automation"],
+  "author": "Angelo Roque (https://github.com/Arckangelo)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arckangelo/automationexercise-cypress-tests.git"
+  },
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "cypress": "^14.0.0"
+    "cypress": "^15.20.0",
+    "cypress-mochawesome-reporter": "^5.0.0"
   }
 }
