@@ -1,0 +1,19 @@
+# Configuração do gitleaks: usa todas as regras padrão e só acrescenta
+# exceções para falsos positivos conhecidos. Cada exceção deve ser o mais
+# específica possível (arquivo E valor) e nunca liberar um segredo real.
+title = "automationexercise-cypress-tests"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = """
+Senha fictícia do cenário negativo "usuário não cadastrado" (login.cy.js e
+login.api.cy.js). A conta não existe no site: o teste espera justamente que
+o login falhe. A regra generic-api-key a confunde com uma chave por causa da
+entropia. Só é liberada neste arquivo e com este valor exato.
+"""
+condition = "AND"
+paths = ['''^cypress/fixtures/users\.json$''']
+regexTarget = "match"
+regexes = ['''password": "qualquercoisa123"''']

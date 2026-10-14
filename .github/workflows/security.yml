@@ -1,0 +1,72 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # semanal (segunda, 05:00 UTC): pega vulnerabilidades novas em dependências que não mudaram
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+# mínimo por padrão; cada job pede só o que precisa
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Segredos (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # enviar o SARIF para a aba Security
+    env:
+      # binário oficial com versão e checksum fixos; a gitleaks-action só varre
+      # o intervalo de commits do evento, e aqui o objetivo é o histórico completo
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - name: Checkout do código (histórico completo)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Instalar gitleaks
+        run: |
+          arquivo="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$arquivo" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${arquivo}"
+          echo "${GITLEAKS_SHA256}  ${arquivo}" | sha256sum --check
+          tar -xzf "$arquivo" gitleaks
+          ./gitleaks version
+
+      - name: Varrer o histórico completo
+        run: |
+          ./gitleaks git . \
+            --config .gitleaks.toml \
+            --log-opts="--all" \
+            --redact \
+            --verbose \
+            --report-format sarif \
+            --report-path gitleaks.sarif
+
+      - name: Enviar resultados para a aba Security
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
+
+  npm-audit:
+    name: Dependências (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      # lê só o package-lock.json, sem instalar nada; falha apenas em severidade alta ou crítica
+      - name: Auditar dependências
+        run: npm audit --audit-level=high
