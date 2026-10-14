@@ -6,7 +6,7 @@ describe('[BUG-03] Front-end - Mixed Content nas folhas de estilo', () => {
     // Checar só os <link href="http://..."> do HTML NÃO pega este bug: o
     // recurso inseguro vem de um @import dentro do CSS (main.css, linhas 5–7).
     // Por isso o teste baixa cada CSS do próprio site e inspeciona o conteúdo.
-    it('[BUG-03] as folhas de estilo do site não devem importar recursos via http://', () => {
+    it('[BUG-03] as folhas de estilo não devem importar recursos via http://', () => {
         cy.visit('/')
 
         cy.document().then((doc) => {
