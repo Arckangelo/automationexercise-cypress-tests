@@ -6,7 +6,9 @@
   "scripts": {
     "test": "cypress run",
     "test:open": "cypress open",
-    "test:headed": "cypress run --headed"
+    "test:headed": "cypress run --headed",
+    "test:bugs": "cypress run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\"",
+    "test:bugs:open": "cypress open --e2e --env knownBugs=true"
   },
   "keywords": ["cypress", "automation", "tests"],
   "author": "",
