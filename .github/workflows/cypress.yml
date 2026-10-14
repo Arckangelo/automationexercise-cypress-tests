@@ -5,9 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # todo dia às 06:00 (UTC), para acompanhar se algum bug conhecido foi corrigido
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 jobs:
-  cypress-run:
+  suite:
+    name: Suíte principal
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
@@ -17,3 +22,105 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           build: npm install
+
+      - name: Salvar screenshots das falhas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-suite
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Salvar relatório HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-suite
+          path: cypress/reports/suite
+
+  known-bugs:
+    name: Bugs conhecidos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # Estes testes falham enquanto os bugs existirem; o job não quebra o
+      # pipeline e serve para acompanhar o estado dos bugs no relatório.
+      - name: Rodar testes de bugs conhecidos
+        id: bugs
+        continue-on-error: true
+        uses: cypress-io/github-action@v6
+        with:
+          build: npm install
+          command: npm run test:bugs
+
+      - name: Resumo
+        if: always()
+        run: |
+          if [ "${{ steps.bugs.outcome }}" = "success" ]; then
+            echo "### ✅ Todos os bugs conhecidos parecem corrigidos — mova os testes para a suíte principal" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### 🐞 Bugs conhecidos continuam reproduzindo (resultado esperado). Ver relatório." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Salvar relatório HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-known-bugs
+          path: cypress/reports/known-bugs
+
+  publicar-relatorio:
+    name: Publicar relatório no GitHub Pages
+    needs: [suite, known-bugs]
+    # publica o relatório só a partir da main (push, agendamento ou manual)
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Baixar relatórios
+        uses: actions/download-artifact@v4
+        with:
+          pattern: relatorio-*
+          path: site
+
+      - name: Montar página inicial
+        run: |
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>AutomationExercise - Relatórios de testes</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 16px; color: #1f2937; }
+              a { display: block; padding: 16px; margin: 12px 0; border: 1px solid #d1d5db; border-radius: 8px; text-decoration: none; color: inherit; }
+              a:hover { border-color: #2563eb; }
+              small { color: #6b7280; }
+            </style>
+          </head>
+          <body>
+            <h1>AutomationExercise · Relatórios de testes</h1>
+            <p><small>Gerado pelo CI em __DATA__ · <a style="display:inline;border:0;padding:0;color:#2563eb" href="https://github.com/${{ github.repository }}">repositório</a></small></p>
+            <a href="relatorio-suite/index.html"><strong>Suíte principal</strong><br><small>Testes de UI e API (devem passar)</small></a>
+            <a href="relatorio-known-bugs/index.html"><strong>Bugs conhecidos</strong><br><small>Testes de regressão que falham enquanto os bugs existirem</small></a>
+          </body>
+          </html>
+          EOF
+          sed -i "s/__DATA__/$(date -u '+%d\/%m\/%Y %H:%M UTC')/" site/index.html
+
+      - name: Enviar artefato do Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Publicar
+        id: deploy
+        uses: actions/deploy-pages@v4
