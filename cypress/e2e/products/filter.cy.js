@@ -14,8 +14,8 @@ describe('Filtro de produtos', () => {
         // valida que a URL mudou para a categoria certa
         cy.url().should('include', '/category_products/6')
 
-        // valida que o título da página mostra a categoria filtrada
-        cy.get('h2.title').should('be.visible')
+        // valida que o título mostra a categoria certa (a URL sozinha não garante o conteúdo)
+        cy.get('h2.title').should('have.text', 'Men - Jeans Products')
 
         // valida que apareceu pelo menos um produto
         cy.get('.productinfo').should('have.length.greaterThan', 0)
@@ -26,6 +26,9 @@ describe('Filtro de produtos', () => {
 
         // valida que a URL mudou para a marca certa
         cy.url().should('include', '/brand_products/Polo')
+
+        // valida que o título mostra a marca certa
+        cy.get('h2.title').should('have.text', 'Brand - Polo Products')
 
         // valida que apareceu pelo menos um produto
         cy.get('.productinfo').should('have.length.greaterThan', 0)
@@ -40,6 +43,9 @@ describe('Filtro de produtos', () => {
 
         // valida que a URL mudou para a categoria certa
         cy.url().should('include', '/category_products/1')
+
+        // valida que o título mostra a categoria certa
+        cy.get('h2.title').should('have.text', 'Women - Dress Products')
 
         // valida que apareceu pelo menos um produto
         cy.get('.productinfo').should('have.length.greaterThan', 0)
