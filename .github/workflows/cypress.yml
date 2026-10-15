@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Rodar testes Cypress
-        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
+        uses: cypress-io/github-action@c541a95ea92d9239347a2355f2e895cd4b3f8060 # v7.4.6
         with:
           build: npm install
 
@@ -58,7 +58,7 @@ jobs:
       - name: Rodar testes de bugs conhecidos
         id: bugs
         continue-on-error: true
-        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
+        uses: cypress-io/github-action@c541a95ea92d9239347a2355f2e895cd4b3f8060 # v7.4.6
         with:
           build: npm install
           command: npm run test:bugs
