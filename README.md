@@ -23,6 +23,7 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 - [cypress-mochawesome-reporter](https://github.com/LironEr/cypress-mochawesome-reporter) - Relatório HTML com screenshots das falhas
 - GitHub Actions para integração contínua e GitHub Pages para publicar o relatório
 - gitleaks, npm audit, Dependabot e CodeQL para a segurança do pipeline (DevSecOps)
+- REA, cURL e o Chromium do Playwright: usados na investigação e na captura de evidências dos bugs, não na suíte de testes
 
 ## ✅ O que é testado
 
@@ -59,6 +60,8 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 
 Durante a exploração foram encontrados **5 bugs** no site e na API, documentados com passos de
 reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
+
+<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.0 de 14/10/2026, por Angelo Roque: 5 defeitos confirmados e reproduzíveis, sendo 1 de severidade alta, 2 médias e 2 baixas."></a></p>
 
 - **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
 - **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção
