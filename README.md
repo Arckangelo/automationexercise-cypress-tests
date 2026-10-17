@@ -16,7 +16,7 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 
 ## 🛠️ Tecnologias
 
-- [Cypress](https://www.cypress.io/) 15 - Framework de testes E2E
+- [Cypress](https://www.cypress.io/) 16 - Framework de testes E2E
 - JavaScript
 - Mocha/Chai (assertions, nativos do Cypress)
 - Testes de API com `cy.request` (nativo do Cypress, sem lib extra)
@@ -58,13 +58,14 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 
 ### 🐞 Bugs conhecidos
 
-Durante a exploração foram encontrados **5 bugs** no site e na API, documentados com passos de
-reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
+Em duas rodadas de exploração foram encontrados **11 bugs** no site e na API, documentados com
+passos de reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
 
-<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.0 de 14/10/2026, por Angelo Roque: 5 defeitos confirmados e reproduzíveis, sendo 1 de severidade alta, 2 médias e 2 baixas."></a></p>
+<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.1 de 16/10/2026, por Angelo Roque: 11 defeitos confirmados e reproduzíveis, sendo 4 de severidade alta, 5 médias e 2 baixas."></a></p>
 
 - **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
-- **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção
+- **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção.
+  O PDF e a capa são gerados a partir de [`docs/relatorio/`](docs/relatorio/) com `docs/relatorio/gerar.sh` (Chrome ou Chromium)
 
 | ID | Severidade | Resumo |
 |---|---|---|
@@ -73,8 +74,14 @@ reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
 | BUG-03 | Baixa | Fontes bloqueadas por Mixed Content (`@import http://` no CSS) |
 | BUG-04 | Média | API retorna HTTP 200 em respostas de erro |
 | BUG-05 | Baixa | API serve JSON com `Content-Type: text/html` |
+| BUG-06 | Alta | `GET /delete_account` exclui a conta logada sem confirmação nem token CSRF |
+| BUG-07 | Alta | API `getUserDetailByEmail` expõe dados pessoais sem autenticação |
+| BUG-08 | Alta | *Contact Us* exibe "Success!" mas a mensagem nunca é enviada |
+| BUG-09 | Média | Quantidade vazia, decimal ou `1e2` gera HTTP 500 com página de debug |
+| BUG-10 | Média | Assinatura da newsletter exibe sucesso sem enviar nada ao servidor |
+| BUG-11 | Média | Avaliação de produto exibe agradecimento sem enviar nada ao servidor |
 
-Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (9 testes). Esses testes descrevem
+Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (17 testes). Esses testes descrevem
 o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles ficam fora da suíte
 principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
 **diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
@@ -87,7 +94,10 @@ principal (`npm test`) e rodam num job separado do CI, que não quebra o pipelin
     ├── cypress.yml              # CI: suíte principal, bugs conhecidos e publicação do relatório
     ├── security.yml             # segredos (gitleaks) e dependências vulneráveis (npm audit)
     └── codeql.yml               # análise estática do JavaScript e dos workflows
-docs/Relatorio_de_Bugs.pdf       # relatório completo de bugs
+docs/
+├── Relatorio_de_Bugs.pdf        # relatório completo de bugs (gerado)
+├── img/capa-relatorio.png       # capa do relatório usada neste README (gerada)
+└── relatorio/                   # fontes HTML do PDF e da capa, e o gerar.sh que os produz
 .gitleaks.toml                   # regras do gitleaks e exceções comentadas para falsos positivos
 .pre-commit-config.yaml          # hook local opcional que bloqueia segredos antes do commit
 BUGS.md                          # resumo dos bugs encontrados
@@ -105,9 +115,11 @@ cypress/
 │   ├── cart/
 │   │   └── checkout.cy.js       # cenários de teste do checkout
 │   ├── known-bugs/              # testes de regressão de bugs conhecidos (fora da suíte padrão)
-│   │   ├── api-http-status.cy.js  # BUG-04/05: status HTTP e Content-Type da API
-│   │   ├── cart-quantity.cy.js    # BUG-01/02: quantidade negativa/zero no carrinho
-│   │   └── mixed-content.cy.js    # BUG-03: @import http:// nas folhas de estilo
+│   │   ├── account-security.cy.js     # BUG-06/07: exclusão de conta por GET e dados expostos na API
+│   │   ├── api-http-status.cy.js      # BUG-04/05: status HTTP e Content-Type da API
+│   │   ├── cart-quantity.cy.js        # BUG-01/02/09: quantidade negativa, zero e não inteira
+│   │   ├── forms-not-submitted.cy.js  # BUG-08/10/11: Contact Us, newsletter e avaliação sem envio
+│   │   └── mixed-content.cy.js        # BUG-03: @import http:// nas folhas de estilo
 │   └── products/
 │       ├── filter.cy.js         # cenários de teste de filtro de produtos
 │       └── search.cy.js         # cenários de teste de busca de produtos
@@ -154,7 +166,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Job | O que faz |
 |---|---|
 | Suíte principal | Roda os 25 testes; salva as screenshots das falhas e o relatório HTML como artefatos |
-| Bugs conhecidos | Roda os 9 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
+| Bugs conhecidos | Roda os 17 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
 | Publicar relatório | Publica os dois relatórios HTML no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline
