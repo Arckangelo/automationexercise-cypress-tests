@@ -48,3 +48,34 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
         validarCarrinho()
     })
 })
+
+// BUG-09 (ver BUGS.md)
+// O campo é type="number" sem step, então o navegador deixa o usuário apagar o
+// valor ou digitar decimal e notação científica. O cart.js repassa o texto sem
+// validar e o servidor quebra (HTTP 500, página de debug do Django), enquanto
+// a tela não mostra nem o aviso "Added" nem um erro.
+describe('[BUG-09] Carrinho - quantidade não inteira derruba o servidor', () => {
+
+    beforeEach(() => {
+        cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
+    })
+
+    const entradas = [
+        { cenario: 'campo vazio', valor: '' },
+        { cenario: 'decimal (2.5)', valor: '2.5' },
+        { cenario: 'notação científica (1e2)', valor: '1e2' },
+    ]
+
+    entradas.forEach(({ cenario, valor }) => {
+        it(`[BUG-09] ${cenario} não deve gerar erro 500`, () => {
+            cy.visit('/product_details/5')
+            cy.get('#quantity').clear()
+            if (valor) cy.get('#quantity').type(valor)
+            cy.get('button.cart').click()
+
+            cy.wait('@adicionarAoCarrinho').then(({ response }) => {
+                expect(response.statusCode, 'status HTTP de /add_to_cart').to.be.lessThan(500)
+            })
+        })
+    })
+})

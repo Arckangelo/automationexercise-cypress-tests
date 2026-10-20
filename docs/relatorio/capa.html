@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Capa — Relatório de Bugs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=block">
+<style>
+  :root {
+    --fundo: #0b1220;
+    --painel: #111a2b;
+    --rotulo: #152034;
+    --linha: #1f2b40;
+    --texto: #e6ecf5;
+    --suave: #8a97ab;
+    --azul: #5b8def;
+    --azul-claro: #7ea6f5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; }
+  body {
+    position: relative;
+    font-family: Inter, sans-serif;
+    color: var(--texto);
+    background:
+      radial-gradient(900px 700px at 88% 8%, rgba(37, 82, 170, 0.28), transparent 70%),
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 48px 48px,
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 48px 48px,
+      var(--fundo);
+  }
+  body::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0; width: 10px;
+    background: linear-gradient(#3b6fe0, #2546b8);
+  }
+  .conteudo { position: absolute; left: 130px; right: 130px; top: 96px; }
+  .sobretitulo {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 21px; font-weight: 600; letter-spacing: 0.32em; color: var(--azul-claro);
+  }
+  .sobretitulo::before { content: ""; width: 48px; height: 2px; background: var(--azul); }
+  h1 { margin-top: 26px; font-size: 104px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+  .aplicacao { margin-top: 30px; font-size: 32px; color: #b9c4d6; }
+  .aplicacao strong { color: #fff; font-weight: 600; }
+  .aplicacao code { font-family: "JetBrains Mono", monospace; font-size: 28px; color: var(--azul-claro); }
+  table {
+    margin-top: 56px; width: 100%;
+    border-collapse: separate; border-spacing: 0;
+    border: 1px solid var(--linha); border-radius: 14px; overflow: hidden;
+    background: var(--painel);
+  }
+  th, td { border-bottom: 1px solid var(--linha); text-align: left; vertical-align: middle; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+  th {
+    width: 330px; padding: 0 34px; background: var(--rotulo);
+    font-size: 18px; font-weight: 600; letter-spacing: 0.22em; color: var(--suave);
+  }
+  td { padding: 22px 38px; height: 83px; font-size: 28px; }
+  .ferramentas { display: flex; flex-wrap: wrap; gap: 12px 14px; }
+  .ferramenta {
+    padding: 6px 14px; border: 1px solid #2c4170; border-radius: 6px;
+    background: #12203a; font-size: 23px;
+  }
+  .ferramenta span { color: var(--suave); }
+  .status { display: flex; align-items: center; gap: 18px; }
+  .selo {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 6px 16px; border-radius: 999px; font-size: 24px; font-weight: 600;
+  }
+  .selo::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .alta  { color: #f87171; background: rgba(239, 68, 68, 0.14);  border: 1px solid rgba(239, 68, 68, 0.45); }
+  .media { color: #fbbf24; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.45); }
+  .baixa { color: #4ade80; background: rgba(34, 197, 94, 0.14);  border: 1px solid rgba(34, 197, 94, 0.45); }
+  .rodape {
+    position: absolute; left: 130px; right: 130px; bottom: 80px;
+    display: flex; justify-content: space-between;
+    font-size: 19px; letter-spacing: 0.08em; color: #6f7c92;
+  }
+</style>
+</head>
+<body>
+  <div class="conteudo">
+    <div class="sobretitulo">ANÁLISE DE QUALIDADE</div>
+    <h1>Relatório de Bugs</h1>
+    <p class="aplicacao">Aplicação: <strong>Automation Exercise</strong> — <code>https://www.automationexercise.com</code></p>
+    <table>
+      <tr><th>DOCUMENTO</th><td>Relatório de defeitos e propostas de correção</td></tr>
+      <tr><th>VERSÃO</th><td>1.1</td></tr>
+      <tr><th>DATA</th><td>16/10/2026</td></tr>
+      <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
+      <tr><th>FERRAMENTAS</th><td>
+        <div class="ferramentas">
+          <span class="ferramenta">REA 6.5.0 <span>(captura de cenários de navegador e evidências)</span></span>
+          <span class="ferramenta">Chromium 1243 <span>(Playwright)</span></span>
+          <span class="ferramenta">cURL</span>
+          <span class="ferramenta">Cypress 16.1.1</span>
+        </div>
+      </td></tr>
+      <tr><th>STATUS GERAL</th><td>
+        <div class="status">11 defeitos confirmados e reproduzíveis —
+          <span class="selo alta">4 alta</span>
+          <span class="selo media">5 média</span>
+          <span class="selo baixa">2 baixa</span>
+        </div>
+      </td></tr>
+    </table>
+  </div>
+  <div class="rodape">
+    <span>Relatório de defeitos e propostas de correção</span>
+    <span>Versão 1.1 · 16/10/2026</span>
+  </div>
+</body>
+</html>

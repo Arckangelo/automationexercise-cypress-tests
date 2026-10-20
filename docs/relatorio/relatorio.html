@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Bugs — Automation Exercise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=block">
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 17mm 20mm;
+    @bottom-left {
+      content: "Relatório de Bugs · Automation Exercise";
+      font: 600 7.5pt Inter, sans-serif; color: #1e3a6e;
+    }
+    @bottom-right {
+      content: "Página " counter(page) " de " counter(pages);
+      font: 7.5pt Inter, sans-serif; color: #7b8698;
+    }
+  }
+  @page capa {
+    margin: 0;
+    @bottom-left { content: none; }
+    @bottom-right { content: none; }
+  }
+
+  :root {
+    --azul: #1e3a6e;
+    --azul-medio: #2f5aa8;
+    --linha: #d5dbe5;
+    --fundo-rotulo: #eef2f8;
+    --texto: #1f2733;
+    --suave: #5b6676;
+    --alta: #c62828;
+    --media: #c77700;
+    --baixa: #2e7d32;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font: 9.6pt/1.5 Inter, sans-serif; color: var(--texto); }
+
+  /* Capa */
+  .capa {
+    page: capa;
+    height: 297mm; padding: 62mm 18mm 0;
+    background: var(--azul); color: #fff;
+    break-after: page;
+  }
+  .capa h1 { margin: 0; font-size: 30pt; font-weight: 800; letter-spacing: -0.02em; }
+  .capa .linha-capa { width: 100%; height: 2px; margin: 7mm 0 6mm; background: #5b8def; }
+  .capa .aplicacao { margin: 0 0 16mm; font-size: 11pt; color: #c8d4ea; }
+  .capa table { width: 100%; border-collapse: collapse; }
+  .capa th, .capa td { padding: 3.2mm 0; border-bottom: 1px solid rgba(255, 255, 255, 0.18); text-align: left; vertical-align: top; }
+  .capa th { width: 42mm; font-size: 7.5pt; font-weight: 600; letter-spacing: 0.22em; color: #a9b8d4; }
+  .capa td { font-size: 9.6pt; }
+
+  /* Corpo */
+  h2 {
+    margin: 0 0 4mm; padding-bottom: 1.6mm;
+    border-bottom: 2px solid var(--azul);
+    font-size: 15pt; font-weight: 700; color: var(--azul);
+    break-after: avoid;
+  }
+  h3 { margin: 6mm 0 2.5mm; font-size: 11.5pt; font-weight: 700; color: var(--azul); break-after: avoid; }
+  h4 {
+    margin: 5mm 0 1.5mm; font-size: 7.6pt; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--azul-medio); break-after: avoid;
+  }
+  p { margin: 0 0 2.5mm; }
+  ul, ol { margin: 0 0 2.5mm; padding-left: 6mm; }
+  li { margin-bottom: 1mm; }
+  code {
+    font: 8.2pt "JetBrains Mono", monospace;
+    padding: 0.2mm 1mm; border-radius: 2px; background: #eef1f6; color: #1d3f7a;
+  }
+  pre {
+    margin: 1.5mm 0 3mm; padding: 3mm 4mm;
+    border-left: 3px solid var(--azul-medio); border-radius: 2px;
+    background: #f3f5f9; white-space: pre-wrap; break-inside: avoid;
+    font: 7.8pt/1.45 "JetBrains Mono", monospace; color: #1f2733;
+  }
+  pre code { padding: 0; background: none; color: inherit; font-size: inherit; }
+  .secao { break-before: page; }
+  .bug { break-before: page; }
+  .bug h3 {
+    margin: 0 0 3mm; padding: 2.4mm 4mm;
+    border-left: 4px solid var(--azul-medio); background: #eef2f8;
+    font-size: 12pt;
+  }
+  table.dados { width: 100%; margin: 2mm 0 4mm; border-collapse: collapse; break-inside: avoid; }
+  table.dados th, table.dados td { padding: 1.8mm 3mm; border: 1px solid var(--linha); text-align: left; vertical-align: top; }
+  table.dados thead th { background: var(--azul); color: #fff; font-weight: 600; }
+  table.dados tbody td:first-child { white-space: nowrap; }
+  table.ficha th { width: 44mm; background: var(--fundo-rotulo); font-weight: 600; color: var(--azul); }
+  .alta { color: var(--alta); font-weight: 700; }
+  .media { color: var(--media); font-weight: 700; }
+  .baixa { color: var(--baixa); font-weight: 700; }
+  .nota {
+    margin: 2mm 0 4mm; padding: 2.5mm 4mm;
+    border-left: 3px solid #e0a800; background: #fff8e1; font-size: 8.6pt; color: #5a4a00;
+  }
+  .pequeno { font-size: 8.4pt; }
+</style>
+</head>
+<body>
+
+<!-- ============================== CAPA ============================== -->
+<section class="capa">
+  <h1>Relatório de Bugs</h1>
+  <div class="linha-capa"></div>
+  <p class="aplicacao">Aplicação: Automation Exercise — https://www.automationexercise.com</p>
+  <table>
+    <tr><th>DOCUMENTO</th><td>Relatório de defeitos e propostas de correção</td></tr>
+    <tr><th>VERSÃO</th><td>1.1</td></tr>
+    <tr><th>DATA</th><td>16/10/2026</td></tr>
+    <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
+    <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.1.1</td></tr>
+    <tr><th>STATUS GERAL</th><td>11 defeitos confirmados e reproduzíveis — 4 alta, 5 média, 2 baixa</td></tr>
+    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): BUG-01 a BUG-05 · 1.1 (16/10/2026): BUG-06 a BUG-11</td></tr>
+  </table>
+</section>
+
+<!-- ============================== 1. SUMÁRIO ============================== -->
+<section>
+  <h2>1. Sumário executivo</h2>
+  <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante duas rodadas de
+  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados onze defeitos,
+  todos reproduzíveis e cobertos por testes automatizados em Cypress que falham enquanto o defeito persistir.</p>
+  <p>Os defeitos mais graves envolvem a conta do usuário e o atendimento. Uma simples requisição <code>GET</code> para
+  <code>/delete_account</code> apaga a conta de quem estiver logado, sem confirmação nem proteção contra CSRF
+  (BUG-06). A API pública devolve nome, endereço e data de nascimento de qualquer e-mail cadastrado, sem
+  autenticação (BUG-07). E o formulário <em>Contact Us</em> exibe "Success!" sem enviar a mensagem a lugar nenhum
+  (BUG-08).</p>
+  <p>No carrinho, a quantidade não é validada: valores negativos geram totais negativos (BUG-01), zero gera itens sem
+  valor (BUG-02) e valores vazios ou não inteiros derrubam o servidor com a página de debug do Django (BUG-09). A
+  newsletter e as avaliações de produto também exibem mensagens de sucesso sem enviar nada (BUG-10 e BUG-11). Os
+  demais defeitos envolvem recursos carregados de forma insegura (Mixed Content) e incoerências no contrato HTTP da
+  API.</p>
+
+  <table class="dados">
+    <thead><tr><th>ID</th><th>Título</th><th>Área</th><th>Severidade</th><th>Prioridade</th></tr></thead>
+    <tbody>
+      <tr><td>BUG-01</td><td>Carrinho aceita quantidade negativa</td><td>Carrinho / Back-end</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-02</td><td>Carrinho aceita quantidade zero</td><td>Carrinho / Back-end</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-03</td><td>Fontes carregadas via HTTP em página HTTPS (Mixed Content)</td><td>Front-end / CSS</td><td class="baixa">Baixa</td><td>P3</td></tr>
+      <tr><td>BUG-04</td><td>API retorna HTTP 200 para respostas de erro</td><td>API REST</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-05</td><td>API serve JSON com Content-Type text/html</td><td>API REST</td><td class="baixa">Baixa</td><td>P3</td></tr>
+      <tr><td>BUG-06</td><td>Conta é excluída por um GET sem confirmação nem token CSRF</td><td>Conta / Segurança</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-07</td><td>API expõe dados pessoais sem autenticação</td><td>API REST / Privacidade</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-08</td><td>Contact Us confirma o envio, mas não envia nada</td><td>Atendimento / Front-end</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-09</td><td>Quantidade vazia ou não inteira gera erro 500</td><td>Carrinho / Back-end</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-10</td><td>Assinatura da newsletter não é registrada</td><td>Newsletter / Front-end</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-11</td><td>Avaliação de produto não é enviada</td><td>Produto / Front-end</td><td class="media">Média</td><td>P2</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================== 2. ESCOPO ============================== -->
+<section class="secao">
+  <h2>2. Escopo e metodologia</h2>
+  <h3>2.1 Escopo analisado</h3>
+  <p><strong>Rodada 1 (14/10/2026, BUG-01 a BUG-05):</strong></p>
+  <ul>
+    <li>Página inicial (carregamento de recursos, console e rede);</li>
+    <li>Página de detalhes do produto e fluxo de adição ao carrinho;</li>
+    <li>Página do carrinho (<code>/view_cart</code>);</li>
+    <li>API pública documentada em <code>/api_list</code>.</li>
+  </ul>
+  <p><strong>Rodada 2 (16/10/2026, BUG-06 a BUG-11):</strong></p>
+  <ul>
+    <li>Conta logada: login, logout, exclusão de conta e consulta de dados pela API;</li>
+    <li>Pedido completo (checkout e pagamento com dados de teste) e estado do carrinho depois do pedido e do logout;</li>
+    <li>Formulários <em>Contact Us</em>, newsletter e avaliação de produto;</li>
+    <li>Entradas inválidas na quantidade (vazio, decimal, notação científica, valores muito altos);</li>
+    <li>Coerência de nome e preço entre listagem, página de detalhe e API (34 produtos) e das contagens por marca.</li>
+  </ul>
+  <p><strong>Fora do escopo:</strong> upload de arquivo no <em>Contact Us</em>, meios de pagamento reais e testes
+  de carga ou de segurança ofensivos. Os testes de segurança se limitaram a observar o comportamento com contas de
+  teste criadas para isso.</p>
+
+  <h3>2.2 Metodologia</h3>
+  <ol>
+    <li><strong>Captura de cenários reais com a REA:</strong> o comando <code>rea capture-browser-scenario</code>
+    executou cenários declarativos em um Chromium isolado (perfil temporário, sem dados do usuário) e registrou como
+    evidência os eventos de console, os erros de página, as requisições e respostas de rede e a árvore de
+    acessibilidade.</li>
+    <li><strong>Análise estática dos recursos:</strong> inspeção de <code>/static/js/cart.js</code>,
+    <code>/static/js/subscription.js</code>, <code>/static/css/main.css</code>, dos scripts embutidos nas páginas e
+    da marcação HTML, para localizar a causa raiz.</li>
+    <li><strong>Verificação da API:</strong> requisições com cURL comparando o status HTTP real, o campo
+    <code>responseCode</code> do corpo e os cabeçalhos.</li>
+    <li><strong>Diálogos JavaScript:</strong> a REA não trata <code>confirm()</code>. Para o <em>Contact Us</em>, um
+    script do Playwright aceitou o diálogo e registrou todas as requisições feitas depois do envio.</li>
+    <li><strong>Reprodução:</strong> na rodada 2, cada achado foi reproduzido pelo menos duas vezes; os testes de conta
+    usaram contas descartáveis, criadas pela API e removidas ao final.</li>
+    <li><strong>Confirmação automatizada:</strong> cada defeito ganhou um teste Cypress que descreve o comportamento
+    correto. Todos os testes falharam pelas asserções que descrevem os defeitos, o que os confirma.</li>
+  </ol>
+
+  <h3>2.3 Ambiente de teste</h3>
+  <table class="dados ficha">
+    <tr><th>Sistema operacional</th><td>Ubuntu 26.04.1 LTS (linux-x64)</td></tr>
+    <tr><th>Navegador</th><td>Chromium 1243 (Playwright), headless, 1280×720, locale en-US, fuso UTC</td></tr>
+    <tr><th>Node.js</th><td>v24.14.0</td></tr>
+    <tr><th>Cypress</th><td>16.1.1 (navegador Electron)</td></tr>
+    <tr><th>REA</th><td>6.4.0 na rodada 1; 6.5.0 na rodada 2</td></tr>
+    <tr><th>Tecnologia observada no servidor</th><td>Django (inferido pelo token <code>csrfmiddlewaretoken</code> e pela página de erro), Phusion Passenger 6.2.0, atrás do Cloudflare</td></tr>
+  </table>
+
+  <h3>2.4 Critérios de classificação</h3>
+  <table class="dados">
+    <thead><tr><th>Severidade</th><th>Critério</th></tr></thead>
+    <tbody>
+      <tr><td class="alta">Alta</td><td>Afeta a integridade de dados financeiros ou de usuários, regras de negócio centrais ou a confidencialidade de dados pessoais; pode ser explorado pelo usuário ou por terceiros.</td></tr>
+      <tr><td class="media">Média</td><td>Comportamento incorreto com impacto funcional ou de integração, sem perda financeira ou de dados direta.</td></tr>
+      <tr><td class="baixa">Baixa</td><td>Impacto visual, de conformidade ou de boas práticas, com contorno simples.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================== 3. DETALHAMENTO ============================== -->
+<section class="secao">
+  <h2>3. Detalhamento dos defeitos</h2>
+</section>
+
+<!-- BUG-01 -->
+<section class="bug" style="break-before: avoid;">
+  <h3>BUG-01 — Carrinho aceita quantidade negativa</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td><code>/product_details/{id}</code>, <code>/static/js/cart.js</code>, endpoint <code>GET /add_to_cart/{id}</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (determinística)</td></tr>
+    <tr><th>Pré-condição</th><td>Nenhuma (usuário anônimo, carrinho vazio)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Acessar <code>https://www.automationexercise.com/product_details/1</code> (produto Blue Top, Rs. 500).</li>
+    <li>No campo <em>Quantity</em>, apagar o valor e digitar <code>-3</code>.</li>
+    <li>Clicar em <em>Add to cart</em>.</li>
+    <li>No modal, clicar em <em>View Cart</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>A quantidade deve ser rejeitada, com mensagem de validação (mínimo 1). Nenhum item deve ser adicionado ao carrinho.</p>
+  <h4>Resultado obtido</h4>
+  <p>O item é adicionado e o carrinho exibe: <code>Blue Top | Rs. 500 | -3 | Rs. -1500</code>.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>Rede (REA):</strong> requisição <code>GET https://www.automationexercise.com/add_to_cart/1?quantity=-3</code> aceita pelo servidor.</li>
+    <li><strong>Árvore de acessibilidade do carrinho (REA):</strong> <code>row "Product Image Blue Top Women &gt; Tops Rs. 500 -3 Rs. -1500"</code>.</li>
+    <li><strong>Cypress:</strong> <code>AssertionError: expected -3 to be above 0</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>O campo é declarado como <code>&lt;input type="number" id="quantity" min="1"&gt;</code>. O atributo <code>min</code>,
+  porém, só é aplicado pelo navegador quando um formulário é enviado. O botão é
+  <code>&lt;button type="button" class="cart"&gt;</code>, e o envio é feito por AJAX em <code>cart.js</code>, que lê o
+  valor bruto e o envia sem nenhuma validação:</p>
+<pre><code>$('.cart').on('click', function() {
+    var product = document.getElementById("product_id").value;
+    var quantity = document.getElementById("quantity").value;
+    $.ajax({
+        url: "/add_to_cart/" + product,
+        data: {'quantity': quantity},
+        ...</code></pre>
+  <p>O servidor também aceita o valor sem validar o intervalo. A falha existe, portanto, em duas camadas. A camada
+  decisiva é o back-end, porque a validação no navegador pode ser contornada chamando a URL diretamente.</p>
+  <h4>Impacto</h4>
+  <ul>
+    <li>Total do carrinho negativo ou reduzido indevidamente (combinando itens positivos e negativos);</li>
+    <li>Risco de manipulação de preço no checkout e de inconsistência em estoque, relatórios e faturamento;</li>
+    <li>Experiência do usuário degradada e falta de confiabilidade nos valores exibidos.</li>
+  </ul>
+  <h4>Solução proposta</h4>
+  <p><strong>1. Back-end (obrigatório):</strong> validar a quantidade na view, como inteiro dentro de um intervalo
+  permitido, e responder com erro 400 quando o valor for inválido. Exemplo em Django:</p>
+<pre><code>from django.http import JsonResponse
+
+MIN_QUANTITY = 1
+MAX_QUANTITY = 99
+
+def add_to_cart(request, product_id):
+    try:
+        quantity = int(request.GET.get("quantity", MIN_QUANTITY))
+    except (TypeError, ValueError):
+        return JsonResponse({"message": "Quantidade inválida."}, status=400)
+
+    if not MIN_QUANTITY &lt;= quantity &lt;= MAX_QUANTITY:
+        return JsonResponse(
+            {"message": f"A quantidade deve estar entre {MIN_QUANTITY} e {MAX_QUANTITY}."},
+            status=400,
+        )
+
+    # ... lógica existente de adição ao carrinho ...</code></pre>
+  <p><strong>2. Modelo de dados (defesa em profundidade):</strong> impedir que valores inválidos sejam persistidos,
+  mesmo que outra rota grave no carrinho:</p>
+<pre><code>from django.db import models
+
+class CartItem(models.Model):
+    quantity = models.PositiveIntegerField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(quantity__gte=1),
+                name="cart_item_quantity_gte_1",
+            ),
+        ]</code></pre>
+  <p><strong>3. Front-end (experiência do usuário):</strong> usar a validação nativa do navegador antes de enviar e
+  tratar o erro do servidor:</p>
+<pre><code>$('.cart').on('click', function () {
+    var input = document.getElementById("quantity");
+    var quantity = Number(input.value);
+    if (!input.checkValidity() || !Number.isInteger(quantity) || quantity &lt; 1) {
+        input.reportValidity();
+        return;
+    }
+    $.ajax({
+        url: "/add_to_cart/" + document.getElementById("product_id").value,
+        data: { quantity: quantity },
+        success: function () {
+            $('#cartModal').removeClass('fade').addClass('show');
+        },
+        error: function (xhr) {
+            alert(xhr.responseJSON?.message || "Não foi possível adicionar o produto.");
+        }
+    });
+});</code></pre>
+  <p><strong>4. Saneamento:</strong> executar uma rotina única para remover ou corrigir itens de carrinho já gravados
+  com quantidade menor ou igual a zero.</p>
+  <h4>Critério de aceite</h4>
+  <ul>
+    <li><code>GET /add_to_cart/1?quantity=-3</code> retorna HTTP 400 e não altera o carrinho;</li>
+    <li>A interface exibe a mensagem de validação e não abre o modal de sucesso;</li>
+    <li>O teste Cypress “[BUG-01] não deve aceitar quantidade negativa (-3)” passa.</li>
+  </ul>
+</section>
+
+<!-- BUG-02 -->
+<section class="bug">
+  <h3>BUG-02 — Carrinho aceita quantidade zero</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td>Mesmo do BUG-01</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100%</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <p>Os mesmos do BUG-01, informando <code>0</code> no campo <em>Quantity</em>.</p>
+  <h4>Resultado esperado</h4>
+  <p>A quantidade deve ser rejeitada; nenhum item deve ser adicionado.</p>
+  <h4>Resultado obtido</h4>
+  <p>O carrinho exibe uma linha sem valor: <code>Blue Top | Rs. 500 | 0 | Rs. 0</code>.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>REA:</strong> árvore de acessibilidade com <code>row "Product Image Blue Top Women &gt; Tops Rs. 500 0 Rs. 0"</code>.</li>
+    <li><strong>Cypress:</strong> <code>AssertionError: expected 0 to be above 0</code>.</li>
+  </ul>
+  <h4>Causa raiz e solução</h4>
+  <p>A causa raiz é a mesma do BUG-01: falta validar o limite inferior. A correção proposta para o BUG-01 (intervalo
+  1..99 no back-end, restrição no banco e validação no front-end) resolve os dois defeitos, e também o BUG-09.
+  Recomenda-se corrigi-los na mesma entrega.</p>
+  <h4>Impacto</h4>
+  <p>Itens "fantasmas" no carrinho, que confundem o usuário e podem gerar pedidos com linhas sem valor e falhas em
+  integrações de estoque e logística.</p>
+</section>
+
+<!-- BUG-03 -->
+<section class="bug">
+  <h3>BUG-03 — Fontes carregadas via HTTP em página HTTPS (Mixed Content)</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td><code>/static/css/main.css</code>, linhas 5 a 7</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% em navegadores modernos</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Abrir <code>https://www.automationexercise.com/</code> com as ferramentas de desenvolvedor abertas (aba Console).</li>
+    <li>Observar os erros de <em>Mixed Content</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>Todos os recursos são carregados via HTTPS e as fontes Roboto, Open Sans e Abel são aplicadas.</p>
+  <h4>Resultado obtido</h4>
+  <p>O navegador bloqueia três folhas de estilo do Google Fonts, e a página é exibida com fontes substitutas.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>Console (REA):</strong> <code>Mixed Content: The page at 'https://www.automationexercise.com/' was
+    loaded over HTTPS, but requested an insecure stylesheet 'http://fonts.googleapis.com/css?family=Abel'. This
+    request has been blocked; the content must be served over HTTPS.</code> (mesma mensagem para Roboto e Open Sans);</li>
+    <li><strong>Rede (REA):</strong> três eventos <code>request-failed</code> para <code>http://fonts.googleapis.com/...</code>;</li>
+    <li><strong>Código-fonte:</strong></li>
+  </ul>
+<pre><code>@import url(http://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,700,100);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,800,300,600,700);
+@import url(http://fonts.googleapis.com/css?family=Abel);</code></pre>
+  <ul>
+    <li><strong>Cypress:</strong> <code>@import http:// em .../static/css/main.css: expected [ Array(3) ] to be empty</code>.</li>
+  </ul>
+  <h4>Causa raiz</h4>
+  <p>As URLs foram escritas com o esquema <code>http://</code>, provavelmente desde antes da migração do site para
+  HTTPS. Os navegadores bloqueiam esse tipo de recurso em páginas seguras.</p>
+  <h4>Impacto</h4>
+  <p>Identidade visual diferente da projetada, erros no console que poluem a monitoração e prejuízo em auditorias de
+  qualidade e segurança (Lighthouse, por exemplo). Além disso, os <code>@import</code> encadeados atrasam a renderização.</p>
+  <h4>Solução proposta</h4>
+  <p><strong>1. Correção mínima:</strong> trocar o esquema para HTTPS em <code>main.css</code>:</p>
+<pre><code>@import url(https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,700,100);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,800,300,600,700);
+@import url(https://fonts.googleapis.com/css?family=Abel);</code></pre>
+  <p><strong>2. Correção recomendada (melhor desempenho):</strong> remover os <code>@import</code> do CSS e carregar
+  as fontes em uma única requisição no <code>&lt;head&gt;</code> do template base:</p>
+<pre><code>&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&amp;family=Open+Sans:wght@300;400;600;700;800&amp;family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;1,400&amp;display=swap"&gt;</code></pre>
+  <p><strong>3. Prevenção:</strong> adicionar o cabeçalho <code>Content-Security-Policy: upgrade-insecure-requests</code>,
+  que faz o navegador atualizar automaticamente para HTTPS os recursos referenciados com HTTP.</p>
+  <h4>Critério de aceite</h4>
+  <p>Nenhum erro de <em>Mixed Content</em> no console da página inicial; fontes aplicadas; teste Cypress do BUG-03 passando.</p>
+</section>
+
+<!-- BUG-04 -->
+<section class="bug">
+  <h3>BUG-04 — API retorna HTTP 200 para respostas de erro</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td>Endpoints <code>/api/*</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100%</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+<pre><code>curl -i -X POST https://www.automationexercise.com/api/productsList</code></pre>
+  <h4>Resultado esperado</h4>
+  <p>Status HTTP coerente com o erro (<code>405 Method Not Allowed</code>, com o cabeçalho <code>Allow: GET</code>).</p>
+  <h4>Resultado obtido</h4>
+  <p>Status HTTP <code>200 OK</code>, com o erro apenas no corpo:
+  <code>{"responseCode": 405, "message": "This request method is not supported."}</code>.</p>
+  <h4>Evidências</h4>
+  <table class="dados">
+    <thead><tr><th>Requisição</th><th>Status HTTP real</th><th><code>responseCode</code> no corpo</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST /api/productsList</code></td><td>200</td><td>405</td></tr>
+      <tr><td><code>PUT /api/brandsList</code></td><td>200</td><td>405</td></tr>
+      <tr><td><code>DELETE /api/verifyLogin</code></td><td>200</td><td>405</td></tr>
+      <tr><td><code>POST /api/searchProduct</code> (sem parâmetro)</td><td>200</td><td>400</td></tr>
+      <tr><td><code>POST /api/verifyLogin</code> (parâmetros em query string)</td><td>200</td><td>400</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Cypress:</strong> <code>status HTTP real: expected 200 to equal 405</code> e <code>expected 200 to equal 400</code>.</p>
+  <h4>Causa raiz</h4>
+  <p>As views da API devolvem o código de erro como dado no corpo JSON, mas não o definem como status da resposta HTTP,
+  que fica no padrão 200. A página <code>/api_list</code> documenta “Response Code: 405” sem esclarecer que o código não
+  é o status HTTP.</p>
+  <h4>Impacto</h4>
+  <ul>
+    <li>Clientes HTTP, gateways, CDNs, ferramentas de monitoramento (APM) e alertas tratam erros como sucesso;</li>
+    <li>Bibliotecas que lançam exceção em 4xx/5xx (<code>fetch</code> com <code>response.ok</code>, axios, Cypress <code>cy.request</code>) não detectam a falha;</li>
+    <li>Respostas de erro podem ser armazenadas em cache como respostas válidas.</li>
+  </ul>
+  <h4>Solução proposta</h4>
+  <p>Centralizar a construção das respostas da API em um único utilitário, que define o status HTTP e mantém o campo
+  <code>responseCode</code> no corpo por compatibilidade com os clientes atuais:</p>
+<pre><code>from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+def api_response(status, **payload):
+    return JsonResponse({"responseCode": status, **payload}, status=status)
+
+def method_not_allowed(allowed):
+    response = api_response(405, message="This request method is not supported.")
+    response["Allow"] = ", ".join(allowed)
+    return response
+
+def products_list(request):
+    if request.method != "GET":
+        return method_not_allowed(["GET"])
+    return api_response(200, products=serialize_products())
+
+def search_product(request):
+    if request.method != "POST":
+        return method_not_allowed(["POST"])
+    term = request.POST.get("search_product")
+    if not term:
+        return api_response(
+            400, message="Bad request, search_product parameter is missing in POST request."
+        )
+    return api_response(200, products=search(term))</code></pre>
+  <p><strong>Compatibilidade:</strong> o corpo das respostas não muda; muda apenas o status HTTP. Por isso, a correção
+  deve ser anunciada na página <code>/api_list</code>, deixando claro que “Response Code” passa a valer também como
+  status HTTP. Clientes que usam <code>failOnStatusCode</code> ou equivalente precisarão tratar respostas 4xx.</p>
+  <h4>Critério de aceite</h4>
+  <p>Para todos os casos da tabela de evidências, o status HTTP é igual ao <code>responseCode</code> do corpo, e as
+  respostas 405 incluem o cabeçalho <code>Allow</code>.</p>
+</section>
+
+<!-- BUG-05 -->
+<section class="bug">
+  <h3>BUG-05 — API serve JSON com Content-Type text/html</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td>Endpoints <code>/api/*</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100%</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+<pre><code>curl -s -D - -o /dev/null https://www.automationexercise.com/api/productsList
+curl -s -I https://www.automationexercise.com/api/productsList</code></pre>
+  <h4>Resultado esperado</h4>
+  <p><code>Content-Type: application/json</code> em todas as respostas da API.</p>
+  <h4>Resultado obtido</h4>
+  <ul>
+    <li>GET e POST: <code>content-type: text/html; charset=utf-8</code>, com corpo JSON;</li>
+    <li>HEAD da mesma URL: <code>content-type: application/json</code>. O tipo informado no HEAD diverge do GET.</li>
+  </ul>
+  <p><strong>Cypress:</strong> <code>expected 'text/html; charset=utf-8' to include 'application/json'</code>.</p>
+  <h4>Causa raiz (hipótese)</h4>
+  <p>O comportamento é compatível com respostas montadas como <code>HttpResponse(json.dumps(...))</code>, que usa
+  <code>text/html</code> por padrão no Django. A divergência no HEAD sugere que esse método é tratado por outro caminho
+  (outra camada da aplicação ou da infraestrutura). Como o código do servidor não está disponível, essa causa precisa
+  ser confirmada pela equipe de desenvolvimento.</p>
+  <h4>Impacto</h4>
+  <p>Clientes que dependem do <code>Content-Type</code> não convertem o corpo automaticamente em JSON (por exemplo, no
+  Cypress, <code>res.body</code> chega como texto). O cabeçalho <code>X-Content-Type-Options: nosniff</code>, também
+  presente, impede que o navegador corrija o tipo. Além disso, a resposta fica mais exposta a interpretação como HTML.</p>
+  <h4>Solução proposta</h4>
+  <p>Usar <code>JsonResponse</code> em todas as respostas da API. O utilitário <code>api_response</code> proposto no
+  BUG-04 já faz isso, então os dois defeitos podem ser corrigidos na mesma entrega. Recomenda-se também confirmar que
+  GET e HEAD passam pela mesma view, para que retornem cabeçalhos idênticos.</p>
+  <h4>Critério de aceite</h4>
+  <p>GET, POST e HEAD retornam <code>Content-Type: application/json</code>; teste Cypress do BUG-05 passando.</p>
+</section>
+
+<!-- BUG-06 -->
+<section class="bug">
+  <h3>BUG-06 — Conta é excluída por um GET sem confirmação nem token CSRF</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td>Rota <code>GET /delete_account</code> (link <em>Delete Account</em> do menu)</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2, com contas diferentes)</td></tr>
+    <tr><th>Pré-condição</th><td>Usuário logado</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Entrar com uma conta de teste em <code>/login</code>.</li>
+    <li>Abrir <code>https://www.automationexercise.com/delete_account</code> diretamente (barra de endereço ou qualquer link).</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>A exclusão pede confirmação explícita e só acontece por <code>POST</code> com token CSRF.</p>
+  <h4>Resultado obtido</h4>
+  <p>A página exibe "Account Deleted!" e a conta deixa de existir, sem nenhuma confirmação.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>REA:</strong> cenário login → <code>goto /delete_account</code>; árvore de acessibilidade final com <code>heading "Account Deleted!"</code>, nas duas execuções;</li>
+    <li><strong>API:</strong> depois do cenário, <code>POST /api/verifyLogin</code> com as credenciais da conta responde <code>{"responseCode": 404, "message": "User not found!"}</code>;</li>
+    <li><strong>Cypress:</strong> <code>a conta deve continuar existindo: expected 404 to equal 200</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>Uma operação destrutiva está exposta como <code>GET</code>, sem etapa de confirmação. O site já usa o token
+  <code>csrfmiddlewaretoken</code> do Django nos formulários, mas essa proteção só vale para métodos que alteram estado
+  (<code>POST</code>, <code>PUT</code>, <code>DELETE</code>); um <code>GET</code> passa direto.</p>
+  <h4>Impacto</h4>
+  <ul>
+    <li>Qualquer página, e-mail ou mensagem com um link para <code>/delete_account</code> apaga a conta de quem estiver
+    logado e clicar nele. O cookie de sessão costuma acompanhar uma navegação vinda de outro site; esse cenário entre
+    origens é inferência e não foi testado;</li>
+    <li>Pré-carregamento do navegador, extensões ou rastreadores podem disparar a exclusão sem ação do usuário;</li>
+    <li>Perda irreversível da conta, do endereço e do histórico do cliente.</li>
+  </ul>
+  <h4>Solução proposta</h4>
+<pre><code>from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def delete_account(request):
+    if request.method == "GET":
+        # só exibe a tela de confirmação, com o formulário protegido por {% csrf_token %}
+        return render(request, "confirm_delete_account.html")
+    request.user.delete()
+    return redirect("account_deleted")</code></pre>
+  <p>O link do menu passa a abrir a tela de confirmação, e a exclusão só ocorre ao enviar o formulário. Recomenda-se
+  também pedir a senha atual antes de excluir.</p>
+  <h4>Critério de aceite</h4>
+  <ul>
+    <li><code>GET /delete_account</code> não altera a conta; só exibe a confirmação;</li>
+    <li><code>POST</code> sem token CSRF válido é rejeitado com 403;</li>
+    <li>O teste Cypress “[BUG-06] GET /delete_account não deve excluir a conta sem confirmação” passa.</li>
+  </ul>
+</section>
+
+<!-- BUG-07 -->
+<section class="bug">
+  <h3>BUG-07 — API expõe dados pessoais sem autenticação</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td><code>GET /api/getUserDetailByEmail</code> (API 14 da lista pública)</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2, com contas diferentes)</td></tr>
+    <tr><th>Pré-condição</th><td>Conhecer o e-mail de uma conta</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+<pre><code>curl "https://www.automationexercise.com/api/getUserDetailByEmail?email=&lt;e-mail da conta&gt;"</code></pre>
+  <h4>Resultado esperado</h4>
+  <p>A API exige autenticação e só devolve os dados do próprio usuário autenticado.</p>
+  <h4>Resultado obtido</h4>
+  <p>Sem nenhuma credencial, a resposta traz <code>id</code>, <code>name</code>, <code>email</code>, <code>title</code>,
+  <code>birth_day</code>, <code>birth_month</code>, <code>birth_year</code>, <code>first_name</code>,
+  <code>last_name</code>, <code>company</code>, <code>address1</code>, <code>address2</code>, <code>country</code>,
+  <code>state</code>, <code>city</code> e <code>zipcode</code>.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> duas contas de teste criadas para isso; nas duas, HTTP 200 com o objeto <code>user</code> completo;</li>
+    <li><strong>Cypress:</strong> <code>dados pessoais na resposta sem autenticação: expected { Object (responseCode, user) } to not have property 'user'</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>O endpoint procura a conta pelo e-mail recebido na query string e devolve o registro, sem verificar quem faz a
+  requisição. Corresponde a <em>API3:2023 Broken Object Property Level Authorization</em> do OWASP API Security Top 10.</p>
+  <h4>Impacto</h4>
+  <ul>
+    <li>Exposição de dados pessoais (nome, endereço, data de nascimento) de qualquer cliente cujo e-mail seja conhecido;</li>
+    <li>Enumeração de contas: a resposta revela se um e-mail está cadastrado, o que facilita phishing e ataques de senha;</li>
+    <li>Risco de não conformidade com leis de proteção de dados (LGPD, GDPR).</li>
+  </ul>
+  <h4>Solução proposta</h4>
+  <ul>
+    <li>Exigir autenticação e responder com os dados do usuário da sessão ou do token, ignorando o e-mail informado;</li>
+    <li>Devolver só os campos necessários ao cliente da API;</li>
+    <li>Responder da mesma forma para e-mail existente e inexistente quando não houver autorização, para não permitir enumeração.</li>
+  </ul>
+  <div class="nota">O endpoint é documentado na lista pública de APIs do site, e o teste da suíte principal
+  <code>account.api.cy.js</code> o usa como contrato. Se a correção for aplicada, aquele teste deverá ser ajustado junto.</div>
+  <h4>Critério de aceite</h4>
+  <p>Sem autenticação, a resposta não contém dados pessoais (HTTP 401); teste Cypress do BUG-07 passando.</p>
+</section>
+
+<!-- BUG-08 -->
+<section class="bug">
+  <h3>BUG-08 — Contact Us confirma o envio, mas não envia nada</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td><code>/contact_us</code>, script embutido na página</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (3 de 3)</td></tr>
+    <tr><th>Pré-condição</th><td>Nenhuma</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Acessar <code>/contact_us</code> e preencher nome, e-mail, assunto e mensagem.</li>
+    <li>Clicar em <em>Submit</em> e confirmar o diálogo “Press OK to proceed!” com <em>OK</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>A mensagem é enviada ao servidor (<code>POST /contact_us</code>) e só então a confirmação aparece.</p>
+  <h4>Resultado obtido</h4>
+  <p>Aparece “Success! Your details have been submitted successfully.”, mas nenhuma requisição sai para o site.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>Playwright (diálogo aceito):</strong> duas execuções com <code>requisicoes_apos_envio: []</code> para o
+    domínio do site; numa terceira, registrando todas as origens, só houve tráfego de anúncios do Google;</li>
+    <li><strong>REA:</strong> com o diálogo recusado (comportamento padrão), também nenhuma requisição;</li>
+    <li><strong>Cypress:</strong> <code>requisições enviadas ao site: expected [] to have a length above 0 but got 0</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>O script da página intercepta o envio e retorna <code>false</code> nos dois ramos do <code>confirm()</code>:</p>
+<pre><code>$("#contact-us-form").on("submit", function() {
+    var r = confirm("Press OK to proceed!");
+    if (r == true) {
+        $(".alert-success").html("Success! Your details have been submitted successfully.");
+        $(".alert-success").attr("style", "display: block;");
+        $("#form-section").html('&lt;a class="btn btn-success" href="/"&gt;...Home&lt;/a&gt;');
+        return false;
+    } else {
+        return false;
+    }
+});</code></pre>
+  <p>Além disso, o <code>&lt;form&gt;</code> não declara <code>enctype="multipart/form-data"</code>: mesmo que o envio
+  acontecesse, o arquivo anexado no campo <code>upload_file</code> não seria transmitido.</p>
+  <h4>Impacto</h4>
+  <ul>
+    <li>Pedidos de suporte, reclamações e solicitações se perdem sem que cliente ou empresa percebam;</li>
+    <li>A mensagem de sucesso induz o cliente a esperar uma resposta que nunca virá.</li>
+  </ul>
+  <h4>Solução proposta</h4>
+  <ul>
+    <li>Deixar o formulário ser enviado (retornar <code>true</code> no ramo confirmado, ou enviar por AJAX) e exibir a
+    confirmação só depois da resposta de sucesso do servidor;</li>
+    <li>Declarar <code>enctype="multipart/form-data"</code> e validar o arquivo no back-end (tipo e tamanho);</li>
+    <li>Tornar obrigatórios os campos de mensagem e assunto.</li>
+  </ul>
+  <h4>Critério de aceite</h4>
+  <p>O envio gera <code>POST /contact_us</code> com os campos e o anexo; a confirmação só aparece após resposta 2xx;
+  teste Cypress do BUG-08 passando.</p>
+</section>
+
+<!-- BUG-09 -->
+<section class="bug">
+  <h3>BUG-09 — Quantidade vazia ou não inteira gera erro 500</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td><code>/static/js/cart.js</code>, endpoint <code>GET /add_to_cart/{id}</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2 em cada valor)</td></tr>
+    <tr><th>Pré-condição</th><td>Nenhuma</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Acessar <code>/product_details/5</code>.</li>
+    <li>Apagar o conteúdo do campo <em>Quantity</em> (ou digitar <code>2.5</code> ou <code>1e2</code>, que o campo numérico aceita).</li>
+    <li>Clicar em <em>Add to cart</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>Mensagem de validação na tela; nenhum erro no servidor.</p>
+  <h4>Resultado obtido</h4>
+  <p>O servidor responde <strong>HTTP 500</strong> com a página de erro do Django em modo de depuração. A tela não abre
+  o modal “Added!” nem mostra erro, e o carrinho continua vazio.</p>
+  <h4>Evidências</h4>
+  <table class="dados">
+    <thead><tr><th>Valor digitado</th><th>Requisição</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>(vazio)</td><td><code>GET /add_to_cart/5?quantity=</code></td><td>500</td></tr>
+      <tr><td><code>2.5</code></td><td><code>GET /add_to_cart/5?quantity=2.5</code></td><td>500</td></tr>
+      <tr><td><code>1e2</code></td><td><code>GET /add_to_cart/5?quantity=1e2</code></td><td>500</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li><strong>REA:</strong> rede com as respostas 500 acima; console com <code>Failed to load resource: the server responded with a status of 500</code>; árvore de acessibilidade sem o modal e carrinho com “Cart is empty!”;</li>
+    <li><strong>Resposta do servidor:</strong> página de erro com <code>DEBUG = True</code> e traceback de <code>ValueError</code>;</li>
+    <li><strong>Cypress:</strong> <code>status HTTP de /add_to_cart: expected 500 to be below 500</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>É a mesma ausência de validação do BUG-01, agora no tipo do valor. O campo não declara <code>step</code>, então o
+  navegador aceita texto vazio, decimais e notação científica; o <code>cart.js</code> envia o texto bruto; e o servidor
+  converte com <code>int()</code> sem tratar a exceção. Como o Django está com <code>DEBUG</code> ligado em produção, o
+  erro devolve o traceback completo.</p>
+  <h4>Impacto</h4>
+  <ul>
+    <li>O produto não entra no carrinho e o usuário não recebe nenhum aviso;</li>
+    <li>A página de depuração expõe detalhes internos da aplicação a qualquer visitante;</li>
+    <li>Erros 500 recorrentes poluem a monitoração e os indicadores de disponibilidade.</li>
+  </ul>
+  <h4>Solução proposta</h4>
+  <p>A validação do BUG-01 (converter com tratamento de exceção e responder 400) resolve este defeito. Também é
+  necessário configurar <code>DEBUG = False</code> em produção e declarar <code>step="1"</code> no campo, para que a
+  validação do navegador rejeite valores não inteiros.</p>
+  <h4>Critério de aceite</h4>
+  <p>Os três valores da tabela retornam 400 com mensagem de validação, sem página de depuração; testes Cypress do BUG-09 passando.</p>
+</section>
+
+<!-- BUG-10 -->
+<section class="bug">
+  <h3>BUG-10 — Assinatura da newsletter não é registrada</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td>Rodapé de todas as páginas, <code>/static/js/subscription.js</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>No rodapé de qualquer página, informar um e-mail em <em>Subscription</em>.</li>
+    <li>Clicar na seta de envio.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>O e-mail é enviado ao servidor e a assinatura é registrada.</p>
+  <h4>Resultado obtido</h4>
+  <p>Aparece “You have been successfully subscribed!”, mas nenhuma requisição é feita ao site.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>REA:</strong> nenhuma requisição ao domínio do site depois do clique, nas duas execuções;</li>
+    <li><strong>Cypress:</strong> <code>requisições enviadas ao site: expected [] to have a length above 0 but got 0</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+<pre><code>$(".searchform").on("submit", function() {
+    $("#success-subscribe").removeClass('hide');
+    setTimeout(function(){
+        $("#success-subscribe").addClass('hide');
+        document.getElementById("susbscribe_email").value = '';
+    }, 1500);
+    return false;
+});</code></pre>
+  <p>O script mostra a mensagem, limpa o campo e cancela o envio. O formulário até contém o <code>csrfmiddlewaretoken</code>, mas nunca é submetido.</p>
+  <h4>Impacto</h4>
+  <p>Assinantes não recebem as comunicações prometidas e a base de contatos de marketing não cresce.</p>
+  <h4>Solução proposta</h4>
+  <p>Enviar o e-mail por <code>POST</code> (com o token CSRF já presente), validar e gravar no back-end, e mostrar a
+  confirmação só depois da resposta de sucesso. O ideal é usar confirmação por e-mail (<em>double opt-in</em>).</p>
+  <h4>Critério de aceite</h4>
+  <p>A assinatura gera uma requisição ao servidor e a mensagem depende da resposta; teste Cypress do BUG-10 passando.</p>
+</section>
+
+<!-- BUG-11 -->
+<section class="bug">
+  <h3>BUG-11 — Avaliação de produto não é enviada</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td><code>/product_details/{id}</code>, aba <em>Write Your Review</em>, script embutido na página</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Acessar <code>/product_details/1</code>.</li>
+    <li>Preencher nome, e-mail e texto em <em>Write Your Review</em> e clicar em <em>Submit</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>A avaliação é enviada ao servidor e passa a aparecer na página do produto (ou fica pendente de moderação, com aviso).</p>
+  <h4>Resultado obtido</h4>
+  <p>Aparece “Thank you for your review.”, mas nenhuma requisição é feita ao site e a avaliação não aparece em lugar nenhum.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>REA:</strong> nenhuma requisição ao domínio do site depois do envio, nas duas execuções;</li>
+    <li><strong>Cypress:</strong> <code>requisições enviadas ao site: expected [] to have a length above 0 but got 0</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>Assim como no BUG-10, o script embutido trata o <code>submit</code> de <code>#review-form</code> apenas mostrando
+  e escondendo a mensagem de agradecimento, e o formulário não tem <code>action</code> nem é enviado.</p>
+  <h4>Impacto</h4>
+  <p>Clientes perdem tempo escrevendo avaliações que somem, e a loja não recebe o retorno nem a prova social das avaliações.</p>
+  <h4>Solução proposta</h4>
+  <p>Enviar a avaliação por <code>POST</code> com token CSRF, gravá-la (com moderação, se necessário) e exibir a
+  confirmação só após a resposta do servidor.</p>
+  <h4>Critério de aceite</h4>
+  <p>O envio gera uma requisição ao servidor e a avaliação fica disponível ou pendente de moderação; teste Cypress do BUG-11 passando.</p>
+</section>
+
+<!-- ============================== 4. PLANO ============================== -->
+<section class="secao">
+  <h2>4. Plano de correção recomendado</h2>
+  <table class="dados">
+    <thead><tr><th>Entrega</th><th>Defeitos</th><th>Ações</th><th>Esforço estimado</th></tr></thead>
+    <tbody>
+      <tr><td>1 — Urgente</td><td>BUG-06, BUG-07</td><td>Exclusão de conta só por <code>POST</code> com CSRF e confirmação; autenticação no endpoint de dados do usuário</td><td>Baixo a médio</td></tr>
+      <tr><td>2 — Urgente</td><td>BUG-01, BUG-02, BUG-09</td><td>Validação de quantidade no back-end (inteiro, 1..99, resposta 400), restrição no banco, validação no front-end, <code>DEBUG = False</code> e saneamento de dados</td><td>Baixo a médio</td></tr>
+      <tr><td>3</td><td>BUG-08, BUG-10, BUG-11</td><td>Envio real dos três formulários, com persistência e confirmação só após a resposta do servidor</td><td>Médio</td></tr>
+      <tr><td>4</td><td>BUG-04, BUG-05</td><td>Utilitário único de resposta da API com status e Content-Type corretos; atualização da documentação</td><td>Baixo</td></tr>
+      <tr><td>5</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
+    </tbody>
+  </table>
+  <div class="nota">As estimativas são qualitativas e baseadas apenas no comportamento observado. O código do servidor não foi analisado diretamente.</div>
+
+  <h2 style="margin-top: 9mm;">5. Recomendações adicionais</h2>
+  <ul>
+    <li><strong>Operações que alteram estado via GET:</strong> além do <code>/delete_account</code> (BUG-06),
+    <code>/add_to_cart/{id}</code> e <code>/delete_cart/{id}</code> alteram o carrinho por meio de requisições GET.
+    Recomenda-se migrá-las para POST/DELETE com proteção CSRF, porque requisições GET podem ser disparadas por links,
+    pré-carregamento do navegador ou rastreadores.</li>
+    <li><strong>Mensagens de sucesso:</strong> exibir confirmações só depois da resposta do servidor, nunca antes
+    (origem comum dos BUG-08, BUG-10 e BUG-11).</li>
+    <li><strong>Configuração de produção:</strong> desligar <code>DEBUG</code> no Django; hoje as páginas de erro 404 e 500
+    expõem rotas internas e tracebacks.</li>
+    <li><strong>Regressão automatizada:</strong> os testes Cypress deste relatório estão em
+    <code>cypress/e2e/known-bugs/</code> do repositório e rodam diariamente no pipeline de integração contínua, em um
+    job separado da suíte principal. Eles falham hoje e devem passar após as correções.</li>
+    <li><strong>Monitoramento de console:</strong> adicionar verificação automática de erros de console (Mixed Content,
+    exceções JavaScript) e de respostas 5xx nos testes de fumaça.</li>
+    <li><strong>Contrato da API:</strong> publicar uma especificação OpenAPI com status HTTP, cabeçalhos, autenticação e
+    esquemas de resposta para cada endpoint.</li>
+  </ul>
+</section>
+
+<!-- ============================== 6. RASTREABILIDADE ============================== -->
+<section class="secao">
+  <h2>6. Rastreabilidade com os testes automatizados</h2>
+  <p class="pequeno">Execução de 16/10/2026: <code>npm run test:bugs</code>, 17 testes, 17 falhas, todas pelas asserções que descrevem os defeitos.</p>
+  <table class="dados pequeno">
+    <thead><tr><th>Defeito</th><th>Teste Cypress</th><th>Resultado atual</th></tr></thead>
+    <tbody>
+      <tr><td>BUG-01</td><td>[BUG-01] não deve aceitar quantidade negativa (-3)</td><td>Falha — <code>expected -3 to be above 0</code></td></tr>
+      <tr><td>BUG-02</td><td>[BUG-02] não deve aceitar quantidade zero (0)</td><td>Falha — <code>expected 0 to be above 0</code></td></tr>
+      <tr><td>BUG-03</td><td>[BUG-03] as folhas de estilo não devem importar recursos via http://</td><td>Falha — 3 imports inseguros em <code>main.css</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] POST /api/productsList deve retornar HTTP 405</td><td>Falha — <code>expected 200 to equal 405</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] PUT /api/brandsList deve retornar HTTP 405</td><td>Falha — <code>expected 200 to equal 405</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] DELETE /api/verifyLogin deve retornar HTTP 405</td><td>Falha — <code>expected 200 to equal 405</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] POST /api/searchProduct sem parâmetro deve retornar HTTP 400</td><td>Falha — <code>expected 200 to equal 400</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] POST /api/verifyLogin com parâmetros na query string deve retornar HTTP 400</td><td>Falha — <code>expected 200 to equal 400</code></td></tr>
+      <tr><td>BUG-05</td><td>[BUG-05] GET /api/productsList deve declarar Content-Type JSON</td><td>Falha — <code>expected 'text/html; charset=utf-8' to include 'application/json'</code></td></tr>
+      <tr><td>BUG-06</td><td>[BUG-06] GET /delete_account não deve excluir a conta sem confirmação</td><td>Falha — <code>expected 404 to equal 200</code></td></tr>
+      <tr><td>BUG-07</td><td>[BUG-07] GET /api/getUserDetailByEmail não deve expor dados pessoais sem autenticação</td><td>Falha — resposta contém <code>user</code></td></tr>
+      <tr><td>BUG-08</td><td>[BUG-08] Contact Us deve enviar a mensagem ao servidor</td><td>Falha — <code>expected [] to have a length above 0</code></td></tr>
+      <tr><td>BUG-09</td><td>[BUG-09] campo vazio não deve gerar erro 500</td><td>Falha — <code>expected 500 to be below 500</code></td></tr>
+      <tr><td>BUG-09</td><td>[BUG-09] decimal (2.5) não deve gerar erro 500</td><td>Falha — <code>expected 500 to be below 500</code></td></tr>
+      <tr><td>BUG-09</td><td>[BUG-09] notação científica (1e2) não deve gerar erro 500</td><td>Falha — <code>expected 500 to be below 500</code></td></tr>
+      <tr><td>BUG-10</td><td>[BUG-10] assinatura da newsletter deve ser enviada ao servidor</td><td>Falha — <code>expected [] to have a length above 0</code></td></tr>
+      <tr><td>BUG-11</td><td>[BUG-11] avaliação de produto deve ser enviada ao servidor</td><td>Falha — <code>expected [] to have a length above 0</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="margin-top: 9mm;">7. Limitações</h2>
+  <ul>
+    <li>A análise foi feita de fora (caixa-preta e caixa-cinza): as causas raiz no servidor são inferidas a partir do
+    comportamento observado, do HTML, do CSS e do JavaScript públicos. Os trechos de código do back-end são propostas
+    ilustrativas, e não cópias do código existente.</li>
+    <li>Os resultados refletem o estado do site em 14/10/2026 (BUG-01 a BUG-05) e 16/10/2026 (BUG-06 a BUG-11, e
+    reteste de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
+    <li>O Automation Exercise é um site de prática de automação; parte dos comportamentos (como os formulários sem
+    envio) pode ser intencional. Eles foram registrados porque, do ponto de vista do usuário, são defeitos.</li>
+    <li>O ataque entre origens do BUG-06 é inferido, não demonstrado. A página de depuração do BUG-09 não foi analisada
+    além do necessário para identificar o erro.</li>
+    <li>As áreas listadas como fora do escopo (seção 2.1) não foram avaliadas, e a ausência de defeitos nelas não está comprovada.</li>
+  </ul>
+</section>
+
+</body>
+</html>
