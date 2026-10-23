@@ -13,16 +13,17 @@ export const usarUsuarioDeTeste = () => {
     const usuario = {}
 
     before(() => {
-        const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
-        usuario.email = `qa.suite.${id}@teste.com`
-        usuario.password = `Qa@${id}`
+    const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
+    usuario.email = `qa.suite.${id}@teste.com`
+    usuario.password = `Qa@${id}`
 
-        cy.fixture('apiData').then(({ novaConta }) => {
-            cy.apiCreateAccount({ ...novaConta, email: usuario.email, password: usuario.password })
-                .its('body.responseCode')
-                .should('eq', 201)
-        })
+    cy.fixture('apiData').then(({ novaConta }) => {
+        usuario.name = novaConta.name   // << expõe o nome para os testes
+        cy.apiCreateAccount({ ...novaConta, email: usuario.email, password: usuario.password })
+            .its('body.responseCode')
+            .should('eq', 201)
     })
+})
 
     after(() => {
         cy.apiDeleteAccount(usuario.email, usuario.password)
