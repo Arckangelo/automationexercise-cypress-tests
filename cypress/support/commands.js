@@ -43,6 +43,17 @@ Cypress.Commands.add('limparCarrinho', () => {
 
 Cypress.Commands.add('apiRequest', (options) => {
   return cy.request({ failOnStatusCode: false, ...options }).then((response) => {
+    const contentType = response.headers['content-type'] || ''
+
+    if (!contentType.includes('application/json')) {
+      throw new Error(
+        `Resposta inesperada em ${options.method || 'GET'} ${options.url}\n` +
+        `Content-Type: ${contentType}\n` +
+        `Status: ${response.status}\n` +
+        `Body: ${String(response.body).slice(0, 200)}`
+      )
+    }
+
     const body = typeof response.body === 'string' ? JSON.parse(response.body) : response.body
     return { ...response, body }
   })
