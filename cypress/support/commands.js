@@ -40,10 +40,35 @@ Cypress.Commands.add('limparCarrinho', () => {
 // automático do corpo quando o Content-Type é "application/json", então
 // sem esse ajuste response.body chegaria como STRING crua nos testes.
 // cy.apiRequest() centraliza esse parse pra todos os outros comandos.
-
 Cypress.Commands.add('apiRequest', (options) => {
   return cy.request({ failOnStatusCode: false, ...options }).then((response) => {
-    const body = typeof response.body === 'string' ? JSON.parse(response.body) : response.body
+    const rawBody = response.body
+    let body
+
+    if (typeof rawBody === 'string') {
+      try {
+        body = JSON.parse(rawBody)
+      } catch (e) {
+        throw new Error(
+          `Resposta inválida em ${options.method || 'GET'} ${options.url}\n` +
+          `Content-Type: ${response.headers['content-type'] || ''}\n` +
+          `Status: ${response.status}\n` +
+          `Body: ${String(rawBody).slice(0, 200)}`
+        )
+      }
+    } else {
+      body = rawBody
+    }
+
+    if (!body || typeof body !== 'object' || !('responseCode' in body)) {
+      throw new Error(
+        `Resposta da API sem payload esperado em ${options.method || 'GET'} ${options.url}\n` +
+        `Content-Type: ${response.headers['content-type'] || ''}\n` +
+        `Status: ${response.status}\n` +
+        `Body: ${JSON.stringify(body || '').slice(0, 200)}`
+      )
+    }
+
     return { ...response, body }
   })
 })

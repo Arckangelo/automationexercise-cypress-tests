@@ -36,7 +36,7 @@ describe('Login', () => {
     // Teste 3: login com email que nunca foi cadastrado no sistema
     it('não deve logar com email não cadastrado', function () {
         cy.get('[data-qa="login-email"]').type(this.users.notRegisteredUser.email)
-        cy.get('[data-qa="login-password"]').type(this.users.notRegisteredUser.password)
+        cy.get('[data-qa="login-password"]').type(usuario.password, { log: false })
         cy.get('[data-qa="login-button"]').click()
 
         // mesma mensagem de erro, já que o site não diferencia "email não existe" de "senha errada"
