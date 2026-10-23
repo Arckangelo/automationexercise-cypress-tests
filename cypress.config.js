@@ -8,7 +8,7 @@ const mochawesome = require('cypress-mochawesome-reporter/plugin')
 const KNOWN_BUGS_SPECS = 'cypress/e2e/known-bugs/**'
 
 module.exports = defineConfig({
-  screenshotOnRunFailure: true, //temporario para testes de mutação
+  screenshotOnRunFailure: false, //temporario para testes de mutação
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
     reportDir: 'cypress/reports/suite',
