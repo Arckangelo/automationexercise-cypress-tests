@@ -34,7 +34,9 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         cy.get('[data-qa="message"]').type('Mensagem de teste do BUG-08.')
         cy.get('[data-qa="submit-button"]').click()
 
-        cy.contains('Success! Your details have been submitted successfully.').should('be.visible')
+        cy.get('.contact-form .status.alert-success')
+            .should('be.visible')
+            .and('have.text', 'Success! Your details have been submitted successfully.')
         deveTerEnviado(envios)
     })
 
@@ -45,7 +47,9 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         cy.get('#susbscribe_email').type('qa.newsletter@teste.com')
         cy.get('#subscribe').click()
 
-        cy.contains('You have been successfully subscribed!').should('be.visible')
+        cy.get('#success-subscribe')
+            .should('be.visible')
+            .and('contain.text', 'You have been successfully subscribed!')
         deveTerEnviado(envios)
     })
 
@@ -58,7 +62,11 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         cy.get('#review').type('Avaliação de teste do BUG-11.')
         cy.get('#button-review').click()
 
-        cy.contains('Thank you for your review.').should('be.visible')
+        // a caixa da mensagem, não o #review-section: ele tem altura 0 (a coluna
+        // interna flutua) e o Cypress trata elementos sem altura como invisíveis
+        cy.get('#review-section .alert-success')
+            .should('be.visible')
+            .and('contain.text', 'Thank you for your review.')
         deveTerEnviado(envios)
     })
 })

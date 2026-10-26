@@ -112,31 +112,35 @@
   <p class="aplicacao">Aplicação: Automation Exercise — https://www.automationexercise.com</p>
   <table>
     <tr><th>DOCUMENTO</th><td>Relatório de defeitos e propostas de correção</td></tr>
-    <tr><th>VERSÃO</th><td>1.1</td></tr>
-    <tr><th>DATA</th><td>16/10/2026</td></tr>
+    <tr><th>VERSÃO</th><td>1.5</td></tr>
+    <tr><th>DATA</th><td>26/10/2026</td></tr>
     <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
     <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.1.1</td></tr>
-    <tr><th>STATUS GERAL</th><td>11 defeitos confirmados e reproduzíveis — 4 alta, 5 média, 2 baixa</td></tr>
-    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): BUG-01 a BUG-05 · 1.1 (16/10/2026): BUG-06 a BUG-11</td></tr>
+    <tr><th>STATUS GERAL</th><td>16 defeitos confirmados e reproduzíveis — 6 alta, 5 média, 5 baixa</td></tr>
+    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): BUG-01 a BUG-05 · 1.1 (16/10/2026): BUG-06 a BUG-11 · 1.2 (26/10/2026): BUG-12 e BUG-13 · 1.3 (26/10/2026): BUG-14 · 1.4 (26/10/2026): BUG-15 · 1.5 (26/10/2026): impacto do BUG-12 confirmado e BUG-16</td></tr>
   </table>
 </section>
 
 <!-- ============================== 1. SUMÁRIO ============================== -->
 <section>
   <h2>1. Sumário executivo</h2>
-  <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante duas rodadas de
-  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados onze defeitos,
+  <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante três rodadas de
+  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados dezesseis defeitos,
   todos reproduzíveis e cobertos por testes automatizados em Cypress que falham enquanto o defeito persistir.</p>
   <p>Os defeitos mais graves envolvem a conta do usuário e o atendimento. Uma simples requisição <code>GET</code> para
   <code>/delete_account</code> apaga a conta de quem estiver logado, sem confirmação nem proteção contra CSRF
   (BUG-06). A API pública devolve nome, endereço e data de nascimento de qualquer e-mail cadastrado, sem
   autenticação (BUG-07). E o formulário <em>Contact Us</em> exibe "Success!" sem enviar a mensagem a lugar nenhum
-  (BUG-08).</p>
+  (BUG-08). No pedido, o pagamento sem login é aceito e confirmado (BUG-12), e a confirmação e a fatura de qualquer
+  valor podem ser geradas só pela URL, sem compra (BUG-16).</p>
   <p>No carrinho, a quantidade não é validada: valores negativos geram totais negativos (BUG-01), zero gera itens sem
   valor (BUG-02) e valores vazios ou não inteiros derrubam o servidor com a página de debug do Django (BUG-09). A
-  newsletter e as avaliações de produto também exibem mensagens de sucesso sem enviar nada (BUG-10 e BUG-11). Os
-  demais defeitos envolvem recursos carregados de forma insegura (Mixed Content) e incoerências no contrato HTTP da
-  API.</p>
+  newsletter e as avaliações de produto também exibem mensagens de sucesso sem enviar nada (BUG-10 e BUG-11). No checkout, a exigência
+  de login e de carrinho com itens existe só no JavaScript da página: pela URL, <code>/checkout</code> e
+  <code>/payment</code> abrem sem login (BUG-12) e com o carrinho vazio (BUG-13). Os
+  demais defeitos envolvem recursos carregados de forma insegura (Mixed Content) e incoerências no contrato da API,
+  como status HTTP e Content-Type incorretos e uma lista de marcas que repete a marca de cada produto (BUG-14). Na busca, espaço duplo ou um <code>&amp;</code> no termo levam a resultados
+  vazios ou errados (BUG-15).</p>
 
   <table class="dados">
     <thead><tr><th>ID</th><th>Título</th><th>Área</th><th>Severidade</th><th>Prioridade</th></tr></thead>
@@ -152,6 +156,11 @@
       <tr><td>BUG-09</td><td>Quantidade vazia ou não inteira gera erro 500</td><td>Carrinho / Back-end</td><td class="media">Média</td><td>P2</td></tr>
       <tr><td>BUG-10</td><td>Assinatura da newsletter não é registrada</td><td>Newsletter / Front-end</td><td class="media">Média</td><td>P2</td></tr>
       <tr><td>BUG-11</td><td>Avaliação de produto não é enviada</td><td>Produto / Front-end</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-12</td><td>Checkout e pagamento funcionam sem login</td><td>Checkout / Back-end</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-13</td><td>Checkout oferece Place Order com o carrinho vazio</td><td>Checkout / Back-end</td><td class="baixa">Baixa</td><td>P3</td></tr>
+      <tr><td>BUG-14</td><td>API de marcas repete a marca de cada produto</td><td>API REST</td><td class="baixa">Baixa</td><td>P3</td></tr>
+      <tr><td>BUG-15</td><td>Busca com espaço duplo ou “&amp;” no termo falha</td><td>Busca / Front-end</td><td class="baixa">Baixa</td><td>P3</td></tr>
+      <tr><td>BUG-16</td><td>Confirmação de pedido e fatura gerados pela URL</td><td>Pedido / Back-end</td><td class="alta">Alta</td><td>P1</td></tr>
     </tbody>
   </table>
 </section>
@@ -175,6 +184,15 @@
     <li>Entradas inválidas na quantidade (vazio, decimal, notação científica, valores muito altos);</li>
     <li>Coerência de nome e preço entre listagem, página de detalhe e API (34 produtos) e das contagens por marca.</li>
   </ul>
+  <p><strong>Rodada 3 (26/10/2026, BUG-12 a BUG-16):</strong></p>
+  <ul>
+    <li>Acesso direto a <code>/checkout</code> e <code>/payment</code>, com e sem login e com o carrinho vazio;</li>
+    <li>Regras de checkout aplicadas pelo JavaScript de <code>/view_cart</code> comparadas às respostas do servidor;</li>
+    <li>Conteúdo completo das listas de produtos e marcas da API e permissões de atualização e exclusão de conta;</li>
+    <li>Filtros por categoria e marca e busca de produtos, comparados ao catálogo da API, incluindo maiúsculas, espaços e caracteres especiais no termo;</li>
+    <li>Envio do pagamento sem login (uma vez por cenário, com cartão fictício <code>4111 1111 1111 1111</code>) e acesso
+    direto às páginas de confirmação e fatura.</li>
+  </ul>
   <p><strong>Fora do escopo:</strong> upload de arquivo no <em>Contact Us</em>, meios de pagamento reais e testes
   de carga ou de segurança ofensivos. Os testes de segurança se limitaram a observar o comportamento com contas de
   teste criadas para isso.</p>
@@ -193,7 +211,9 @@
     <li><strong>Diálogos JavaScript:</strong> a REA não trata <code>confirm()</code>. Para o <em>Contact Us</em>, um
     script do Playwright aceitou o diálogo e registrou todas as requisições feitas depois do envio.</li>
     <li><strong>Reprodução:</strong> na rodada 2, cada achado foi reproduzido pelo menos duas vezes; os testes de conta
-    usaram contas descartáveis, criadas pela API e removidas ao final.</li>
+    usaram contas descartáveis, criadas pela API e removidas ao final. Na rodada 3, os achados foram
+    reproduzidos com cURL em sessão anônima e com Cypress (inclusive com usuário logado), em duas execuções; a REA
+    não foi usada nessa rodada.</li>
     <li><strong>Confirmação automatizada:</strong> cada defeito ganhou um teste Cypress que descreve o comportamento
     correto. Todos os testes falharam pelas asserções que descrevem os defeitos, o que os confirma.</li>
   </ol>
@@ -814,6 +834,218 @@ def delete_account(request):
   <p>O envio gera uma requisição ao servidor e a avaliação fica disponível ou pendente de moderação; teste Cypress do BUG-11 passando.</p>
 </section>
 
+<!-- BUG-12 -->
+<section class="bug">
+  <h3>BUG-12 — Checkout e pagamento funcionam sem login</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td><code>/checkout</code>, <code>/payment</code> e script embutido em <code>/view_cart</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Sem estar logado, acessar <code>/view_cart</code> e clicar em <em>Proceed To Checkout</em>: aparece o modal
+    “Register / Login account to proceed on checkout.”</li>
+    <li>Na mesma sessão, abrir <code>/checkout</code> pela barra de endereço.</li>
+    <li>Abrir <code>/payment</code>, preencher um cartão fictício e clicar em <em>Pay and Confirm Order</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>As duas páginas redirecionam para <code>/login</code>, como o modal do passo 1 indica, e o pagamento sem login é recusado.</p>
+  <h4>Resultado obtido</h4>
+  <p>As duas respondem HTTP 200. <code>/checkout</code> mostra o endereço em branco, <em>Total Amount</em> Rs. 0 e o
+  botão <em>Place Order</em>. <code>/payment</code> mostra o formulário completo de cartão, e o envio é aceito: a página
+  mostra “Order Placed! Your order has been confirmed!”, com fatura de valor 0 e sem nome de cliente.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> sessão anônima, <code>GET /checkout</code> e <code>GET /payment</code> com status 200;
+    o HTML de <code>/payment</code> contém <code>name-on-card</code>, <code>card-number</code>, <code>cvc</code>,
+    <code>expiry-month</code>, <code>expiry-year</code> e <code>pay-button</code>;</li>
+    <li><strong>Cypress:</strong> <code>Expected &lt;button#submit…&gt; not to exist in the DOM, but it was continuously found</code>;</li>
+    <li><strong>Envio sem login (Cypress, sessão de visitante):</strong> <code>POST /payment</code> → HTTP 302 para
+    <code>/payment_done/0</code>; fatura “Hi , Your total purchase amount is 0”. Mesmo resultado com o carrinho vazio e com
+    um produto de Rs. 500 no carrinho do visitante, que é ignorado.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+<pre><code>$(".check_out").on("click", function() {
+    var logged_in_user = "";
+    if (logged_in_user) {
+        window.location = '/checkout';
+    } else {
+        $('#checkoutModal').removeClass('fade');
+        $('#checkoutModal').addClass('show');
+    }
+});</code></pre>
+  <p>A exigência de login existe só neste script de <code>/view_cart</code>, que decide entre navegar ou abrir o
+  modal. As rotas <code>/checkout</code> e <code>/payment</code> não verificam a sessão no servidor.</p>
+  <h4>Impacto</h4>
+  <p>Um visitante sem conta conclui o fluxo e recebe a confirmação de um pedido de valor 0, sem cliente associado.
+  A regra “checkout só com conta” é contornada digitando a URL. Não há histórico de pedidos no site, então não dá para
+  saber se o servidor grava esses pedidos ou só exibe a confirmação.</p>
+  <h4>Solução proposta</h4>
+  <p>Exigir sessão autenticada no servidor para <code>/checkout</code> e <code>/payment</code> (no Django,
+  <code>@login_required</code>), redirecionar para <code>/login</code> e recusar o <code>POST /payment</code> sem sessão,
+  mantendo o modal apenas como atalho de interface.</p>
+  <h4>Critério de aceite</h4>
+  <p>Sem login, as duas rotas redirecionam para <code>/login</code>; testes Cypress do BUG-12 passando.</p>
+</section>
+
+<!-- BUG-13 -->
+<section class="bug">
+  <h3>BUG-13 — Checkout oferece Place Order com o carrinho vazio</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td><code>/checkout</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Entrar com uma conta de teste e esvaziar o carrinho.</li>
+    <li>Em <code>/view_cart</code>, confirmar que aparece “Cart is empty!” e que não há botão de checkout.</li>
+    <li>Abrir <code>/checkout</code> pela barra de endereço.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>O checkout redireciona para o carrinho ou informa que não há itens para finalizar.</p>
+  <h4>Resultado obtido</h4>
+  <p>A página abre com <em>Total Amount</em> Rs. 0 e o botão <em>Place Order</em>, que leva ao formulário de pagamento.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> sessão anônima com carrinho vazio, <code>/checkout</code> com status 200, total
+    <code>Rs. 0</code> e link para <code>/payment</code>;</li>
+    <li><strong>Cypress (usuário logado):</strong> <code>Expected &lt;a.btn.btn-default.check_out&gt; not to exist in the DOM, but it was continuously found</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>A página do carrinho só deixa de exibir o botão <em>Proceed To Checkout</em> quando não há itens. A rota
+  <code>/checkout</code> não confere se o carrinho tem itens antes de montar o pedido.</p>
+  <h4>Impacto</h4>
+  <p>O usuário pode chegar ao pagamento de um pedido vazio, o que abre espaço para pedidos de valor zero e confunde o
+  fluxo de compra. A criação efetiva de um pedido vazio não foi testada.</p>
+  <h4>Solução proposta</h4>
+  <p>No servidor, redirecionar <code>/checkout</code> e <code>/payment</code> para <code>/view_cart</code> quando o
+  carrinho estiver vazio, e rejeitar o <code>POST /payment</code> nesse caso.</p>
+  <h4>Critério de aceite</h4>
+  <p>Com o carrinho vazio, <code>/checkout</code> não oferece <em>Place Order</em>; teste Cypress do BUG-13 passando.</p>
+</section>
+
+<!-- BUG-14 -->
+<section class="bug">
+  <h3>BUG-14 — API de marcas repete a marca de cada produto</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td><code>GET /api/brandsList</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Executar <code>curl https://automationexercise.com/api/brandsList</code>.</li>
+    <li>Comparar com a lista de marcas da página <code>/products</code> e com <code>GET /api/productsList</code>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>Uma entrada por marca da loja, como a página <code>/products</code> mostra (8 marcas) e como a documentação
+  descreve (“All brands list”).</p>
+  <h4>Resultado obtido</h4>
+  <p>34 itens com apenas 8 nomes distintos. Cada item corresponde a um produto: o <code>id</code> é o ID do produto
+  (<code>{"id": 1, "brand": "Polo"}</code> é o Blue Top) e cada marca aparece uma vez por produto.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> os IDs de <code>brandsList</code> são idênticos, na mesma ordem, aos de
+    <code>productsList</code>, e a marca de cada ID é a do produto de mesmo ID. Contagem por marca: Polo 6, H&amp;M 5,
+    Madame 5, Biba 5, Babyhug 4, Mast &amp; Harbour 3, Allen Solly Junior 3, Kookie Kids 3;</li>
+    <li><strong>Cypress:</strong> <code>marcas repetidas: expected [ Array(8) ] to be empty</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>O endpoint parece montar a resposta percorrendo os produtos e devolvendo a marca de cada um, em vez de consultar
+  as marcas. A causa no servidor é inferida pelo formato da resposta.</p>
+  <h4>Impacto</h4>
+  <p>Quem consome a API recebe marcas duplicadas e IDs que não identificam marcas, e precisa deduplicar por conta
+  própria para montar um filtro.</p>
+  <h4>Solução proposta</h4>
+  <p>Devolver uma entrada por marca, com o ID da marca e, se útil, a quantidade de produtos de cada uma.</p>
+  <h4>Critério de aceite</h4>
+  <p><code>brandsList</code> sem nomes repetidos e com as mesmas marcas do catálogo; teste Cypress do BUG-14 passando.</p>
+</section>
+
+<!-- BUG-15 -->
+<section class="bug">
+  <h3>BUG-15 — Busca com espaço duplo ou “&amp;” no termo falha</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td><code>/products</code>, script embutido do botão de busca (<code>#submit_search</code>)</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Em <code>/products</code>, buscar <code>blue&nbsp;&nbsp;top</code> (com dois espaços).</li>
+    <li>Buscar <code>Blue &amp; Pink</code>, trecho do nome do produto <em>Sleeves Top and Short - Blue &amp; Pink</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p><code>blue&nbsp;&nbsp;top</code> encontra o <em>Blue Top</em>, e <code>Blue &amp; Pink</code> encontra o produto que tem esse trecho no nome.</p>
+  <h4>Resultado obtido</h4>
+  <p><code>blue&nbsp;&nbsp;top</code> não encontra nenhum produto. <code>Blue &amp; Pink</code> mostra 5 produtos errados (IDs 1, 16, 21,
+  37 e 41): tudo o que contém “Blue ”, porque o termo é cortado no <code>&amp;</code>.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> <code>/products?search=Blue%20&amp;%20Pink</code>, a URL que o script monta, devolve os 5 produtos;
+    com o <code>&amp;</code> codificado (<code>%26</code>), devolve só o correto;</li>
+    <li><strong>Cypress (navegador):</strong> <code>expected [] to deeply equal [ 1 ]</code> e
+    <code>expected [ 1, 16, 21, 37, 41 ] to deeply equal [ 16 ]</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+<pre><code>$("#submit_search").on("click", function() {
+    var search = document.getElementById("search_product").value;
+    window.location = '/products?search=' + search;
+});</code></pre>
+  <p>O texto do campo é concatenado na URL sem <code>trim</code> e sem <code>encodeURIComponent</code>. O <code>&amp;</code>
+  passa a separar parâmetros, e o servidor não normaliza espaços repetidos. Espaço no fim do termo não é afetado, porque o
+  navegador o remove da URL.</p>
+  <h4>Impacto</h4>
+  <p>Buscas por nomes reais de produtos podem não encontrar nada ou mostrar resultados errados, sem nenhum aviso ao usuário.</p>
+  <h4>Solução proposta</h4>
+  <p>No front-end, montar a URL com <code>encodeURIComponent(search.trim())</code>; no servidor, normalizar espaços
+  repetidos antes de buscar.</p>
+  <h4>Critério de aceite</h4>
+  <p>As duas buscas retornam os produtos esperados; testes Cypress do BUG-15 passando.</p>
+</section>
+
+<!-- BUG-16 -->
+<section class="bug">
+  <h3>BUG-16 — Confirmação de pedido e fatura gerados pela URL</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td><code>/payment_done/{valor}</code> e <code>/download_invoice/{valor}</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Sem login e sem comprar nada, abrir <code>/payment_done/999999</code>.</li>
+    <li>Abrir <code>/download_invoice/999999</code>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>As duas rotas exigem um pedido real da sessão atual; sem ele, redirecionam ou respondem 404.</p>
+  <h4>Resultado obtido</h4>
+  <p><code>/payment_done/999999</code> mostra “Order Placed! Congratulations! Your order has been confirmed!”, e
+  <code>/download_invoice/999999</code> baixa a fatura “Hi , Your total purchase amount is 999999. Thank you”. Só valores
+  negativos dão 404.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> sessão anônima; <code>/download_invoice/0</code> e <code>/download_invoice/999999</code> com
+    HTTP 200 e o valor da URL no texto; <code>/download_invoice/-50</code> com 404;</li>
+    <li><strong>Cypress:</strong> <code>expected 'Hi , Your total purchase amount is 999999. Thank you' to not include …</code> e
+    <code>[data-qa="order-placed"]</code> encontrado em <code>/payment_done/999999</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>As duas rotas recebem o valor do pedido na URL e montam a página e a fatura com ele, sem consultar um pedido
+  registrado nem verificar a sessão. O fluxo legítimo usa o mesmo formato: depois do pagamento, o servidor redireciona
+  para <code>/payment_done/{valor}</code>.</p>
+  <h4>Impacto</h4>
+  <p>Qualquer pessoa gera uma confirmação de pedido ou uma fatura de qualquer valor, sem conta e sem compra, que pode ser
+  usada como comprovante falso (por exemplo, para contestar uma cobrança ou alegar um pagamento).</p>
+  <h4>Solução proposta</h4>
+  <p>Identificar o pedido por um ID gravado no servidor e vinculado à sessão do cliente, e montar a confirmação e a
+  fatura a partir do pedido registrado, nunca a partir da URL.</p>
+  <h4>Critério de aceite</h4>
+  <p>Sem um pedido da sessão atual, as duas rotas não exibem confirmação nem fatura; testes Cypress do BUG-16 passando.</p>
+</section>
+
 <!-- ============================== 4. PLANO ============================== -->
 <section class="secao">
   <h2>4. Plano de correção recomendado</h2>
@@ -822,9 +1054,12 @@ def delete_account(request):
     <tbody>
       <tr><td>1 — Urgente</td><td>BUG-06, BUG-07</td><td>Exclusão de conta só por <code>POST</code> com CSRF e confirmação; autenticação no endpoint de dados do usuário</td><td>Baixo a médio</td></tr>
       <tr><td>2 — Urgente</td><td>BUG-01, BUG-02, BUG-09</td><td>Validação de quantidade no back-end (inteiro, 1..99, resposta 400), restrição no banco, validação no front-end, <code>DEBUG = False</code> e saneamento de dados</td><td>Baixo a médio</td></tr>
-      <tr><td>3</td><td>BUG-08, BUG-10, BUG-11</td><td>Envio real dos três formulários, com persistência e confirmação só após a resposta do servidor</td><td>Médio</td></tr>
-      <tr><td>4</td><td>BUG-04, BUG-05</td><td>Utilitário único de resposta da API com status e Content-Type corretos; atualização da documentação</td><td>Baixo</td></tr>
-      <tr><td>5</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
+      <tr><td>3 — Urgente</td><td>BUG-12, BUG-16</td><td>Sessão autenticada obrigatória em <code>/checkout</code> e <code>/payment</code>; confirmação e fatura montadas a partir do pedido registrado da sessão, nunca da URL</td><td>Baixo a médio</td></tr>
+      <tr><td>4</td><td>BUG-08, BUG-10, BUG-11</td><td>Envio real dos três formulários, com persistência e confirmação só após a resposta do servidor</td><td>Médio</td></tr>
+      <tr><td>5</td><td>BUG-13</td><td>Verificação no servidor de carrinho com itens em <code>/checkout</code> e <code>/payment</code></td><td>Baixo</td></tr>
+      <tr><td>6</td><td>BUG-04, BUG-05, BUG-14</td><td>Utilitário único de resposta da API com status e Content-Type corretos; lista de marcas sem repetição; atualização da documentação</td><td>Baixo</td></tr>
+      <tr><td>7</td><td>BUG-15</td><td>Termo da busca com <code>encodeURIComponent</code> e <code>trim</code>; normalização de espaços no servidor</td><td>Muito baixo</td></tr>
+      <tr><td>8</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
     </tbody>
   </table>
   <div class="nota">As estimativas são qualitativas e baseadas apenas no comportamento observado. O código do servidor não foi analisado diretamente.</div>
@@ -837,6 +1072,8 @@ def delete_account(request):
     pré-carregamento do navegador ou rastreadores.</li>
     <li><strong>Mensagens de sucesso:</strong> exibir confirmações só depois da resposta do servidor, nunca antes
     (origem comum dos BUG-08, BUG-10 e BUG-11).</li>
+    <li><strong>Regras de acesso no servidor:</strong> esconder um botão ou abrir um modal não protege uma rota; toda
+    regra de acesso precisa ser verificada pelo servidor (origem comum dos BUG-12, BUG-13 e BUG-16).</li>
     <li><strong>Configuração de produção:</strong> desligar <code>DEBUG</code> no Django; hoje as páginas de erro 404 e 500
     expõem rotas internas e tracebacks.</li>
     <li><strong>Regressão automatizada:</strong> os testes Cypress deste relatório estão em
@@ -852,7 +1089,7 @@ def delete_account(request):
 <!-- ============================== 6. RASTREABILIDADE ============================== -->
 <section class="secao">
   <h2>6. Rastreabilidade com os testes automatizados</h2>
-  <p class="pequeno">Execução de 16/10/2026: <code>npm run test:bugs</code>, 17 testes, 17 falhas, todas pelas asserções que descrevem os defeitos.</p>
+  <p class="pequeno">Execução de 26/10/2026: <code>npm run test:bugs</code>, 25 testes, 25 falhas, todas pelas asserções que descrevem os defeitos.</p>
   <table class="dados pequeno">
     <thead><tr><th>Defeito</th><th>Teste Cypress</th><th>Resultado atual</th></tr></thead>
     <tbody>
@@ -873,6 +1110,14 @@ def delete_account(request):
       <tr><td>BUG-09</td><td>[BUG-09] notação científica (1e2) não deve gerar erro 500</td><td>Falha — <code>expected 500 to be below 500</code></td></tr>
       <tr><td>BUG-10</td><td>[BUG-10] assinatura da newsletter deve ser enviada ao servidor</td><td>Falha — <code>expected [] to have a length above 0</code></td></tr>
       <tr><td>BUG-11</td><td>[BUG-11] avaliação de produto deve ser enviada ao servidor</td><td>Falha — <code>expected [] to have a length above 0</code></td></tr>
+      <tr><td>BUG-12</td><td>[BUG-12] sem login, /payment não deve mostrar o formulário de pagamento</td><td>Falha — <code>pay-button</code> encontrado</td></tr>
+      <tr><td>BUG-12</td><td>[BUG-12] sem login, /checkout não deve oferecer "Place Order"</td><td>Falha — link para <code>/payment</code> encontrado</td></tr>
+      <tr><td>BUG-13</td><td>[BUG-13] logado e com carrinho vazio, /checkout não deve oferecer "Place Order"</td><td>Falha — link para <code>/payment</code> encontrado</td></tr>
+      <tr><td>BUG-14</td><td>[BUG-14] GET /api/brandsList não deve repetir marcas</td><td>Falha — <code>marcas repetidas: expected [ Array(8) ] to be empty</code></td></tr>
+      <tr><td>BUG-15</td><td>[BUG-15] espaço duplo entre as palavras ("blue&nbsp;&nbsp;top") deve encontrar os produtos de "blue top"</td><td>Falha — <code>expected [] to deeply equal [ 1 ]</code></td></tr>
+      <tr><td>BUG-15</td><td>[BUG-15] termo com "&amp;" ("Blue &amp; Pink") deve encontrar os produtos de "Blue &amp; Pink"</td><td>Falha — <code>expected [ 1, 16, 21, 37, 41 ] to deeply equal [ 16 ]</code></td></tr>
+      <tr><td>BUG-16</td><td>[BUG-16] /download_invoice/&lt;valor&gt; não deve emitir fatura sem pedido nem sessão</td><td>Falha — fatura com <code>amount is 999999</code></td></tr>
+      <tr><td>BUG-16</td><td>[BUG-16] /payment_done/&lt;valor&gt; não deve confirmar pedido sem pagamento nem sessão</td><td>Falha — <code>order-placed</code> encontrado</td></tr>
     </tbody>
   </table>
 
@@ -882,11 +1127,13 @@ def delete_account(request):
     comportamento observado, do HTML, do CSS e do JavaScript públicos. Os trechos de código do back-end são propostas
     ilustrativas, e não cópias do código existente.</li>
     <li>Os resultados refletem o estado do site em 14/10/2026 (BUG-01 a BUG-05) e 16/10/2026 (BUG-06 a BUG-11, e
-    reteste de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
+    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
     <li>O Automation Exercise é um site de prática de automação; parte dos comportamentos (como os formulários sem
     envio) pode ser intencional. Eles foram registrados porque, do ponto de vista do usuário, são defeitos.</li>
     <li>O ataque entre origens do BUG-06 é inferido, não demonstrado. A página de depuração do BUG-09 não foi analisada
-    além do necessário para identificar o erro.</li>
+    além do necessário para identificar o erro. O pagamento sem login do BUG-12 foi enviado só uma vez por cenário,
+    com cartão fictício; não há como verificar se o servidor grava esses pedidos. O pagamento com carrinho vazio e usuário
+    logado (BUG-13) não foi enviado.</li>
     <li>As áreas listadas como fora do escopo (seção 2.1) não foram avaliadas, e a ausência de defeitos nelas não está comprovada.</li>
   </ul>
 </section>

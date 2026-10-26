@@ -1,53 +1,58 @@
 describe('Filtro de produtos', () => {
 
-    beforeEach(() => {
+    // catálogo da API: fonte independente para saber quais produtos cada filtro deve mostrar
+    let catalogo = []
+
+    before(() => {
+        cy.apiGetProductsList().then(({ body }) => { catalogo = body.products })
+    })
+
+    const ordenar = (ids) => [...ids].sort((a, b) => a - b)
+
+    const idsDoCatalogo = (filtro) => ordenar(catalogo.filter(filtro).map((p) => p.id))
+
+    // IDs dos produtos exibidos na lista principal
+    const idsNaTela = () =>
+        cy.get('.features_items .productinfo a.add-to-cart')
+            .then(($botoes) => ordenar($botoes.toArray().map((b) => Number(b.dataset.productId))))
+
+    const tituloDaLista = () => cy.get('.features_items h2.title')
+
+    const categorias = [
+        { painel: 'Women', categoria: 'Dress', href: '/category_products/1' },
+        { painel: 'Men', categoria: 'Jeans', href: '/category_products/6' },
+    ]
+
+    categorias.forEach(({ painel, categoria, href }) => {
+        it(`categoria ${painel} > ${categoria} mostra exatamente os produtos dessa categoria`, () => {
+            cy.visit('/products')
+            cy.get(`a[href="#${painel}"]`).click()
+            cy.get(`#${painel} a[href="${href}"]`).click()
+
+            tituloDaLista().should('have.text', `${painel} - ${categoria} Products`)
+            idsNaTela().should('deep.equal', idsDoCatalogo((p) =>
+                p.category.usertype.usertype === painel && p.category.category === categoria))
+        })
+    })
+
+    it('marca Polo mostra exatamente os produtos dessa marca', () => {
         cy.visit('/products')
+        cy.get('.brands-name a[href="/brand_products/Polo"]').click()
+
+        tituloDaLista().should('have.text', 'Brand - Polo Products')
+        idsNaTela().should('deep.equal', idsDoCatalogo((p) => p.brand === 'Polo'))
     })
 
-    it('deve filtrar produtos por categoria (Men > Jeans)', () => {
-        // expande o painel "Men" antes de clicar na subcategoria
-        cy.contains('Men').click()
+    // pega: contador da lateral desatualizado ou calculado errado
+    it('quantidade de cada marca na lateral bate com o catálogo', () => {
+        cy.visit('/products')
 
-        // clica na subcategoria Jeans
-        cy.get('a[href="/category_products/6"]').click()
+        cy.get('.brands-name a[href^="/brand_products/"]').should('have.length.greaterThan', 0).each(($marca) => {
+            const nome = decodeURIComponent($marca.attr('href').replace('/brand_products/', ''))
+            const naLateral = Number($marca.find('span').text().replace(/\D/g, ''))
+            const noCatalogo = catalogo.filter((p) => p.brand === nome).length
 
-        // valida que a URL mudou para a categoria certa
-        cy.url().should('include', '/category_products/6')
-
-        // valida que o título mostra a categoria certa (a URL sozinha não garante o conteúdo)
-        cy.get('h2.title').should('have.text', 'Men - Jeans Products')
-
-        // valida que apareceu pelo menos um produto
-        cy.get('.productinfo').should('have.length.greaterThan', 0)
-    })
-
-    it('deve filtrar produtos por marca (Polo)', () => {
-        cy.get('a[href="/brand_products/Polo"]').click()
-
-        // valida que a URL mudou para a marca certa
-        cy.url().should('include', '/brand_products/Polo')
-
-        // valida que o título mostra a marca certa
-        cy.get('h2.title').should('have.text', 'Brand - Polo Products')
-
-        // valida que apareceu pelo menos um produto
-        cy.get('.productinfo').should('have.length.greaterThan', 0)
-    })
-    
-    it('deve filtrar produtos por categoria (Women > Dress)', () => {
-        // expande o painel "Women" antes de clicar na subcategoria
-        cy.contains('Women').click()
-
-        // clica na subcategoria Dress
-        cy.get('a[href="/category_products/1"]').click()
-
-        // valida que a URL mudou para a categoria certa
-        cy.url().should('include', '/category_products/1')
-
-        // valida que o título mostra a categoria certa
-        cy.get('h2.title').should('have.text', 'Women - Dress Products')
-
-        // valida que apareceu pelo menos um produto
-        cy.get('.productinfo').should('have.length.greaterThan', 0)
+            expect(naLateral, `quantidade de ${nome}`).to.eq(noCatalogo)
+        })
     })
 })

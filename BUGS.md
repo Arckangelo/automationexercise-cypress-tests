@@ -6,7 +6,7 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 > 📄 Relatório completo, com análise de causa raiz, soluções propostas e plano de correção:
 > **[docs/Relatorio_de_Bugs.pdf](docs/Relatorio_de_Bugs.pdf)**
 
-**Última verificação:** 16/10/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome/Electron)
+**Última verificação:** 26/10/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome/Electron)
 
 | ID | Severidade | Área | Resumo | Teste |
 |----|-----------|------|--------|-------|
@@ -21,6 +21,11 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 | [BUG-09](#bug-09--quantidade-vazia-ou-não-inteira-gera-erro-500) | Média | Carrinho | Quantidade vazia, decimal ou `1e2` gera HTTP 500 com página de debug, sem aviso ao usuário | `cart-quantity.cy.js` |
 | [BUG-10](#bug-10--assinatura-da-newsletter-não-é-registrada) | Média | Newsletter | Assinatura exibe sucesso, mas nada é enviado ao servidor | `forms-not-submitted.cy.js` |
 | [BUG-11](#bug-11--avaliação-de-produto-não-é-enviada) | Média | Produto | Avaliação exibe agradecimento, mas nada é enviado ao servidor | `forms-not-submitted.cy.js` |
+| [BUG-12](#bug-12--checkout-e-pagamento-funcionam-sem-login) | Alta | Checkout | Sem login, `/checkout` e `/payment` abrem pela URL e o pagamento é aceito: o pedido é confirmado | `checkout-access.cy.js` |
+| [BUG-13](#bug-13--checkout-oferece-place-order-com-o-carrinho-vazio) | Baixa | Checkout | Com o carrinho vazio, `/checkout` mostra total Rs. 0 e o botão *Place Order* | `checkout-access.cy.js` |
+| [BUG-14](#bug-14--api-de-marcas-repete-a-marca-de-cada-produto) | Baixa | API | `brandsList` devolve a marca de cada produto: 34 itens para 8 marcas | `api-brands.cy.js` |
+| [BUG-15](#bug-15--busca-com-espaço-duplo-ou--no-termo-falha) | Baixa | Busca | Espaço duplo não encontra nada; `&` corta o termo e mostra produtos errados | `search-input.cy.js` |
+| [BUG-16](#bug-16--confirmação-de-pedido-e-fatura-gerados-pela-url) | Alta | Pedido | Confirmação de pedido e fatura de **qualquer valor** gerados pela URL, sem sessão nem compra | `order-confirmation.cy.js` |
 
 ---
 
@@ -56,7 +61,11 @@ Exemplo de cenário capturado (BUG-01, quantidade negativa no carrinho):
 **Escopo:** a primeira rodada (14/10/2026, BUG-01 a BUG-05) cobriu home, página de produto,
 carrinho e API pública. A segunda rodada (16/10/2026, BUG-06 a BUG-11) cobriu conta logada,
 pedido completo, *Contact Us*, newsletter, avaliações de produto e a coerência entre listagem,
-detalhe e API. O upload de arquivo do *Contact Us* e os meios de pagamento reais não foram testados.
+detalhe e API. A terceira rodada (26/10/2026, BUG-12 a BUG-16) cobriu o acesso direto às páginas de checkout e
+pagamento, com e sem login, o conteúdo completo das listas de produtos e marcas da API, e os
+filtros e a busca comparados ao catálogo da API. O pagamento sem login foi enviado uma vez por cenário,
+com um cartão fictício (`4111 1111 1111 1111`), para medir o impacto do BUG-12. O upload de arquivo do *Contact Us* e os meios de pagamento reais não
+foram testados.
 
 Na segunda rodada, cada achado foi reproduzido pelo menos duas vezes. Como a REA não trata
 diálogos JavaScript, o envio do *Contact Us* com o `confirm()` aceito foi confirmado com um
@@ -259,6 +268,118 @@ ao site. O `subscription.js` só mostra a mensagem e retorna `false`.
 **Resultado obtido:** aparece "Thank you for your review.", mas nenhuma requisição é feita ao site e
 a avaliação não aparece em lugar nenhum. O script da página só mostra a mensagem.
 
+## BUG-12 — Checkout e pagamento funcionam sem login
+
+**Severidade:** Alta — o pedido é confirmado sem autenticação.
+
+**Passos para reproduzir**
+1. Sem estar logado, abrir `https://automationexercise.com/view_cart` e clicar em
+   *Proceed To Checkout*: aparece o modal "Register / Login account to proceed on checkout."
+2. Na mesma sessão, abrir `https://automationexercise.com/checkout` pela barra de endereço.
+3. Abrir `https://automationexercise.com/payment`, preencher o cartão (fictício) e clicar em
+   *Pay and Confirm Order*.
+
+**Resultado esperado:** as duas páginas redirecionam para `/login`, como o modal do passo 1 indica,
+e o pagamento sem login é recusado.
+
+**Resultado obtido:** as duas respondem HTTP 200. `/checkout` mostra o endereço em branco, total
+Rs. 0 e o botão *Place Order*. `/payment` mostra o formulário completo de cartão (`name-on-card`,
+`card-number`, `cvc`, validade e *Pay and Confirm Order*). O bloqueio existe só no JavaScript do
+botão da página do carrinho.
+
+**Impacto confirmado:** o `POST /payment` sem login é aceito (HTTP 302 para `/payment_done/0`) e a
+página mostra "Order Placed! Congratulations! Your order has been confirmed!", com fatura de valor
+**0** e sem nome de cliente. Isso acontece com o carrinho vazio e também com um produto de Rs. 500 no
+carrinho do visitante, que é ignorado. Não há histórico de pedidos no site, então não dá para saber
+se o servidor grava esses pedidos ou só exibe a confirmação.
+
+**Correção sugerida:** exigir sessão autenticada no servidor para `/checkout` e `/payment`
+(no Django, `@login_required`), redirecionar para `/login` e recusar o `POST /payment` sem sessão.
+
+## BUG-13 — Checkout oferece Place Order com o carrinho vazio
+
+**Severidade:** Baixa.
+
+**Passos para reproduzir**
+1. Entrar com uma conta de teste e esvaziar o carrinho.
+2. Em `/view_cart`, confirmar que aparece "Cart is empty!" e que não há botão de checkout.
+3. Abrir `https://automationexercise.com/checkout` pela barra de endereço.
+
+**Resultado esperado:** o checkout redireciona para o carrinho ou informa que não há itens.
+
+**Resultado obtido:** a página abre com *Total Amount* Rs. 0 e o botão *Place Order*, que leva ao
+formulário de pagamento. A tela do carrinho esconde o botão, mas o servidor não valida.
+
+**Correção sugerida:** no servidor, redirecionar `/checkout` e `/payment` para `/view_cart` quando
+o carrinho estiver vazio.
+
+## BUG-14 — API de marcas repete a marca de cada produto
+
+**Severidade:** Baixa.
+
+**Passos para reproduzir:** `curl https://automationexercise.com/api/brandsList`
+
+**Resultado esperado:** a lista das marcas da loja, cada uma uma vez, como a página `/products`
+mostra (8 marcas) e como a documentação descreve ("All brands list").
+
+**Resultado obtido:** 34 itens com apenas 8 nomes distintos. Cada item corresponde a um **produto**:
+o `id` é o ID do produto (`{"id": 1, "brand": "Polo"}` é o Blue Top) e cada marca aparece uma vez
+por produto (Polo 6 vezes, H&M 5, Madame 5…), exatamente a contagem de produtos de cada marca em
+`/api/productsList`.
+
+**Impacto:** quem consome a API recebe marcas duplicadas e IDs que não identificam marcas, e
+precisa deduplicar por conta própria para montar um filtro de marcas.
+
+**Correção sugerida:** devolver uma entrada por marca, com o ID da marca (e, se útil, a quantidade
+de produtos).
+
+## BUG-15 — Busca com espaço duplo ou "&" no termo falha
+
+**Severidade:** Baixa.
+
+**Passos para reproduzir:** em `/products`, buscar `blue  top` (dois espaços) e depois `Blue & Pink`
+(trecho do nome do produto *Sleeves Top and Short - Blue & Pink*).
+
+**Resultado esperado:** `blue  top` encontra o *Blue Top*, e `Blue & Pink` encontra o produto que
+tem esse trecho no nome.
+
+**Resultado obtido:** `blue  top` não encontra nenhum produto. `Blue & Pink` mostra 5 produtos
+errados: tudo o que contém "Blue ", porque o termo é cortado no `&`.
+
+**Causa raiz:** o script da página monta a URL concatenando o texto do campo, sem `trim` e sem
+`encodeURIComponent`:
+
+```js
+window.location = '/products?search=' + search;
+```
+
+O `&` passa a separar parâmetros da URL, e o servidor não normaliza espaços repetidos. Espaço no
+fim do termo **não** é afetado, porque o navegador o remove da URL.
+
+**Correção sugerida:** no front-end, usar `encodeURIComponent(search.trim())`. No servidor,
+normalizar espaços repetidos antes de buscar.
+
+## BUG-16 — Confirmação de pedido e fatura gerados pela URL
+
+**Severidade:** Alta — permite forjar comprovantes de compra.
+
+**Passos para reproduzir:** sem login e sem comprar nada, abrir
+`https://automationexercise.com/payment_done/999999` e
+`https://automationexercise.com/download_invoice/999999`.
+
+**Resultado esperado:** as duas rotas exigem um pedido real da sessão atual; sem ele, redirecionam ou
+respondem 404.
+
+**Resultado obtido:** `/payment_done/999999` mostra "Order Placed! Your order has been confirmed!", e
+`/download_invoice/999999` baixa uma fatura "Your total purchase amount is 999999". O valor vem da
+URL. Só valores negativos dão 404.
+
+**Risco:** qualquer pessoa gera uma confirmação de pedido ou uma fatura de qualquer valor, que pode
+ser usada como comprovante falso, por exemplo para contestar uma cobrança ou alegar um pagamento.
+
+**Correção sugerida:** identificar o pedido por um ID gravado no servidor e vinculado à sessão do
+cliente, e montar a confirmação e a fatura a partir do pedido registrado, nunca da URL.
+
 ---
 
 ## Como os testes de bug funcionam
@@ -277,4 +398,4 @@ npm run test:bugs        # headless
 npm run test:bugs:open   # interface do Cypress
 ```
 
-Resultado esperado atualmente: **17 testes, 17 falhas**, todas pelas asserções que descrevem os bugs.
+Resultado esperado atualmente: **25 testes, 25 falhas**, todas pelas asserções que descrevem os bugs.

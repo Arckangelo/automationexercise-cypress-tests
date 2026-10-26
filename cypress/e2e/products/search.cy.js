@@ -1,37 +1,55 @@
 describe('Busca de produtos', () => {
 
-    beforeEach(() => {
+    // catálogo da API: fonte independente para saber o que cada busca deve encontrar
+    let catalogo = []
+
+    before(() => {
+        cy.apiGetProductsList().then(({ body }) => { catalogo = body.products })
+    })
+
+    const ordenar = (ids) => [...ids].sort((a, b) => a - b)
+
+    // o site procura o termo no nome ou na categoria do produto, sem diferenciar maiúsculas
+    const contem = (texto, termo) => texto.toLowerCase().includes(termo.toLowerCase())
+    const idsQueContem = (termo) => ordenar(catalogo
+        .filter((p) => contem(p.name, termo) || contem(p.category.category, termo))
+        .map((p) => p.id))
+
+    const buscar = (termo) => {
         cy.visit('/products')
+        cy.get('#search_product').type(termo)
+        cy.get('#submit_search').click()
+        cy.get('.features_items h2.title').should('have.text', 'Searched Products')
+    }
+
+    // IDs dos produtos exibidos na lista principal
+    const idsNaTela = () =>
+        cy.get('.features_items').then(($lista) => ordenar(
+            $lista.find('.productinfo a.add-to-cart').toArray().map((b) => Number(b.dataset.productId))))
+
+    it('termo existente mostra exatamente os produtos que contêm o termo', () => {
+        buscar('jeans')
+
+        idsNaTela().should('deep.equal', idsQueContem('jeans')).and('not.be.empty')
     })
 
-    it('deve buscar um produto existente e mostrar resultados', () => {
-        const termoBusca = 'jeans'
+    it('busca não diferencia maiúsculas de minúsculas', () => {
+        buscar('JEANS')
 
-        // preenche o campo de busca e clica na lupa
-        cy.get('#search_product').type(termoBusca)
-        cy.get('#submit_search').click()
-
-        // valida que o título "Searched Products" apareceu
-        cy.get('h2.title').contains('Searched Products').should('be.visible')
-
-        // valida que pelo menos um produto foi encontrado
-        cy.get('.productinfo').should('have.length.greaterThan', 0)
-
-        // valida que o nome de algum produto retornado contém o termo buscado
-        // (case insensitive, já que o site pode retornar "Jeans" com maiúscula)
-        cy.get('.productinfo p').first().invoke('text').should('match', new RegExp(termoBusca, 'i'))
+        idsNaTela().should('deep.equal', idsQueContem('jeans')).and('not.be.empty')
     })
 
-    it('deve buscar um produto inexistente e não mostrar resultados', () => {
-        const termoBusca = 'xyzproutoquenaoexiste123'
+    // o navegador remove espaços do fim da URL, então o termo chega limpo ao servidor
+    // (espaço duplo e "&" não têm a mesma sorte: ver BUG-15)
+    it('espaço no fim do termo é ignorado', () => {
+        buscar('jeans ')
 
-        cy.get('#search_product').type(termoBusca)
-        cy.get('#submit_search').click()
+        idsNaTela().should('deep.equal', idsQueContem('jeans')).and('not.be.empty')
+    })
 
-        // valida que o título ainda aparece (o site sempre mostra o título)
-        cy.get('h2.title').contains('Searched Products').should('be.visible')
+    it('termo sem correspondência mostra a lista vazia', () => {
+        buscar('xyzprodutoquenaoexiste123')
 
-        // valida que NENHUM produto foi retornado
-        cy.get('.productinfo').should('have.length', 0)
+        idsNaTela().should('be.empty')
     })
 })

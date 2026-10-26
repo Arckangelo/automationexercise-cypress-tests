@@ -6,7 +6,7 @@ Cypress.Commands.add('login', (email, password) => {
     cy.get('[data-qa="login-button"]').click()
 
     // garante que o login funcionou antes de salvar a sessão
-    cy.contains('Logged in as').should('be.visible')
+    cy.get('.shop-menu a:has(.fa-user)').should('be.visible')
   }, {
     // a cada teste, confere se a sessão salva ainda é válida
     validate() {
