@@ -1,124 +1,195 @@
 import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
 
+// Só o primeiro teste adiciona produto pela interface. Os demais montam o
+// carrinho por HTTP, para que uma falha no botão "Add to cart" não derrube
+// testes que verificam outra coisa (remoção, checkout, endereço).
 describe('Carrinho e Checkout', () => {
 
     // conta descartável criada via API antes dos testes e removida no final
     const usuario = usarUsuarioDeTeste()
 
-    // nome e preço lidos na listagem, indexados pelo ID do produto
-    let dados = {}
+    // nome e preço de cada produto vêm da API (fonte controlada),
+    // não da mesma tela que está sendo testada
+    let produtos = {}
+    let conta = {}
 
-    beforeEach(() => {
-        dados = {}
-
-        // intercepts registrados antes de qualquer ação, para os aliases existirem quando o teste esperar por eles
-        cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
-        cy.intercept('GET', '/delete_cart/*').as('removerDoCarrinho')
-
-        cy.login(usuario.email, usuario.password)
-
-        // setup via HTTP, sem passar pela interface (ver cypress/support/commands.js)
-        cy.limparCarrinho()
+    before(() => {
+        cy.apiGetProductsList().then(({ body }) => {
+            produtos = Cypress._.keyBy(body.products, 'id')
+        })
+        cy.fixture('apiData').then(({ novaConta }) => { conta = novaConta })
     })
 
-    // adiciona por ID e guarda nome e preço lidos na listagem
-    const adicionarProdutoPorId = (id) => {
-        cy.get(`a.add-to-cart[data-product-id="${id}"]`).first()
-            .closest('.product-image-wrapper').within(() => {
-                cy.get('.productinfo p').invoke('text').then(t => { dados[id] = { nome: t.trim() } })
-                cy.get('.productinfo h2').invoke('text').then(t => { dados[id].preco = t.trim() })
-                cy.get('.add-to-cart').first().click()
-            })
-        cy.wait('@adicionarAoCarrinho').its('response.statusCode').should('eq', 200)
+    beforeEach(() => {
+        cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
+        cy.intercept('GET', '/delete_cart/*').as('removerDoCarrinho')
+    })
+
+    // --- helpers ---
+
+    const adicionarViaHttp = (id) => {
+        cy.request(`/add_to_cart/${id}`).its('status').should('eq', 200)
     }
 
-    // confere no carrinho a identidade, o preço e a quantidade do item
-    const validarItem = (id) => {
-        cy.then(() => {
-            expect(dados[id].nome, 'nome capturado').to.not.be.empty
-            expect(dados[id].preco, 'preço capturado').to.not.be.empty
-            cy.get(`#product-${id} .cart_description h4 a`).invoke('text').should('contain', dados[id].nome)
-            cy.get(`#product-${id} .cart_price p`).invoke('text').should('contain', dados[id].preco)
-            cy.get(`#product-${id} .cart_quantity button`).invoke('text').should('contain', '1')
+    const valorEmRupias = (texto) => Number(texto.replace(/\D/g, ''))
+
+    // texto exato da célula, sem espaços nas pontas
+    const textoDe = (seletor) => cy.get(seletor).invoke('text').invoke('trim')
+
+    // confere nome, preço, quantidade e total da linha do produto
+    const validarItem = (id, quantidade = 1) => {
+        const { name, price } = produtos[id]
+        const total = `Rs. ${valorEmRupias(price) * quantidade}`
+
+        cy.get(`#product-${id}`).within(() => {
+            textoDe('.cart_description h4 a').should('eq', name)
+            textoDe('.cart_price p').should('eq', price)
+            textoDe('.cart_quantity button').should('eq', String(quantidade))
+            textoDe('.cart_total_price').should('eq', total)
         })
     }
 
-    it('deve adicionar produtos ao carrinho e visualizar no carrinho', () => {
-        const produtosIds = ['1', '2']
-        cy.visit('/products')
+    const linhasDoCarrinho = () => cy.get('.cart_quantity_delete')
 
-        adicionarProdutoPorId(produtosIds[0])
-        cy.contains('Continue Shopping').click()
+    describe('Carrinho (logado)', () => {
 
-        adicionarProdutoPorId(produtosIds[1])
-        cy.contains('View Cart').click()
+        beforeEach(() => {
+            cy.login(usuario.email, usuario.password)
+            cy.limparCarrinho()
+        })
 
-        cy.url().should('include', '/view_cart')
-        cy.get('#cart_info_table tbody tr').should('have.length', 2)
+        it('adicionar pela listagem mostra o produto no carrinho', () => {
+            cy.visit('/products')
+            cy.get('.productinfo a.add-to-cart[data-product-id="1"]').click()
+            cy.wait('@adicionarAoCarrinho').its('response.statusCode').should('eq', 200)
 
-        validarItem(produtosIds[0])
-        validarItem(produtosIds[1])
+            cy.get('#cartModal a[href="/view_cart"]').click()
+
+            linhasDoCarrinho().should('have.length', 1)
+            validarItem('1')
+        })
+
+        // pega: linha duplicada, quantidade sobrescrita em vez de somada, total errado
+        it('adicionar o mesmo produto duas vezes soma quantidade e total', () => {
+            adicionarViaHttp('1')
+            adicionarViaHttp('1')
+            cy.visit('/view_cart')
+
+            linhasDoCarrinho().should('have.length', 1)
+            validarItem('1', 2)
+        })
+
+        // o cart.js apaga a linha da tela com qualquer resposta 200; só o
+        // reload prova que o servidor removeu o item de fato
+        it('remover um item mantém os demais no servidor', () => {
+            adicionarViaHttp('1')
+            adicionarViaHttp('2')
+            cy.visit('/view_cart')
+            linhasDoCarrinho().should('have.length', 2)
+
+            cy.get('#product-1 .cart_quantity_delete').click()
+            cy.wait('@removerDoCarrinho').its('response.statusCode').should('eq', 200)
+
+            cy.reload()
+            cy.get('#product-1').should('not.exist')
+            linhasDoCarrinho().should('have.length', 1)
+            validarItem('2')
+        })
+
+        it('remover o último item deixa o carrinho vazio no servidor', () => {
+            adicionarViaHttp('1')
+            cy.visit('/view_cart')
+
+            cy.get('#product-1 .cart_quantity_delete').click()
+            cy.wait('@removerDoCarrinho').its('response.statusCode').should('eq', 200)
+
+            cy.reload()
+            linhasDoCarrinho().should('not.exist')
+            cy.get('#empty_cart').should('be.visible')
+        })
+
+        it('carrinho vazio não oferece o botão de checkout', () => {
+            cy.visit('/view_cart')
+
+            cy.get('#empty_cart').should('be.visible')
+            cy.get('.check_out').should('not.exist')
+        })
     })
 
-    it('deve remover um produto do carrinho', () => {
-    cy.visit('/products')
+    describe('Checkout (logado)', () => {
 
-    adicionarProdutoPorId('1')
-    cy.contains('Continue Shopping').click()
-    adicionarProdutoPorId('2')
-    cy.contains('View Cart').click()
+        beforeEach(() => {
+            cy.login(usuario.email, usuario.password)
+            cy.limparCarrinho()
+        })
 
-    cy.get('#cart_info_table tbody tr').should('have.length', 2)
-    validarItem('1')
-    validarItem('2')
+        it('Proceed To Checkout leva à página de checkout', () => {
+            adicionarViaHttp('1')
+            cy.visit('/view_cart')
 
-    // remove o primeiro: o que sobrou tem que ser exatamente o outro
-    cy.get('#product-1 .cart_quantity_delete').click()
-    cy.wait('@removerDoCarrinho').its('response.statusCode').should('eq', 200)
+            cy.get('.check_out').click()
 
-    cy.get('#cart_info_table tbody tr').should('have.length', 1)
-    validarItem('2')                       // mata "removeu o item errado"
-    cy.get('#product-1').should('not.exist') // mata "removeu só visualmente"
+            cy.url().should('include', '/checkout')
+            cy.get('#address_delivery').should('be.visible')
+        })
 
-    // remove o último e valida o estado vazio por completo
-    cy.get('#product-2 .cart_quantity_delete').click()
-    cy.wait('@removerDoCarrinho').its('response.statusCode').should('eq', 200)
+        it('checkout mostra os itens e o total do pedido', () => {
+            adicionarViaHttp('1')
+            adicionarViaHttp('2')
+            cy.visit('/checkout')
 
-    cy.get('#cart_info_table tbody tr').should('have.length', 0)  // mata "escondeu mas não removeu"
-    cy.get('#empty_cart').should('be.visible')
-    cy.contains('Cart is empty!').should('be.visible')
+            validarItem('1')
+            validarItem('2')
+
+            const totalEsperado = valorEmRupias(produtos['1'].price) + valorEmRupias(produtos['2'].price)
+            cy.contains('tr', 'Total Amount').find('.cart_total_price')
+                .invoke('text').invoke('trim')
+                .should('eq', `Rs. ${totalEsperado}`)
+        })
+
+        // compara cada linha do endereço com o campo certo do cadastro
+        // (antes comparava com "name", que só batia por coincidência)
+        it('checkout mostra o endereço cadastrado do usuário', () => {
+            adicionarViaHttp('1')
+            cy.visit('/checkout')
+
+            ;['#address_delivery', '#address_invoice'].forEach((caixa) => {
+                cy.get(caixa).within(() => {
+                    textoDe('.address_firstname').should('eq', `${conta.title}. ${conta.firstname} ${conta.lastname}`)
+                    cy.get('.address_address1').should('contain', conta.address1)
+                    cy.get('.address_city')
+                        .should('contain', conta.city)
+                        .and('contain', conta.state)
+                        .and('contain', conta.zipcode)
+                    textoDe('.address_country_name').should('eq', conta.country)
+                    textoDe('.address_phone').should('eq', conta.mobile_number)
+                })
+            })
+        })
+
+        it('Place Order leva ao formulário de pagamento', () => {
+            adicionarViaHttp('1')
+            cy.visit('/checkout')
+
+            cy.get('a[href="/payment"]').click()
+
+            cy.url().should('include', '/payment')
+            cy.get('[data-qa="pay-button"]').should('be.visible')
+        })
     })
 
-  it('deve avançar para o checkout quando logado', () => {
-    cy.visit('/products')
+    describe('Checkout (sem login)', () => {
 
-    adicionarProdutoPorId('1')
-    cy.contains('View Cart').click()
+        // sem cy.login: cada teste começa com sessão nova (testIsolation)
+        it('Proceed To Checkout pede login em vez de avançar', () => {
+            adicionarViaHttp('1')
+            cy.visit('/view_cart')
 
-    cy.get('.check_out').click()
+            cy.get('.check_out').click()
 
-    cy.url().should('include', '/checkout')
-
-    // valida que a página de checkout carregou de fato, não só que a URL mudou
-    cy.contains('Address Details').should('be.visible')
-    cy.contains('Review Your Order').should('be.visible')
-
-    // o resumo tem que conter o MESMO produto, não só os headings
-    validarItem('1')
-
-    // validação de endereço: o box de entrega tem que conter os dados do usuário logado
-    cy.get('#address_delivery').should('contain', usuario.name)
-
-    cy.fixture('apiData').then(({ novaConta }) => {
-        cy.get('#address_delivery')
-            .should('contain', novaConta.address1)
-            .should('contain', novaConta.city)
-            .should('contain', novaConta.zipcode)
-            .should('contain', novaConta.country)
-    })
-
-    // fecha o fluxo: Place Order tem que levar ao pagamento
-    cy.contains('Place Order').click()
-    cy.url().should('include', '/payment')
+            cy.get('#checkoutModal').should('be.visible')
+                .find('a[href="/login"]').should('be.visible')
+            cy.url().should('include', '/view_cart')
+        })
     })
 })
