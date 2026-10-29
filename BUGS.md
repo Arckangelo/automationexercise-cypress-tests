@@ -319,8 +319,9 @@ o carrinho estiver vazio.
 
 **Passos para reproduzir:** `curl https://automationexercise.com/api/brandsList`
 
-**Resultado esperado:** a lista das marcas da loja, cada uma uma vez, como a página `/products`
-mostra (8 marcas) e como a documentação descreve ("All brands list").
+**Resultado esperado:** a API devolve cada marca da loja uma única vez, num total de 8 marcas, as mesmas
+que a página `/products` lista na lateral. É o que a documentação da API promete para esse endpoint
+("All brands list").
 
 **Resultado obtido:** 34 itens com apenas 8 nomes distintos. Cada item corresponde a um **produto**:
 o `id` é o ID do produto (`{"id": 1, "brand": "Polo"}` é o Blue Top) e cada marca aparece uma vez
