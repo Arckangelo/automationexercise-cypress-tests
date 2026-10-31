@@ -116,7 +116,7 @@
     <tr><th>DATA</th><td>26/10/2026</td></tr>
     <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
     <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.1.1</td></tr>
-    <tr><th>STATUS GERAL</th><td>16 defeitos confirmados e reproduzíveis — 6 alta, 5 média, 5 baixa</td></tr>
+    <tr><th>STATUS GERAL</th><td>17 defeitos confirmados e reproduzíveis — 6 alta, 5 média, 6 baixa</td></tr>
     <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): BUG-01 a BUG-05 · 1.1 (16/10/2026): BUG-06 a BUG-11 · 1.2 (26/10/2026): BUG-12 e BUG-13 · 1.3 (26/10/2026): BUG-14 · 1.4 (26/10/2026): BUG-15 · 1.5 (26/10/2026): impacto do BUG-12 confirmado e BUG-16</td></tr>
   </table>
 </section>
@@ -125,7 +125,7 @@
 <section>
   <h2>1. Sumário executivo</h2>
   <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante três rodadas de
-  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados dezesseis defeitos,
+  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados dezessete defeitos,
   todos reproduzíveis e cobertos por testes automatizados em Cypress que falham enquanto o defeito persistir.</p>
   <p>Os defeitos mais graves envolvem a conta do usuário e o atendimento. Uma simples requisição <code>GET</code> para
   <code>/delete_account</code> apaga a conta de quem estiver logado, sem confirmação nem proteção contra CSRF
@@ -161,6 +161,7 @@
       <tr><td>BUG-14</td><td>API de marcas repete a marca de cada produto</td><td>API REST</td><td class="baixa">Baixa</td><td>P3</td></tr>
       <tr><td>BUG-15</td><td>Busca com espaço duplo ou “&amp;” no termo falha</td><td>Busca / Front-end</td><td class="baixa">Baixa</td><td>P3</td></tr>
       <tr><td>BUG-16</td><td>Confirmação de pedido e fatura gerados pela URL</td><td>Pedido / Back-end</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-17</td><td>Senha errada é respondida como conta inexistente</td><td>API REST</td><td class="baixa">Baixa</td><td>P3</td></tr>
     </tbody>
   </table>
 </section>
