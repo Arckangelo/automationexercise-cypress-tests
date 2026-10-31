@@ -13,7 +13,7 @@ Suíte de testes automatizados end-to-end para o site [AutomationExercise](https
 **Resumo**
 
 - **48 testes** na suíte principal: 26 de interface (login, logout, cadastro, busca, filtros, carrinho e checkout) e 22 de API.
-- **16 bugs encontrados** no site e na API (6 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
+- **17 bugs encontrados** no site e na API (6 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
 - **Testes independentes e sem dados fixos:** cada execução cria um usuário descartável pela API e o remove ao final. O carrinho é preparado por HTTP, para que um teste não dependa de outro.
 - **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e asserções reforçadas por análise de mutação.
 - **CI no GitHub Actions:** a suíte roda a cada push e diariamente, o relatório HTML é publicado no GitHub Pages e o pipeline tem verificações de segurança (gitleaks, npm audit, CodeQL).
@@ -68,10 +68,10 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 
 ### 🐞 Bugs conhecidos
 
-Em três rodadas de exploração foram encontrados **16 bugs** no site e na API, documentados com
+Em três rodadas de exploração foram encontrados **17 bugs** no site e na API, documentados com
 passos de reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
 
-<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.5 de 26/10/2026, por Angelo Roque: 16 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 5 baixas."></a></p>
+<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.5 de 26/10/2026, por Angelo Roque: 17 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 6 baixas."></a></p>
 
 - **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
 - **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção.
@@ -95,8 +95,9 @@ passos de reprodução, resultado esperado e obtido, causa raiz e proposta de co
 | BUG-14 | Baixa | API `brandsList` repete a marca de cada produto (34 itens para 8 marcas) |
 | BUG-15 | Baixa | Busca com espaço duplo não encontra nada, e um `&` no termo corta a busca e mostra produtos errados |
 | BUG-16 | Alta | Confirmação de pedido e fatura de qualquer valor gerados pela URL, sem sessão nem compra |
+| BUG-17 | Baixa | API `updateAccount` com senha errada responde 404 "Account not found!", embora a conta exista |
 
-Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (25 testes). Esses testes descrevem
+Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (26 testes). Esses testes descrevem
 o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles ficam fora da suíte
 principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
 **diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
@@ -131,7 +132,7 @@ cypress/
 │   │   └── checkout.cy.js       # cenários de carrinho e checkout
 │   ├── known-bugs/              # testes de regressão de bugs conhecidos (fora da suíte padrão)
 │   │   ├── api-brands.cy.js           # BUG-14: lista de marcas repetida na API
-│   │   ├── account-security.cy.js     # BUG-06/07: exclusão de conta por GET e dados expostos na API
+│   │   ├── account-security.cy.js     # BUG-06/07/17: exclusão de conta por GET, dados expostos e erro de senha na API
 │   │   ├── api-http-status.cy.js      # BUG-04/05: status HTTP e Content-Type da API
 │   │   ├── cart-quantity.cy.js        # BUG-01/02/09: quantidade negativa, zero e não inteira
 │   │   ├── checkout-access.cy.js      # BUG-12/13: checkout e pagamento sem login ou com carrinho vazio
@@ -185,7 +186,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Job | O que faz |
 |---|---|
 | Suíte principal | Roda os 48 testes; salva as screenshots das falhas e o relatório HTML como artefatos |
-| Bugs conhecidos | Roda os 25 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
+| Bugs conhecidos | Roda os 26 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
 | Publicar relatório | Publica os dois relatórios HTML no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline

@@ -114,6 +114,8 @@ describe('API - Conta de usuário', () => {
         })
 
         // permissão: sem a senha certa, ninguém altera a conta de outra pessoa
+        // A resposta "Account not found!" para uma conta que existe é o BUG-17 (ver BUGS.md);
+        // aqui ela é checada como o contrato atual da API.
         it('atualizar com senha errada retorna 404 e não altera os dados', () => {
             criarConta().then((conta) => {
                 const tentativa = { ...conta, password: 'senhaErrada', city: 'Alterada Indevidamente' }

@@ -72,6 +72,19 @@
   .alta  { color: #f87171; background: rgba(239, 68, 68, 0.14);  border: 1px solid rgba(239, 68, 68, 0.45); }
   .media { color: #fbbf24; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.45); }
   .baixa { color: #4ade80; background: rgba(34, 197, 94, 0.14);  border: 1px solid rgba(34, 197, 94, 0.45); }
+  .destaque {
+    position: absolute; right: 0; top: 0;
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+  .destaque .numero {
+    font-size: 220px; font-weight: 800; line-height: 0.85; letter-spacing: -0.05em;
+    background: linear-gradient(180deg, #ffffff, var(--azul-claro));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .destaque .legenda {
+    margin-top: 18px; font-size: 21px; font-weight: 600; letter-spacing: 0.32em; color: var(--azul-claro);
+  }
+  .status strong { font-size: 34px; font-weight: 800; color: #fff; }
   .rodape {
     position: absolute; left: 130px; right: 130px; bottom: 80px;
     display: flex; justify-content: space-between;
@@ -81,6 +94,7 @@
 </head>
 <body>
   <div class="conteudo">
+    <div class="destaque"><span class="numero">17</span><span class="legenda">DEFEITOS CONFIRMADOS</span></div>
     <div class="sobretitulo">ANÁLISE DE QUALIDADE</div>
     <h1>Relatório de Bugs</h1>
     <p class="aplicacao">Aplicação: <strong>Automation Exercise</strong> — <code>https://www.automationexercise.com</code></p>
@@ -98,10 +112,10 @@
         </div>
       </td></tr>
       <tr><th>STATUS GERAL</th><td>
-        <div class="status">16 defeitos confirmados e reproduzíveis —
+        <div class="status"><span><strong>17</strong> defeitos confirmados e reproduzíveis —</span>
           <span class="selo alta">6 alta</span>
           <span class="selo media">5 média</span>
-          <span class="selo baixa">5 baixa</span>
+          <span class="selo baixa">6 baixa</span>
         </div>
       </td></tr>
     </table>

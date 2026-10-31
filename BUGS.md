@@ -26,6 +26,7 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 | [BUG-14](#bug-14--api-de-marcas-repete-a-marca-de-cada-produto) | Baixa | API | `brandsList` devolve a marca de cada produto: 34 itens para 8 marcas | `api-brands.cy.js` |
 | [BUG-15](#bug-15--busca-com-espaço-duplo-ou--no-termo-falha) | Baixa | Busca | Espaço duplo não encontra nada; `&` corta o termo e mostra produtos errados | `search-input.cy.js` |
 | [BUG-16](#bug-16--confirmação-de-pedido-e-fatura-gerados-pela-url) | Alta | Pedido | Confirmação de pedido e fatura de **qualquer valor** gerados pela URL, sem sessão nem compra | `order-confirmation.cy.js` |
+| [BUG-17](#bug-17--senha-errada-é-respondida-como-conta-inexistente) | Baixa | API | `updateAccount` com senha errada responde 404 "Account not found!", embora a conta exista | `account-security.cy.js` |
 
 ---
 
@@ -66,6 +67,9 @@ pagamento, com e sem login, o conteúdo completo das listas de produtos e marcas
 filtros e a busca comparados ao catálogo da API. O pagamento sem login foi enviado uma vez por cenário,
 com um cartão fictício (`4111 1111 1111 1111`), para medir o impacto do BUG-12. O upload de arquivo do *Contact Us* e os meios de pagamento reais não
 foram testados.
+
+O BUG-17 foi registrado em 31/10/2026, a partir do teste de permissão de `updateAccount` da suíte de
+API, e reproduzido via `curl`.
 
 Na segunda rodada, cada achado foi reproduzido pelo menos duas vezes. Como a REA não trata
 diálogos JavaScript, o envio do *Contact Us* com o `confirm()` aceito foi confirmado com um
@@ -381,6 +385,28 @@ ser usada como comprovante falso, por exemplo para contestar uma cobrança ou al
 **Correção sugerida:** identificar o pedido por um ID gravado no servidor e vinculado à sessão do
 cliente, e montar a confirmação e a fatura a partir do pedido registrado, nunca da URL.
 
+## BUG-17 — Senha errada é respondida como conta inexistente
+
+**Severidade:** Baixa — a resposta informa a causa errada do erro.
+
+**Passos para reproduzir**
+1. Criar uma conta com `POST /api/createAccount`.
+2. Enviar `PUT /api/updateAccount` com o e-mail dessa conta, uma senha errada e algum campo alterado
+   (por exemplo `city`).
+
+**Resultado esperado:** a API recusa a alteração e responde `401`, com uma mensagem de credenciais
+inválidas (por exemplo "Invalid email or password").
+
+**Resultado obtido:** a alteração é recusada (os dados continuam os mesmos), mas a resposta é
+`{"responseCode": 404, "message": "Account not found!"}`, embora a conta exista.
+`DELETE /api/deleteAccount` com senha errada responde da mesma forma.
+
+**Impacto:** quem consome a API não consegue distinguir "conta inexistente" de "senha errada", e
+o código 404 faz o erro parecer de rota ou de recurso, não de autenticação.
+
+**Correção sugerida:** responder `401` com uma mensagem genérica de credenciais inválidas sempre que
+o e-mail e a senha não conferirem, sem dizer qual dos dois está errado.
+
 ---
 
 ## Como os testes de bug funcionam
@@ -399,4 +425,4 @@ npm run test:bugs        # headless
 npm run test:bugs:open   # interface do Cypress
 ```
 
-Resultado esperado atualmente: **25 testes, 25 falhas**, todas pelas asserções que descrevem os bugs.
+Resultado esperado atualmente: **26 testes, 26 falhas**, todas pelas asserções que descrevem os bugs.
