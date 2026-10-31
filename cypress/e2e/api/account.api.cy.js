@@ -11,8 +11,10 @@ describe('API - Conta de usuário', () => {
     // mesmo se o teste falhar; 404 significa que o próprio teste já apagou.
     const contasCriadas = []
 
+    const idUnico = () => `${Date.now()}${Cypress._.random(1000, 9999)}`
+
     const novosDados = () => {
-        const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
+        const id = idUnico()
         const conta = { ...novaConta, email: `qa.api.${id}@teste.com`, password: `Qa@${id}` }
         contasCriadas.push(conta)
         return conta
@@ -150,8 +152,9 @@ describe('API - Conta de usuário', () => {
             })
         })
 
+        // e-mail novo a cada execução: um fixo poderia ser cadastrado por alguém no site
         it('apagar conta inexistente retorna 404', () => {
-            cy.apiDeleteAccount('conta_que_nao_existe_999@teste.com', 'qualquercoisa')
+            cy.apiDeleteAccount(`qa.inexistente.${idUnico()}@teste.com`, 'qualquercoisa')
                 .its('body').should('deep.equal', { responseCode: 404, message: 'Account not found!' })
         })
     })
