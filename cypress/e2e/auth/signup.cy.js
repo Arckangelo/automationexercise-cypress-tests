@@ -1,13 +1,11 @@
-import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+import { gerarCredenciais, usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
 
 describe('Cadastro de usuário', () => {
 
     describe('novo usuário', () => {
 
         // e-mail único por execução; a mesma conta é reaproveitada se o teste for repetido (retries)
-        const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
-        const email = `qa.signup.${id}@teste.com`
-        const senha = `Qa@${id}`
+        let conta
 
         // mesmos dados do cadastro via API; o país muda porque "Brazil" não existe no select
         let dados = {}
@@ -18,9 +16,13 @@ describe('Cadastro de usuário', () => {
             })
         })
 
+        beforeEach(function () {
+            if (!conta) conta = gerarCredenciais(this.users.contaAleatoria)
+        })
+
         // remove a conta mesmo se o teste falhar no meio; 404 = nem chegou a ser criada
         afterEach(() => {
-            cy.apiDeleteAccount(email, senha)
+            cy.apiDeleteAccount(conta.email, conta.password)
                 .its('body.responseCode')
                 .should('be.oneOf', [200, 404])
         })
@@ -28,13 +30,13 @@ describe('Cadastro de usuário', () => {
         it('cadastro completo cria a conta com os dados informados', () => {
             cy.visit('/login')
             cy.get('[data-qa="signup-name"]').type(dados.name)
-            cy.get('[data-qa="signup-email"]').type(email)
+            cy.get('[data-qa="signup-email"]').type(conta.email)
             cy.get('[data-qa="signup-button"]').click()
 
             cy.get('[data-qa="create-account"]').should('be.visible')
 
             cy.get('#id_gender1').check()
-            cy.get('[data-qa="password"]').type(senha, { log: false })
+            cy.get('[data-qa="password"]').type(conta.password, { log: false })
             cy.get('[data-qa="days"]').select(dados.birth_date)
             cy.get('[data-qa="months"]').select(dados.birth_month)
             cy.get('[data-qa="years"]').select(dados.birth_year)
@@ -58,9 +60,9 @@ describe('Cadastro de usuário', () => {
             cy.get('.shop-menu a:has(.fa-user) b').invoke('text').invoke('trim').should('eq', dados.name)
 
             // persistência: a senha cadastrada funciona e os dados foram gravados como digitados
-            cy.apiVerifyLogin(email, senha).its('body.responseCode').should('eq', 200)
+            cy.apiVerifyLogin(conta.email, conta.password).its('body.responseCode').should('eq', 200)
 
-            cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email } })
+            cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email: conta.email } })
                 .its('body.user')
                 .should('include', {
                     name: dados.name,

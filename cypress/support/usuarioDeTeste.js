@@ -1,3 +1,13 @@
+// Preenche o modelo de users.json ("qa.{id}@teste.com", "Qa@{id}") com um ID
+// novo a cada chamada. Serve tanto para contas que o teste cria quanto para
+// uma conta que não pode existir: um e-mail fixo poderia ser cadastrado por
+// alguém no site.
+//   const conta = gerarCredenciais(this.users.contaAleatoria)
+export const gerarCredenciais = ({ email, password }) => {
+    const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
+    return { email: email.replaceAll('{id}', id), password: password.replaceAll('{id}', id) }
+}
+
 // Provisiona um usuário descartável para o describe que chamar esta função:
 // cria a conta via API antes dos testes e a remove ao final. Assim nenhuma
 // credencial fica no repositório e a suíte não depende de uma conta fixa,
@@ -13,9 +23,8 @@ export const usarUsuarioDeTeste = () => {
     const usuario = {}
 
     before(() => {
-    const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
-    usuario.email = `qa.suite.${id}@teste.com`
-    usuario.password = `Qa@${id}`
+    // before() roda uma vez por describe, antes do alias @users existir
+    cy.fixture('users').then(({ contaAleatoria }) => Object.assign(usuario, gerarCredenciais(contaAleatoria)))
 
     cy.fixture('apiData').then(({ novaConta }) => {
         usuario.name = novaConta.name   // << expõe o nome para os testes
