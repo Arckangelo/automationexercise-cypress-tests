@@ -1,7 +1,12 @@
 {
+  "contaAleatoria": {
+    "email": "qa.{id}@teste.com",
+    "password": "Qa@{id}"
+  },
   "senhaIncorreta": "senhaerrada",
-  "notRegisteredUser": {
-    "email": "usuario_nao_existe_teste123@teste.com",
-    "password": "qualquercoisa123"
+  "formularios": {
+    "contato": "qa.contato@teste.com",
+    "newsletter": "qa.newsletter@teste.com",
+    "avaliacao": "qa.avaliacao@teste.com"
   }
 }

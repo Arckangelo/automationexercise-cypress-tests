@@ -1,3 +1,5 @@
+import { gerarCredenciais } from '../../support/usuarioDeTeste'
+
 // BUG-04 e BUG-05 (ver BUGS.md)
 // Os testes em cypress/e2e/api/ contornam essas falhas de propósito (checam
 // responseCode no corpo e fazem o parse manual do JSON). Aqui elas são
@@ -14,16 +16,18 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
         {
             method: 'POST',
             url: '/api/verifyLogin',
-            qs: { email: 'qa@teste.com', password: 'qualquercoisa' },
+            credenciaisNaQuery: true,
             cenario: 'com parâmetros na query string',
             esperado: 400,
         },
     ]
 
-    requisicoesDeErro.forEach(({ method, url, qs, cenario, esperado }) => {
+    requisicoesDeErro.forEach(({ method, url, credenciaisNaQuery, cenario, esperado }) => {
         const titulo = [method, url, cenario].filter(Boolean).join(' ')
 
-        it(`[BUG-04] ${titulo} deve retornar HTTP ${esperado}`, () => {
+        it(`[BUG-04] ${titulo} deve retornar HTTP ${esperado}`, function () {
+            const qs = credenciaisNaQuery ? gerarCredenciais(this.users.contaAleatoria) : undefined
+
             cy.apiRequest({ method, url, qs }).then((response) => {
                 // garante que a API realmente sinaliza esse erro no corpo,
                 // para o teste falhar só pelo status HTTP

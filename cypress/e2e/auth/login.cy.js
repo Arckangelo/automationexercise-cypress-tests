@@ -1,4 +1,4 @@
-import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+import { gerarCredenciais, usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
 
 describe('Login', () => {
 
@@ -20,10 +20,6 @@ describe('Login', () => {
         cy.get('.shop-menu a[href="/logout"]').should('not.exist')
         cy.get('.shop-menu a[href="/login"]').should('be.visible')
     }
-
-    beforeEach(() => {
-        cy.fixture('users').as('users')
-    })
 
     describe('pelo formulário', () => {
 
@@ -47,7 +43,9 @@ describe('Login', () => {
 
         // mesma mensagem da senha incorreta: o site não revela se o e-mail existe
         it('e-mail não cadastrado mostra o mesmo erro e não loga', function () {
-            enviarLogin(this.users.notRegisteredUser.email, this.users.notRegisteredUser.password)
+            const naoCadastrado = gerarCredenciais(this.users.contaAleatoria)
+
+            enviarLogin(naoCadastrado.email, naoCadastrado.password)
 
             cy.get('form[action="/login"]').contains('p', MENSAGEM_DE_ERRO).should('be.visible')
             deveEstarDeslogado()

@@ -1,4 +1,4 @@
-import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+import { gerarCredenciais, usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
 
 describe('API - Verificação de login', () => {
 
@@ -6,10 +6,6 @@ describe('API - Verificação de login', () => {
     const usuario = usarUsuarioDeTeste()
 
     const PARAMETRO_FALTANDO = 'Bad request, email or password parameter is missing in POST request.'
-
-    beforeEach(() => {
-        cy.fixture('users').as('users')
-    })
 
     it('credenciais válidas retornam 200 "User exists!"', () => {
         cy.apiVerifyLogin(usuario.email, usuario.password)
@@ -23,7 +19,9 @@ describe('API - Verificação de login', () => {
 
     // mesma resposta da senha incorreta: a API não revela se o e-mail existe
     it('usuário não cadastrado retorna a mesma resposta 404', function () {
-        cy.apiVerifyLogin(this.users.notRegisteredUser.email, this.users.notRegisteredUser.password)
+        const naoCadastrado = gerarCredenciais(this.users.contaAleatoria)
+
+        cy.apiVerifyLogin(naoCadastrado.email, naoCadastrado.password)
             .its('body').should('deep.equal', { responseCode: 404, message: 'User not found!' })
     })
 
