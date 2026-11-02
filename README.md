@@ -71,7 +71,7 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 Em três rodadas de exploração foram encontrados **17 bugs** no site e na API, documentados com
 passos de reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
 
-<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.5 de 26/10/2026, por Angelo Roque: 17 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 6 baixas."></a></p>
+<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.6 de 02/11/2026, por Angelo Roque: 17 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 6 baixas."></a></p>
 
 - **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
 - **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção.
