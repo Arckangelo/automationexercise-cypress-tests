@@ -1,3 +1,5 @@
+import { ordenarIds } from './catalogo'
+
 Cypress.Commands.add('login', (email, password) => {
   cy.session([email, password], () => {
     cy.visit('/login')
@@ -26,6 +28,40 @@ Cypress.Commands.add('limparCarrinho', () => {
       cy.request(`/delete_cart/${id}`).its('status').should('eq', 200)
     })
   })
+})
+
+// Adiciona o produto pelo mesmo endpoint do botão "Add to cart", sem passar
+// pela tela: para testes que precisam de um carrinho montado, mas verificam
+// outra coisa (remoção, checkout, endereço).
+Cypress.Commands.add('adicionarAoCarrinho', (id) => {
+  cy.request(`/add_to_cart/${id}`).its('status').should('eq', 200)
+})
+
+// --- Comandos de leitura da tela ---
+
+// texto exato do elemento, sem espaços nas pontas (respeita o .within())
+Cypress.Commands.add('textoDe', (seletor) => {
+  return cy.get(seletor).invoke('text').invoke('trim')
+})
+
+// nome exibido no menu em "Logged in as <nome>" (item com o ícone de usuário)
+Cypress.Commands.add('usuarioLogado', () => {
+  return cy.textoDe('.shop-menu a:has(.fa-user) b')
+})
+
+// busca pela caixa da página /products e espera a lista de resultados
+Cypress.Commands.add('buscarProduto', (termo) => {
+  cy.visit('/products')
+  cy.get('#search_product').type(termo)
+  cy.get('#submit_search').click()
+  cy.get('.features_items h2.title').should('have.text', 'Searched Products')
+})
+
+// IDs dos produtos na lista principal, em ordem crescente (lista vazia se não
+// houver nenhum), para comparar com os IDs de usarCatalogo()
+Cypress.Commands.add('idsNaTela', () => {
+  return cy.get('.features_items').then(($lista) => ordenarIds(
+    $lista.find('.productinfo a.add-to-cart').toArray().map((botao) => Number(botao.dataset.productId))))
 })
 
 // --- Comandos de API ---
@@ -104,6 +140,34 @@ Cypress.Commands.add('apiCreateAccount', (dados) => {
   return cy.apiRequest({ method: 'POST', url: '/api/createAccount', form: true, body: dados })
 })
 
+Cypress.Commands.add('apiUpdateAccount', (dados) => {
+  return cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: dados })
+})
+
 Cypress.Commands.add('apiDeleteAccount', (email, password) => {
   return cy.apiRequest({ method: 'DELETE', url: '/api/deleteAccount', form: true, body: { email, password } })
+})
+
+// Único ponto do projeto que chama este endpoint. Ele é o próprio BUG-07 (expõe
+// dados sem autenticação): se o site passar a exigir login, o ajuste é só aqui.
+Cypress.Commands.add('apiGetUserDetail', (email) => {
+  return cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email } })
+})
+
+// A consulta devolve os dados do cadastro com 3 campos renomeados e sem a senha
+// e o celular. O comando converte a conta enviada no cadastro para esse formato
+// e confere que todos os campos foram gravados como enviados.
+const NOMES_NA_CONSULTA = { birth_date: 'birth_day', firstname: 'first_name', lastname: 'last_name' }
+const FORA_DA_CONSULTA = ['password', 'mobile_number']
+
+Cypress.Commands.add('contaDeveEstarGravada', (conta) => {
+  const esperado = Cypress._.mapKeys(
+    Cypress._.omit(conta, FORA_DA_CONSULTA),
+    (_valor, campo) => NOMES_NA_CONSULTA[campo] || campo,
+  )
+
+  return cy.apiGetUserDetail(conta.email).then(({ body }) => {
+    expect(body.responseCode, 'conta encontrada').to.eq(200)
+    expect(body.user, 'dados gravados').to.include(esperado)
+  })
 })

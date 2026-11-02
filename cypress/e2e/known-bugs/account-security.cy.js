@@ -38,7 +38,7 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
     // o usa como contrato. Se o site passar a exigir autenticação, aquele
     // teste da suíte principal precisará ser ajustado junto com este.
     it('[BUG-07] GET /api/getUserDetailByEmail não deve expor dados pessoais sem autenticação', () => {
-        cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email: conta.email } })
+        cy.apiGetUserDetail(conta.email)
             .then((response) => {
                 expect(response.body, 'dados pessoais na resposta sem autenticação').to.not.have.property('user')
             })
@@ -49,7 +49,7 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
         cy.fixture('apiData').then(({ novaConta }) => {
             const tentativa = { ...novaConta, email: conta.email, password: this.users.senhaIncorreta, city: 'Alterada Indevidamente' }
 
-            cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: tentativa })
+            cy.apiUpdateAccount(tentativa)
                 .its('body')
                 .then((body) => {
                     expect(body.message, 'mensagem de erro').to.not.eq('Account not found!')
@@ -57,9 +57,7 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
                 })
 
             // a correção não pode passar a aceitar a alteração
-            cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email: conta.email } })
-                .its('body.user.city')
-                .should('eq', novaConta.city)
+            cy.contaDeveEstarGravada({ ...novaConta, ...conta })
         })
     })
 })

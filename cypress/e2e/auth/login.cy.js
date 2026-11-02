@@ -13,9 +13,6 @@ describe('Login', () => {
         cy.get('[data-qa="login-button"]').click()
     }
 
-    // nome exibido no menu em "Logged in as <nome>" (item com o ícone de usuário)
-    const usuarioLogado = () => cy.get('.shop-menu a:has(.fa-user) b').invoke('text').invoke('trim')
-
     const deveEstarDeslogado = () => {
         cy.get('.shop-menu a[href="/logout"]').should('not.exist')
         cy.get('.shop-menu a[href="/login"]').should('be.visible')
@@ -30,7 +27,7 @@ describe('Login', () => {
         it('credenciais válidas logam o usuário certo', () => {
             enviarLogin(usuario.email, usuario.password)
 
-            usuarioLogado().should('eq', usuario.name)
+            cy.usuarioLogado().should('eq', usuario.name)
         })
 
         // o erro sozinho não basta: um bug pode mostrar a mensagem e logar mesmo assim
