@@ -57,6 +57,22 @@ jobs:
           name: relatorio-suite-${{ matrix.browser }}
           path: cypress/reports/suite
 
+  # A proteção da main exige um check chamado "Suíte principal". Com a matriz,
+  # cada navegador vira um job próprio; este junta os resultados num só check,
+  # que passa apenas se a suíte passou em todos os navegadores.
+  suite-resultado:
+    name: Suíte principal
+    needs: suite
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir os navegadores
+        env:
+          RESULTADO: ${{ needs.suite.result }}
+        run: |
+          echo "Resultado da matriz: $RESULTADO"
+          [ "$RESULTADO" = "success" ]
+
   known-bugs:
     name: Bugs conhecidos
     runs-on: ubuntu-latest
