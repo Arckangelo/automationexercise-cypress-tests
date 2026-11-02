@@ -6,7 +6,7 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 > 📄 Relatório completo, com análise de causa raiz, soluções propostas e plano de correção:
 > **[docs/Relatorio_de_Bugs.pdf](docs/Relatorio_de_Bugs.pdf)**
 
-**Última verificação:** 26/10/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome/Electron)
+**Última verificação:** 02/11/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome)
 
 | ID | Severidade | Área | Resumo | Teste |
 |----|-----------|------|--------|-------|
@@ -193,9 +193,10 @@ API3 *Broken Object Property Level Authorization*).
 `birth_month`, `birth_year`, `first_name`, `last_name`, `company`, `address1`, `address2`,
 `country`, `state`, `city` e `zipcode`. Reproduzido com duas contas de teste criadas para isso.
 
-**Observação:** o endpoint aparece na lista pública de APIs do site, e
-[`account.api.cy.js`](cypress/e2e/api/account.api.cy.js) o usa como contrato documentado. Se o site
-passar a exigir autenticação, aquele teste da suíte principal precisará ser ajustado.
+**Observação:** o endpoint aparece na lista pública de APIs do site e é usado pela suíte principal para
+conferir os dados gravados (cadastro e conta). Todas as chamadas passam pelo comando `cy.apiGetUserDetail` em
+[`cypress/support/commands.js`](cypress/support/commands.js): se o site passar a exigir autenticação, o ajuste é
+feito só nele.
 
 ## BUG-08 — Contact Us confirma o envio, mas não envia nada
 

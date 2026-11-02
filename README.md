@@ -71,7 +71,7 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 Em três rodadas de exploração foram encontrados **17 bugs** no site e na API, documentados com
 passos de reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
 
-<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.5 de 26/10/2026, por Angelo Roque: 17 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 6 baixas."></a></p>
+<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.6 de 02/11/2026, por Angelo Roque: 17 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 6 baixas."></a></p>
 
 - **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
 - **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção.
@@ -146,9 +146,10 @@ cypress/
 │       └── search.cy.js         # cenários de teste de busca de produtos
 ├── fixtures/
 │   ├── apiData.json             # massa de dados dos testes de API
-│   └── users.json               # todos os e-mails e senhas dos testes; contas aleatórias seguem o modelo qa.{id}@teste.com
+│   └── users.json               # e-mails, senhas e dados dos formulários; contas aleatórias seguem o modelo qa.{id}@teste.com
 └── support/
-    ├── commands.js              # comandos customizados do Cypress
+    ├── catalogo.js              # carrega o catálogo da API, fonte do que busca, filtro e carrinho devem mostrar
+    ├── commands.js              # comandos customizados: login, carrinho, leitura da tela, busca e API
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
     └── usuarioDeTeste.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/

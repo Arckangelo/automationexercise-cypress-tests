@@ -57,29 +57,12 @@ describe('Cadastro de usuário', () => {
 
             cy.get('[data-qa="account-created"]').should('be.visible')
             cy.get('[data-qa="continue-button"]').click()
-            cy.get('.shop-menu a:has(.fa-user) b').invoke('text').invoke('trim').should('eq', dados.name)
+            cy.usuarioLogado().should('eq', dados.name)
 
             // persistência: a senha cadastrada funciona e os dados foram gravados como digitados
             cy.apiVerifyLogin(conta.email, conta.password).its('body.responseCode').should('eq', 200)
 
-            cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email: conta.email } })
-                .its('body.user')
-                .should('include', {
-                    name: dados.name,
-                    title: 'Mr',
-                    birth_day: dados.birth_date,
-                    birth_month: dados.birth_month,
-                    birth_year: dados.birth_year,
-                    first_name: dados.firstname,
-                    last_name: dados.lastname,
-                    company: dados.company,
-                    address1: dados.address1,
-                    address2: dados.address2,
-                    country: dados.country,
-                    state: dados.state,
-                    city: dados.city,
-                    zipcode: dados.zipcode,
-                })
+            cy.contaDeveEstarGravada({ ...dados, email: conta.email })
         })
     })
 
@@ -88,9 +71,9 @@ describe('Cadastro de usuário', () => {
         // conta criada via API: o teste não depende do cadastro pela tela
         const existente = usarUsuarioDeTeste()
 
-        it('e-mail já cadastrado mostra erro e não avança para o formulário completo', () => {
+        it('e-mail já cadastrado mostra erro e não avança para o formulário completo', function () {
             cy.visit('/login')
-            cy.get('[data-qa="signup-name"]').type('Outro Nome')
+            cy.get('[data-qa="signup-name"]').type(this.users.nomeAlternativo)
             cy.get('[data-qa="signup-email"]').type(existente.email)
             cy.get('[data-qa="signup-button"]').click()
 

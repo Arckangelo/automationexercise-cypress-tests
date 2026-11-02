@@ -4,9 +4,21 @@
     "password": "Qa@{id}"
   },
   "senhaIncorreta": "senhaerrada",
+  "nomeAlternativo": "Outro Nome",
   "formularios": {
-    "contato": "qa.contato@teste.com",
-    "newsletter": "qa.newsletter@teste.com",
-    "avaliacao": "qa.avaliacao@teste.com"
+    "contato": {
+      "nome": "QA Automatizado",
+      "email": "qa.contato@teste.com",
+      "assunto": "Teste de regressão",
+      "mensagem": "Mensagem de teste do BUG-08."
+    },
+    "newsletter": {
+      "email": "qa.newsletter@teste.com"
+    },
+    "avaliacao": {
+      "nome": "QA Automatizado",
+      "email": "qa.avaliacao@teste.com",
+      "texto": "Avaliação de teste do BUG-11."
+    }
   }
 }

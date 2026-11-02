@@ -38,6 +38,7 @@
   }
   * { box-sizing: border-box; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sem-quebra { white-space: nowrap; }
   body { margin: 0; font: 9.6pt/1.5 Inter, sans-serif; color: var(--texto); }
 
   /* Capa */
@@ -112,12 +113,12 @@
   <p class="aplicacao">Aplicação: Automation Exercise — https://www.automationexercise.com</p>
   <table>
     <tr><th>DOCUMENTO</th><td>Relatório de defeitos e propostas de correção</td></tr>
-    <tr><th>VERSÃO</th><td>1.5</td></tr>
-    <tr><th>DATA</th><td>26/10/2026</td></tr>
+    <tr><th>VERSÃO</th><td>1.6</td></tr>
+    <tr><th>DATA</th><td>02/11/2026</td></tr>
     <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
-    <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.1.1</td></tr>
+    <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.2.1</td></tr>
     <tr><th>STATUS GERAL</th><td>17 defeitos confirmados e reproduzíveis — 6 alta, 5 média, 6 baixa</td></tr>
-    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): BUG-01 a BUG-05 · 1.1 (16/10/2026): BUG-06 a BUG-11 · 1.2 (26/10/2026): BUG-12 e BUG-13 · 1.3 (26/10/2026): BUG-14 · 1.4 (26/10/2026): BUG-15 · 1.5 (26/10/2026): impacto do BUG-12 confirmado e BUG-16</td></tr>
+    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): <span class="sem-quebra">BUG-01</span> a <span class="sem-quebra">BUG-05</span> · 1.1 (16/10/2026): <span class="sem-quebra">BUG-06</span> a <span class="sem-quebra">BUG-11</span> · 1.2 (26/10/2026): <span class="sem-quebra">BUG-12</span> e <span class="sem-quebra">BUG-13</span> · 1.3 (26/10/2026): <span class="sem-quebra">BUG-14</span> · 1.4 (26/10/2026): <span class="sem-quebra">BUG-15</span> · 1.5 (26/10/2026): impacto do <span class="sem-quebra">BUG-12</span> confirmado e <span class="sem-quebra">BUG-16</span> · 1.6 (02/11/2026): <span class="sem-quebra">BUG-17</span> e reteste automatizado de todos</td></tr>
   </table>
 </section>
 
@@ -224,7 +225,7 @@
     <tr><th>Sistema operacional</th><td>Ubuntu 26.04.1 LTS (linux-x64)</td></tr>
     <tr><th>Navegador</th><td>Chromium 1243 (Playwright), headless, 1280×720, locale en-US, fuso UTC</td></tr>
     <tr><th>Node.js</th><td>v24.14.0</td></tr>
-    <tr><th>Cypress</th><td>16.1.1 (navegador Electron)</td></tr>
+    <tr><th>Cypress</th><td>16.2.1 (navegador Chrome 156); até a versão 1.5 do relatório, 16.1.1 com Electron</td></tr>
     <tr><th>REA</th><td>6.4.0 na rodada 1; 6.5.0 na rodada 2</td></tr>
     <tr><th>Tecnologia observada no servidor</th><td>Django (inferido pelo token <code>csrfmiddlewaretoken</code> e pela página de erro), Phusion Passenger 6.2.0, atrás do Cloudflare</td></tr>
   </table>
@@ -644,8 +645,9 @@ def delete_account(request):
     <li>Devolver só os campos necessários ao cliente da API;</li>
     <li>Responder da mesma forma para e-mail existente e inexistente quando não houver autorização, para não permitir enumeração.</li>
   </ul>
-  <div class="nota">O endpoint é documentado na lista pública de APIs do site, e o teste da suíte principal
-  <code>account.api.cy.js</code> o usa como contrato. Se a correção for aplicada, aquele teste deverá ser ajustado junto.</div>
+  <div class="nota">O endpoint é documentado na lista pública de APIs do site e é usado pela suíte principal para
+  conferir os dados gravados (cadastro e conta). Todas as chamadas passam pelo comando <code>cy.apiGetUserDetail</code>
+  em <code>cypress/support/commands.js</code>: se a correção for aplicada, o ajuste é feito só nele.</div>
   <h4>Critério de aceite</h4>
   <p>Sem autenticação, a resposta não contém dados pessoais (HTTP 401); teste Cypress do BUG-07 passando.</p>
 </section>
@@ -1090,7 +1092,7 @@ def delete_account(request):
 <!-- ============================== 6. RASTREABILIDADE ============================== -->
 <section class="secao">
   <h2>6. Rastreabilidade com os testes automatizados</h2>
-  <p class="pequeno">Execução de 26/10/2026: <code>npm run test:bugs</code>, 25 testes, 25 falhas, todas pelas asserções que descrevem os defeitos.</p>
+  <p class="pequeno">Execução de 02/11/2026: <code>npm run test:bugs</code>, 26 testes, 26 falhas, todas pelas asserções que descrevem os defeitos.</p>
   <table class="dados pequeno">
     <thead><tr><th>Defeito</th><th>Teste Cypress</th><th>Resultado atual</th></tr></thead>
     <tbody>
@@ -1119,6 +1121,7 @@ def delete_account(request):
       <tr><td>BUG-15</td><td>[BUG-15] termo com "&amp;" ("Blue &amp; Pink") deve encontrar os produtos de "Blue &amp; Pink"</td><td>Falha — <code>expected [ 1, 16, 21, 37, 41 ] to deeply equal [ 16 ]</code></td></tr>
       <tr><td>BUG-16</td><td>[BUG-16] /download_invoice/&lt;valor&gt; não deve emitir fatura sem pedido nem sessão</td><td>Falha — fatura com <code>amount is 999999</code></td></tr>
       <tr><td>BUG-16</td><td>[BUG-16] /payment_done/&lt;valor&gt; não deve confirmar pedido sem pagamento nem sessão</td><td>Falha — <code>order-placed</code> encontrado</td></tr>
+      <tr><td>BUG-17</td><td>[BUG-17] PUT /api/updateAccount com senha errada deve retornar 401, não "Account not found!"</td><td>Falha — resposta <code>Account not found!</code></td></tr>
     </tbody>
   </table>
 
@@ -1128,7 +1131,7 @@ def delete_account(request):
     comportamento observado, do HTML, do CSS e do JavaScript públicos. Os trechos de código do back-end são propostas
     ilustrativas, e não cópias do código existente.</li>
     <li>Os resultados refletem o estado do site em 14/10/2026 (BUG-01 a BUG-05) e 16/10/2026 (BUG-06 a BUG-11, e
-    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
+    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos) e 02/11/2026 (BUG-17, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
     <li>O Automation Exercise é um site de prática de automação; parte dos comportamentos (como os formulários sem
     envio) pode ser intencional. Eles foram registrados porque, do ponto de vista do usuário, são defeitos.</li>
     <li>O ataque entre origens do BUG-06 é inferido, não demonstrado. A página de depuração do BUG-09 não foi analisada

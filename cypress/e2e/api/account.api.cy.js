@@ -34,28 +34,6 @@ describe('API - Conta de usuário', () => {
 
     const credenciaisValidas = (email, password) => cy.apiVerifyLogin(email, password).its('body.responseCode')
 
-    const dadosGravados = (email) =>
-        cy.apiRequest({ method: 'GET', url: '/api/getUserDetailByEmail', qs: { email } })
-
-    // nomes dos campos na resposta da consulta (diferentes dos do cadastro)
-    const comoGravado = (conta) => ({
-        name: conta.name,
-        email: conta.email,
-        title: conta.title,
-        birth_day: conta.birth_date,
-        birth_month: conta.birth_month,
-        birth_year: conta.birth_year,
-        first_name: conta.firstname,
-        last_name: conta.lastname,
-        company: conta.company,
-        address1: conta.address1,
-        address2: conta.address2,
-        country: conta.country,
-        state: conta.state,
-        city: conta.city,
-        zipcode: conta.zipcode,
-    })
-
     describe('criação', () => {
 
         it('criar conta retorna 201 e a senha cadastrada passa a funcionar', () => {
@@ -93,10 +71,7 @@ describe('API - Conta de usuário', () => {
 
         it('consulta por e-mail devolve os dados gravados no cadastro', () => {
             criarConta().then((conta) => {
-                dadosGravados(conta.email).then(({ body }) => {
-                    expect(body.responseCode).to.eq(200)
-                    expect(body.user).to.include(comoGravado(conta))
-                })
+                cy.contaDeveEstarGravada(conta)
             })
         })
     })
@@ -107,10 +82,10 @@ describe('API - Conta de usuário', () => {
             criarConta().then((conta) => {
                 const atualizada = { ...conta, city: 'Campinas', company: 'Empresa Atualizada' }
 
-                cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: atualizada })
+                cy.apiUpdateAccount(atualizada)
                     .its('body').should('deep.equal', { responseCode: 200, message: 'User updated!' })
 
-                dadosGravados(conta.email).its('body.user').should('include', comoGravado(atualizada))
+                cy.contaDeveEstarGravada(atualizada)
             })
         })
 
@@ -121,10 +96,10 @@ describe('API - Conta de usuário', () => {
             criarConta().then((conta) => {
                 const tentativa = { ...conta, password: this.users.senhaIncorreta, city: 'Alterada Indevidamente' }
 
-                cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: tentativa })
+                cy.apiUpdateAccount(tentativa)
                     .its('body').should('deep.equal', { responseCode: 404, message: 'Account not found!' })
 
-                dadosGravados(conta.email).its('body.user').should('include', comoGravado(conta))
+                cy.contaDeveEstarGravada(conta)
             })
         })
     })
@@ -137,7 +112,7 @@ describe('API - Conta de usuário', () => {
                     .its('body').should('deep.equal', { responseCode: 200, message: 'Account deleted!' })
 
                 credenciaisValidas(email, password).should('eq', 404)
-                dadosGravados(email).its('body.responseCode').should('eq', 404)
+                cy.apiGetUserDetail(email).its('body.responseCode').should('eq', 404)
             })
         })
 
