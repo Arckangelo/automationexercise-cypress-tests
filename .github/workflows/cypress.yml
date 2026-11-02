@@ -38,7 +38,7 @@ jobs:
 
       # a action instala as dependências com "npm ci", exatamente como no package-lock.json
       - name: Rodar testes Cypress
-        uses: cypress-io/github-action@bc982daf1fc26474fa0cf2c355d6c910616ce411 # v7.4.7
+        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
         with:
           command: npm run test:${{ matrix.browser }}
 
@@ -78,7 +78,7 @@ jobs:
       - name: Rodar testes de bugs conhecidos
         id: bugs
         continue-on-error: true
-        uses: cypress-io/github-action@bc982daf1fc26474fa0cf2c355d6c910616ce411 # v7.4.7
+        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
         with:
           # os bugs são do site, não do navegador: basta um
           command: npm run test:bugs -- --browser chrome

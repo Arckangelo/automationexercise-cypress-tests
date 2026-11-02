@@ -1,3 +1,5 @@
+import { gerarCredenciais } from '../../support/usuarioDeTeste'
+
 describe('API - Conta de usuário', () => {
 
     let novaConta = {}
@@ -11,17 +13,16 @@ describe('API - Conta de usuário', () => {
     // mesmo se o teste falhar; 404 significa que o próprio teste já apagou.
     const contasCriadas = []
 
-    const novosDados = () => {
-        const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
-        const conta = { ...novaConta, email: `qa.api.${id}@teste.com`, password: `Qa@${id}` }
-        contasCriadas.push(conta)
-        return conta
-    }
+    const novosDados = () =>
+        cy.get('@users').then(({ contaAleatoria }) => {
+            const conta = { ...novaConta, ...gerarCredenciais(contaAleatoria) }
+            contasCriadas.push(conta)
+            return conta
+        })
 
-    const criarConta = () => {
-        const conta = novosDados()
-        return cy.apiCreateAccount(conta).its('body.responseCode').should('eq', 201).then(() => conta)
-    }
+    const criarConta = () =>
+        novosDados().then((conta) =>
+            cy.apiCreateAccount(conta).its('body.responseCode').should('eq', 201).then(() => conta))
 
     afterEach(() => {
         contasCriadas.splice(0).forEach(({ email, password }) => {
@@ -58,20 +59,20 @@ describe('API - Conta de usuário', () => {
     describe('criação', () => {
 
         it('criar conta retorna 201 e a senha cadastrada passa a funcionar', () => {
-            const conta = novosDados()
-
-            cy.apiCreateAccount(conta).its('body').should('deep.equal', { responseCode: 201, message: 'User created!' })
-            credenciaisValidas(conta.email, conta.password).should('eq', 200)
+            novosDados().then((conta) => {
+                cy.apiCreateAccount(conta).its('body').should('deep.equal', { responseCode: 201, message: 'User created!' })
+                credenciaisValidas(conta.email, conta.password).should('eq', 200)
+            })
         })
 
         it('sem o campo "name" retorna 400 e não cria a conta', () => {
-            const { name, ...semNome } = novosDados()
-
-            cy.apiCreateAccount(semNome).its('body').should('deep.equal', {
-                responseCode: 400,
-                message: 'Bad request, name parameter is missing in POST request.',
+            novosDados().then(({ name, ...semNome }) => {
+                cy.apiCreateAccount(semNome).its('body').should('deep.equal', {
+                    responseCode: 400,
+                    message: 'Bad request, name parameter is missing in POST request.',
+                })
+                credenciaisValidas(semNome.email, semNome.password).should('eq', 404)
             })
-            credenciaisValidas(semNome.email, semNome.password).should('eq', 404)
         })
 
         // pega: duplicar a conta ou sobrescrever a senha da conta existente
@@ -116,9 +117,9 @@ describe('API - Conta de usuário', () => {
         // permissão: sem a senha certa, ninguém altera a conta de outra pessoa
         // A resposta "Account not found!" para uma conta que existe é o BUG-17 (ver BUGS.md);
         // aqui ela é checada como o contrato atual da API.
-        it('atualizar com senha errada retorna 404 e não altera os dados', () => {
+        it('atualizar com senha errada retorna 404 e não altera os dados', function () {
             criarConta().then((conta) => {
-                const tentativa = { ...conta, password: 'senhaErrada', city: 'Alterada Indevidamente' }
+                const tentativa = { ...conta, password: this.users.senhaIncorreta, city: 'Alterada Indevidamente' }
 
                 cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: tentativa })
                     .its('body').should('deep.equal', { responseCode: 404, message: 'Account not found!' })
@@ -141,17 +142,20 @@ describe('API - Conta de usuário', () => {
         })
 
         // permissão: sem a senha certa, ninguém apaga a conta de outra pessoa
-        it('apagar com senha errada retorna 404 e mantém a conta', () => {
+        it('apagar com senha errada retorna 404 e mantém a conta', function () {
             criarConta().then(({ email, password }) => {
-                cy.apiDeleteAccount(email, 'senhaErrada')
+                cy.apiDeleteAccount(email, this.users.senhaIncorreta)
                     .its('body').should('deep.equal', { responseCode: 404, message: 'Account not found!' })
 
                 credenciaisValidas(email, password).should('eq', 200)
             })
         })
 
-        it('apagar conta inexistente retorna 404', () => {
-            cy.apiDeleteAccount('conta_que_nao_existe_999@teste.com', 'qualquercoisa')
+        // e-mail novo a cada execução: um fixo poderia ser cadastrado por alguém no site
+        it('apagar conta inexistente retorna 404', function () {
+            const inexistente = gerarCredenciais(this.users.contaAleatoria)
+
+            cy.apiDeleteAccount(inexistente.email, inexistente.password)
                 .its('body').should('deep.equal', { responseCode: 404, message: 'Account not found!' })
         })
     })

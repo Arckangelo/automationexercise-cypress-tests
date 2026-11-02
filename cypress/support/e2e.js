@@ -10,5 +10,11 @@ Cypress.on('uncaught:exception', (err) => {
     }
 })
 
+// E-mails e senhas usados nos testes ficam em fixtures/users.json, disponível em
+// todo teste e hook como this.users (com function, não arrow) ou cy.get('@users').
+beforeEach(() => {
+    cy.fixture('users').as('users')
+})
+
 import 'cypress-mochawesome-reporter/register'
 import './commands.js'

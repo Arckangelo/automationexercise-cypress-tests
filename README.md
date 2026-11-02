@@ -146,11 +146,11 @@ cypress/
 │       └── search.cy.js         # cenários de teste de busca de produtos
 ├── fixtures/
 │   ├── apiData.json             # massa de dados dos testes de API
-│   └── users.json               # dados de cenários negativos (senha incorreta, usuário inexistente)
+│   └── users.json               # todos os e-mails e senhas dos testes; contas aleatórias seguem o modelo qa.{id}@teste.com
 └── support/
     ├── commands.js              # comandos customizados do Cypress
-    ├── e2e.js                   # configurações globais carregadas antes dos testes
-    └── usuarioDeTeste.js        # cria e remove a conta descartável usada nos testes com login
+    ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
+    └── usuarioDeTeste.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/
 └── cypress.js                   # roda o Cypress com um ambiente estável em qualquer sistema (usado pelos scripts npm)
 ```
