@@ -16,7 +16,7 @@ Suíte de testes automatizados end-to-end para o site [AutomationExercise](https
 - **17 bugs encontrados** no site e na API (6 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
 - **Testes independentes e sem dados fixos:** cada execução cria um usuário descartável pela API e o remove ao final. O carrinho é preparado por HTTP, para que um teste não dependa de outro.
 - **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e asserções reforçadas por análise de mutação.
-- **CI no GitHub Actions:** a suíte roda a cada push e diariamente, o relatório HTML é publicado no GitHub Pages e o pipeline tem verificações de segurança (gitleaks, npm audit, CodeQL).
+- **CI no GitHub Actions:** a suíte roda no Chrome, no Firefox e no Edge a cada push e diariamente, o relatório HTML é publicado no GitHub Pages e o pipeline tem verificações de segurança (gitleaks, npm audit, CodeQL).
 
 > Veja também meu [projeto em Python + Playwright](https://github.com/Arckangelo/saucedemo-playwright-python), com testes E2E do SauceDemo.
 
@@ -114,6 +114,7 @@ docs/
 ├── Relatorio_de_Bugs.pdf        # relatório completo de bugs (gerado)
 ├── img/capa-relatorio.png       # capa do relatório usada neste README (gerada)
 └── relatorio/                   # fontes HTML do PDF e da capa, e o gerar.sh que os produz
+.nvmrc                           # versão do Node usada localmente e no CI
 .gitleaks.toml                   # regras do gitleaks e exceções comentadas para falsos positivos
 .pre-commit-config.yaml          # hook local opcional que bloqueia segredos antes do commit
 BUGS.md                          # resumo dos bugs encontrados
@@ -150,11 +151,14 @@ cypress/
     ├── commands.js              # comandos customizados do Cypress
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
     └── usuarioDeTeste.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
+scripts/
+└── cypress.js                   # roda o Cypress com um ambiente estável em qualquer sistema (usado pelos scripts npm)
 ```
 
 ## 🚀 Como rodar o projeto
 
-**Pré-requisitos:** Node.js instalado
+**Pré-requisitos:** Node.js 24, a versão do [`.nvmrc`](.nvmrc) usada também no CI (com nvm: `nvm use`). Para rodar no Chrome, Firefox ou Edge, o navegador precisa estar
+instalado; sem eles, os testes rodam no Electron, que já vem com o Cypress.
 
 1. Clone o repositório
 ```bash
@@ -162,18 +166,23 @@ git clone https://github.com/Arckangelo/automationexercise-cypress-tests.git
 cd automationexercise-cypress-tests
 ```
 
-2. Instale as dependências
+2. Instale as dependências (nas versões exatas do `package-lock.json`)
 ```bash
-npm install
+npm ci
 ```
 
 3. Rode os testes
 
 ```bash
-npm test             # roda toda a suíte sem abrir o navegador (como no CI)
-npx cypress open     # abre a interface do Cypress
-npm run test:bugs    # roda só os testes de bugs conhecidos (falham enquanto os bugs existirem)
+npm test               # roda toda a suíte sem abrir o navegador (no Electron)
+npm run test:chrome    # a suíte no Chrome (também test:firefox e test:edge, como no CI)
+npm run test:open      # abre a interface do Cypress
+npm run test:bugs      # roda só os testes de bugs conhecidos (falham enquanto os bugs existirem)
 ```
+
+Os scripts passam pelo [`scripts/cypress.js`](scripts/cypress.js), que corrige duas variáveis de ambiente
+que travam o Electron em algumas máquinas: a sessão gráfica Wayland (padrão no Ubuntu e no Fedora) e o
+`ELECTRON_RUN_AS_NODE` que editores como o VS Code repassam. Por isso prefira `npm run` a `npx cypress`.
 
 Na interface, escolha **E2E Testing** → selecione um navegador → clique em qualquer arquivo `.cy.js` para rodar.
 
@@ -185,9 +194,9 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 
 | Job | O que faz |
 |---|---|
-| Suíte principal | Roda os 48 testes; salva as screenshots das falhas e o relatório HTML como artefatos |
-| Bugs conhecidos | Roda os 26 testes de regressão sem quebrar o pipeline e indica no resumo se algum bug foi corrigido |
-| Publicar relatório | Publica os dois relatórios HTML no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
+| Suíte principal | Roda os 48 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
+| Bugs conhecidos | Roda os 26 testes de regressão no Chrome, sem quebrar o pipeline, e indica no resumo se algum bug foi corrigido |
+| Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline
 

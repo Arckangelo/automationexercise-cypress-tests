@@ -16,24 +16,37 @@ permissions:
 
 jobs:
   suite:
-    name: Suíte principal
+    name: Suíte principal (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    strategy:
+      # um navegador falhando não cancela os outros: o relatório mostra todos
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, edge]
     steps:
       - name: Checkout do código
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # Node (e o npm que vem com ele) na versão do .nvmrc, não na da imagem do
+      # runner: atualizar o npm passa a ser uma decisão tomada num PR
+      - name: Instalar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # a action instala as dependências com "npm ci", exatamente como no package-lock.json
       - name: Rodar testes Cypress
         uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
         with:
-          build: npm install
+          command: npm run test:${{ matrix.browser }}
 
       - name: Salvar screenshots das falhas
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: screenshots-suite
+          name: screenshots-suite-${{ matrix.browser }}
           path: cypress/screenshots
           if-no-files-found: ignore
 
@@ -41,8 +54,24 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: relatorio-suite
+          name: relatorio-suite-${{ matrix.browser }}
           path: cypress/reports/suite
+
+  # A proteção da main exige um check chamado "Suíte principal". Com a matriz,
+  # cada navegador vira um job próprio; este junta os resultados num só check,
+  # que passa apenas se a suíte passou em todos os navegadores.
+  suite-resultado:
+    name: Suíte principal
+    needs: suite
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir os navegadores
+        env:
+          RESULTADO: ${{ needs.suite.result }}
+        run: |
+          echo "Resultado da matriz: $RESULTADO"
+          [ "$RESULTADO" = "success" ]
 
   known-bugs:
     name: Bugs conhecidos
@@ -53,6 +82,13 @@ jobs:
         with:
           persist-credentials: false
 
+      # Node (e o npm que vem com ele) na versão do .nvmrc, não na da imagem do
+      # runner: atualizar o npm passa a ser uma decisão tomada num PR
+      - name: Instalar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
       # Estes testes falham enquanto os bugs existirem; o job não quebra o
       # pipeline e serve para acompanhar o estado dos bugs no relatório.
       - name: Rodar testes de bugs conhecidos
@@ -60,8 +96,8 @@ jobs:
         continue-on-error: true
         uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
         with:
-          build: npm install
-          command: npm run test:bugs
+          # os bugs são do site, não do navegador: basta um
+          command: npm run test:bugs -- --browser chrome
 
       - name: Resumo
         if: always()
@@ -121,7 +157,9 @@ jobs:
           <body>
             <h1>AutomationExercise · Relatórios de testes</h1>
             <p><small>Gerado pelo CI em __DATA__ · <a style="display:inline;border:0;padding:0;color:#2563eb" href="https://github.com/__REPOSITORIO__">repositório</a></small></p>
-            <a href="relatorio-suite/index.html"><strong>Suíte principal</strong><br><small>Testes de UI e API (devem passar)</small></a>
+            <a href="relatorio-suite-chrome/index.html"><strong>Suíte principal · Chrome</strong><br><small>Testes de UI e API (devem passar)</small></a>
+            <a href="relatorio-suite-firefox/index.html"><strong>Suíte principal · Firefox</strong><br><small>Testes de UI e API (devem passar)</small></a>
+            <a href="relatorio-suite-edge/index.html"><strong>Suíte principal · Edge</strong><br><small>Testes de UI e API (devem passar)</small></a>
             <a href="relatorio-known-bugs/index.html"><strong>Bugs conhecidos</strong><br><small>Testes de regressão que falham enquanto os bugs existirem</small></a>
           </body>
           </html>
