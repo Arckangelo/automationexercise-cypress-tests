@@ -46,7 +46,7 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 | `delete-account.cy.js` | Exclusão da conta pela tela: sessão encerrada e login recusado na tela e na API |
 | `search.cy.js` | Busca que mostra **exatamente** os produtos com o termo (comparados ao catálogo da API), sem diferenciar maiúsculas, ignorando espaço no fim, e busca sem resultados |
 | `filter.cy.js` | Filtros por categoria (Women > Dress, Men > Jeans) e por marca (Polo) mostrando **exatamente** os produtos do catálogo, e contagem de cada marca na lateral |
-| `product-details.cy.js` | Nome, preço, categoria e marca dos 34 produtos iguais aos da API, link "View Product", adição com quantidade e imagem |
+| `product-details.cy.js` | Nome, preço, categoria e marca iguais aos da API numa amostra por **partição de equivalência** (cada categoria, cada marca, preços extremos, nome mais longo, último ID, `&` no texto) mais 1 produto **sorteado** a cada execução; link "View Product", adição com quantidade e imagem. O formato de todo o catálogo é conferido pela API |
 | `checkout.cy.js` | Carrinho (adicionar, somar quantidade, remover com verificação após recarregar, carrinho vazio) e checkout (itens, total, endereço, bloqueio sem login e compra completa com fatura) |
 | `cart-session.cy.js` | Carrinho entre sessões: do visitante para a conta, depois do logout, em outro navegador e soma com o carrinho da conta |
 
@@ -254,6 +254,9 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - Só exceções de scripts de anúncio de terceiros são ignoradas (`cypress/support/e2e.js`); qualquer outro erro JavaScript do site falha o teste
 - O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem até 2 novas tentativas (`retries`) — exceto os de bugs conhecidos, em que a falha é o resultado esperado
 - Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.apiRequest` reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [paginaDeEspera.js](cypress/support/paginaDeEspera.js)
+- Quando o site responde `503` ou `429` (sobrecarga), o `cy.request` repete só aquela requisição, até 3 vezes, em vez de o Cypress repetir o teste inteiro
+- Anúncios e rastreadores de terceiros são bloqueados (`blockHosts` no `cypress.config.js`): deixam as páginas mais lentas e não fazem parte do site testado
+- Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.entrarPorRequisicao`; o login pela tela é coberto em `login.cy.js`
 - **Os testes provisionam os próprios dados:** os specs que precisam de login criam uma conta descartável via API num `before()` e a removem num `after()` (`cypress/support/usuarioDeTeste.js`). Nenhuma credencial fica no repositório e a suíte não depende de uma conta fixa
 
 ## 👤 Autor

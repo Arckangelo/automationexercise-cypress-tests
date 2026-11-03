@@ -21,17 +21,28 @@ describe('Detalhes do produto', () => {
     }
 
     // CT-PRODUCTS-DETAILS-01
-    // por HTTP, para cobrir os 34 produtos sem abrir 34 páginas no navegador
-    it('a página de cada produto mostra nome, preço, categoria e marca iguais aos da API', () => {
+    // A página é um template: em vez de todo o catálogo, confere um produto de
+    // cada classe de equivalência (catalogo.representantes) mais um sorteado, que
+    // muda a cada execução. O formato de TODOS os produtos é conferido pela API
+    // (CT-API-PRODUCTS-01). Para repetir um sorteio: --expose produtoSorteado=<id>
+    it('a página mostra nome, preço, categoria e marca iguais aos da API (classes de equivalência + 1 sorteado)', () => {
         expect(catalogo.produtos, 'catálogo carregado').to.not.be.empty
 
-        catalogo.produtos.forEach(({ id, name, price, brand, category }) => {
+        const representantes = catalogo.representantes()
+        const idSorteado = Cypress.expose('produtoSorteado') || catalogo.sortear(1, representantes.map((r) => r.id))[0].id
+        const amostra = [...representantes, { id: Number(idSorteado), motivos: ['sorteado'] }]
+        cy.log(`amostra: ${amostra.map((p) => p.id).join(', ')} (sorteado: ${idSorteado})`)
+
+        amostra.forEach(({ id, motivos }) => {
+            const produto = catalogo.produto(id)
+            expect(produto, `produto ${id} existe no catálogo`).to.exist
+
             cy.request(`/product_details/${id}`).its('body').then((html) => {
-                expect(lerDetalhes(html), `produto ${id}`).to.deep.equal({
-                    name,
-                    price,
-                    category: `${category.usertype.usertype} > ${category.category}`,
-                    brand,
+                expect(lerDetalhes(html), `produto ${id} (${motivos.join(', ')})`).to.deep.equal({
+                    name: produto.name,
+                    price: produto.price,
+                    category: catalogo.categoriaDe(produto),
+                    brand: produto.brand,
                 })
             })
         })

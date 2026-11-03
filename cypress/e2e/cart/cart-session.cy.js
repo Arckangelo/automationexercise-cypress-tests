@@ -7,15 +7,13 @@ describe('Carrinho entre sessões', () => {
     // conta descartável criada via API antes dos testes e removida no final
     const usuario = usarUsuarioDeTeste()
 
-    const entrar = () => {
-        cy.entrarPelaTela(usuario.email, usuario.password)
-        cy.usuarioLogado().should('eq', usuario.name)
-    }
+    // login e logout por HTTP: o assunto aqui é o carrinho, não as telas de
+    // login e logout (cobertas em login.cy.js)
+    const entrar = () => cy.entrarPorRequisicao(usuario.email, usuario.password)
 
     const sair = () => {
-        cy.visit('/')
-        cy.get('.shop-menu a[href="/logout"]').click()
-        cy.url().should('include', '/login')
+        cy.request('/logout')
+        cy.request('/').its('body').should('not.include', 'Logged in as')
     }
 
     // cada teste começa deslogado e com o carrinho da conta vazio

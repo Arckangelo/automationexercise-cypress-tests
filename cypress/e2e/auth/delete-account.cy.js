@@ -21,7 +21,9 @@ describe('Excluir conta', () => {
 
     // CT-AUTH-DELETE-ACCOUNT-01
     it('excluir a conta pela tela encerra a sessão e o login deixa de funcionar', () => {
-        cy.entrarPelaTela(conta.email, conta.password)
+        // login por HTTP (é preparação); a exclusão é feita pela tela
+        cy.entrarPorRequisicao(conta.email, conta.password)
+        cy.visit('/')
         cy.get('.shop-menu a[href="/delete_account"]').click()
 
         cy.get('[data-qa="account-deleted"]').should('be.visible')
