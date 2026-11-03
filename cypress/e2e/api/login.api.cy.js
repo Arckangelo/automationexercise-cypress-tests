@@ -41,8 +41,15 @@ describe('API - Verificação de login', () => {
     })
 
     // CT-API-LOGIN-06
-    it('método DELETE é rejeitado com 405 (só aceita POST)', () => {
-        cy.apiRequest({ method: 'DELETE', url: '/api/verifyLogin' })
-            .its('body').should('deep.equal', { responseCode: 405, message: 'This request method is not supported.' })
+    // GET, PUT e DELETE trazem o 405 só no corpo (BUG-04); o PATCH recebe um 405
+    // de verdade, mas em outro formato, sem responseCode (também BUG-04).
+    // Aqui só importa que todos sejam recusados.
+    it('GET, PUT, DELETE e PATCH são rejeitados com 405 (só aceita POST)', () => {
+        ;['GET', 'PUT', 'DELETE', 'PATCH'].forEach((method) => {
+            cy.request({ method, url: '/api/verifyLogin', failOnStatusCode: false }).then(({ status, body }) => {
+                const corpo = typeof body === 'string' ? JSON.parse(body) : body
+                expect(status === 405 || corpo.responseCode === 405, `${method} recusado com 405`).to.be.true
+            })
+        })
     })
 })

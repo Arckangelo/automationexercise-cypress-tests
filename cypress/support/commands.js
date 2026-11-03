@@ -170,6 +170,22 @@ Cypress.Commands.add('apiCreateAccount', (dados) => {
   return cy.apiRequest({ method: 'POST', url: '/api/createAccount', form: true, body: dados })
 })
 
+// Envia a 1ª etapa do cadastro (/login -> /signup) como o navegador enviaria, mas
+// sem a validação dos campos na tela (type="email", required). Devolve o HTML da resposta.
+Cypress.Commands.add('enviarSignupSemNavegador', (name, email) => {
+  return cy.request('/login').then(({ body }) => {
+    const token = Cypress.$(body).find('form[action="/signup"] [name="csrfmiddlewaretoken"]').val()
+
+    return cy.request({
+      method: 'POST',
+      url: '/signup',
+      form: true,
+      headers: { referer: `${Cypress.config('baseUrl')}/login` },
+      body: { csrfmiddlewaretoken: token, name, email, form_type: 'signup' },
+    })
+  }).its('body')
+})
+
 Cypress.Commands.add('apiUpdateAccount', (dados) => {
   return cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: dados })
 })

@@ -3,10 +3,15 @@
 // uma conta que não pode existir: um e-mail fixo poderia ser cadastrado por
 // alguém no site.
 //   const conta = gerarCredenciais(this.users.contaAleatoria)
+const novoId = () => `${Date.now()}${Cypress._.random(1000, 9999)}`
+
 export const gerarCredenciais = ({ email, password }) => {
-    const id = `${Date.now()}${Cypress._.random(1000, 9999)}`
+    const id = novoId()
     return { email: email.replaceAll('{id}', id), password: password.replaceAll('{id}', id) }
 }
+
+// mesmo preenchimento, para um modelo de e-mail solto (ex.: users.emailsInvalidos)
+export const gerarEmail = (modelo) => modelo.replaceAll('{id}', novoId())
 
 // Provisiona um usuário descartável para o describe que chamar esta função:
 // cria a conta via API antes dos testes e a remove ao final. Assim nenhuma

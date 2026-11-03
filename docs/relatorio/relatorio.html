@@ -113,20 +113,20 @@
   <p class="aplicacao">Aplicação: Automation Exercise — https://www.automationexercise.com</p>
   <table>
     <tr><th>DOCUMENTO</th><td>Relatório de defeitos e propostas de correção</td></tr>
-    <tr><th>VERSÃO</th><td>1.6</td></tr>
-    <tr><th>DATA</th><td>02/11/2026</td></tr>
+    <tr><th>VERSÃO</th><td>1.7</td></tr>
+    <tr><th>DATA</th><td>03/11/2026</td></tr>
     <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
     <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.2.1</td></tr>
-    <tr><th>STATUS GERAL</th><td>17 defeitos confirmados e reproduzíveis — 6 alta, 5 média, 6 baixa</td></tr>
-    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): <span class="sem-quebra">BUG-01</span> a <span class="sem-quebra">BUG-05</span> · 1.1 (16/10/2026): <span class="sem-quebra">BUG-06</span> a <span class="sem-quebra">BUG-11</span> · 1.2 (26/10/2026): <span class="sem-quebra">BUG-12</span> e <span class="sem-quebra">BUG-13</span> · 1.3 (26/10/2026): <span class="sem-quebra">BUG-14</span> · 1.4 (26/10/2026): <span class="sem-quebra">BUG-15</span> · 1.5 (26/10/2026): impacto do <span class="sem-quebra">BUG-12</span> confirmado e <span class="sem-quebra">BUG-16</span> · 1.6 (02/11/2026): <span class="sem-quebra">BUG-17</span> e reteste automatizado de todos</td></tr>
+    <tr><th>STATUS GERAL</th><td>19 defeitos confirmados e reproduzíveis — 6 alta, 7 média, 6 baixa</td></tr>
+    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): <span class="sem-quebra">BUG-01</span> a <span class="sem-quebra">BUG-05</span> · 1.1 (16/10/2026): <span class="sem-quebra">BUG-06</span> a <span class="sem-quebra">BUG-11</span> · 1.2 (26/10/2026): <span class="sem-quebra">BUG-12</span> e <span class="sem-quebra">BUG-13</span> · 1.3 (26/10/2026): <span class="sem-quebra">BUG-14</span> · 1.4 (26/10/2026): <span class="sem-quebra">BUG-15</span> · 1.5 (26/10/2026): impacto do <span class="sem-quebra">BUG-12</span> confirmado e <span class="sem-quebra">BUG-16</span> · 1.6 (02/11/2026): <span class="sem-quebra">BUG-17</span> e reteste automatizado de todos · 1.7 (03/11/2026): <span class="sem-quebra">BUG-18</span>, <span class="sem-quebra">BUG-19</span>, novas evidências do <span class="sem-quebra">BUG-04</span> e detalhamento do <span class="sem-quebra">BUG-17</span></td></tr>
   </table>
 </section>
 
 <!-- ============================== 1. SUMÁRIO ============================== -->
 <section>
   <h2>1. Sumário executivo</h2>
-  <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante três rodadas de
-  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados dezessete defeitos,
+  <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante quatro rodadas de
+  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados dezenove defeitos,
   todos reproduzíveis e cobertos por testes automatizados em Cypress que falham enquanto o defeito persistir.</p>
   <p>Os defeitos mais graves envolvem a conta do usuário e o atendimento. Uma simples requisição <code>GET</code> para
   <code>/delete_account</code> apaga a conta de quem estiver logado, sem confirmação nem proteção contra CSRF
@@ -142,6 +142,10 @@
   demais defeitos envolvem recursos carregados de forma insegura (Mixed Content) e incoerências no contrato da API,
   como status HTTP e Content-Type incorretos e uma lista de marcas que repete a marca de cada produto (BUG-14). Na busca, espaço duplo ou um <code>&amp;</code> no termo levam a resultados
   vazios ou errados (BUG-15).</p>
+  <p>Na conta, o servidor não valida o formato do e-mail: a API e o formulário de cadastro, enviado sem a validação do
+  navegador, criam contas com qualquer texto no lugar do e-mail (BUG-18). E a API responde a uma senha errada como se a
+  conta não existisse (BUG-17). Os campos obrigatórios do cadastro também aceitam valor vazio, inclusive a senha
+  (BUG-19).</p>
 
   <table class="dados">
     <thead><tr><th>ID</th><th>Título</th><th>Área</th><th>Severidade</th><th>Prioridade</th></tr></thead>
@@ -163,6 +167,8 @@
       <tr><td>BUG-15</td><td>Busca com espaço duplo ou “&amp;” no termo falha</td><td>Busca / Front-end</td><td class="baixa">Baixa</td><td>P3</td></tr>
       <tr><td>BUG-16</td><td>Confirmação de pedido e fatura gerados pela URL</td><td>Pedido / Back-end</td><td class="alta">Alta</td><td>P1</td></tr>
       <tr><td>BUG-17</td><td>Senha errada é respondida como conta inexistente</td><td>API REST</td><td class="baixa">Baixa</td><td>P3</td></tr>
+      <tr><td>BUG-18</td><td>E-mail em formato inválido é aceito no cadastro</td><td>Conta / Back-end</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-19</td><td>Campos obrigatórios do cadastro aceitam valor vazio</td><td>Conta / Back-end</td><td class="media">Média</td><td>P2</td></tr>
     </tbody>
   </table>
 </section>
@@ -194,6 +200,14 @@
     <li>Filtros por categoria e marca e busca de produtos, comparados ao catálogo da API, incluindo maiúsculas, espaços e caracteres especiais no termo;</li>
     <li>Envio do pagamento sem login (uma vez por cenário, com cartão fictício <code>4111 1111 1111 1111</code>) e acesso
     direto às páginas de confirmação e fatura.</li>
+  </ul>
+  <p><strong>Rodada 4 (02/11 e 03/11/2026, BUG-17 a BUG-19):</strong></p>
+  <ul>
+    <li>Respostas da API de conta a credenciais erradas (atualização e exclusão);</li>
+    <li>Validação do formato do e-mail no cadastro: pela API, pela tela e pelo formulário enviado direto ao servidor,
+    sem a validação do navegador;</li>
+    <li>Cadastro pela API com cada campo ausente e com cada campo vazio, um de cada vez;</li>
+    <li>Métodos HTTP aceitos por <code>/api/verifyLogin</code> (GET, PUT, PATCH, DELETE, HEAD e OPTIONS).</li>
   </ul>
   <p><strong>Fora do escopo:</strong> upload de arquivo no <em>Contact Us</em>, meios de pagamento reais e testes
   de carga ou de segurança ofensivos. Os testes de segurança se limitaram a observar o comportamento com contas de
@@ -465,7 +479,13 @@ class CartItem(models.Model):
       <tr><td><code>POST /api/verifyLogin</code> (parâmetros em query string)</td><td>200</td><td>400</td></tr>
     </tbody>
   </table>
-  <p><strong>Cypress:</strong> <code>status HTTP real: expected 200 to equal 405</code> e <code>expected 200 to equal 400</code>.</p>
+  <p>O contrato também é incoerente entre métodos. No <code>/api/verifyLogin</code>, que só aceita <code>POST</code>, o
+  <code>PATCH</code> recebe um 405 de verdade, mas no formato padrão do framework
+  (<code>{"detail": "Method \"PATCH\" not allowed."}</code>), sem o <code>responseCode</code> das outras respostas. E o
+  <code>OPTIONS</code> devolve <code>Allow: POST, PUT, DELETE, GET, OPTIONS</code>, anunciando métodos que o endpoint recusa.</p>
+  <p><strong>Cypress:</strong> <code>status HTTP real: expected 200 to equal 405</code>, <code>expected 200 to equal 400</code>,
+  <code>corpo: expected { Object (detail) } to have property 'responseCode'</code> e
+  <code>métodos anunciados: expected [ 'DELETE', 'GET', 'OPTIONS', 'POST', 'PUT' ] to deeply equal [ 'OPTIONS', 'POST' ]</code>.</p>
   <h4>Causa raiz</h4>
   <p>As views da API devolvem o código de erro como dado no corpo JSON, mas não o definem como status da resposta HTTP,
   que fica no padrão 200. A página <code>/api_list</code> documenta “Response Code: 405” sem esclarecer que o código não
@@ -1049,6 +1069,131 @@ def delete_account(request):
   <p>Sem um pedido da sessão atual, as duas rotas não exibem confirmação nem fatura; testes Cypress do BUG-16 passando.</p>
 </section>
 
+<!-- BUG-17 -->
+<section class="bug">
+  <h3>BUG-17 — Senha errada é respondida como conta inexistente</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td><code>PUT /api/updateAccount</code> e <code>DELETE /api/deleteAccount</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100%</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Criar uma conta com <code>POST /api/createAccount</code>.</li>
+    <li>Enviar <code>PUT /api/updateAccount</code> com o e-mail dessa conta, uma senha errada e algum campo alterado
+    (por exemplo <code>city</code>).</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>A API recusa a alteração e responde <code>401</code>, com uma mensagem de credenciais inválidas.</p>
+  <h4>Resultado obtido</h4>
+  <p>A alteração é recusada (os dados continuam os mesmos), mas a resposta é
+  <code>{"responseCode": 404, "message": "Account not found!"}</code>, embora a conta exista.
+  <code>DELETE /api/deleteAccount</code> com senha errada responde da mesma forma.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> <code>PUT /api/updateAccount</code> com senha errada responde
+    <code>{"responseCode": 404, "message": "Account not found!"}</code>, e a consulta seguinte mostra os dados inalterados;</li>
+    <li><strong>Cypress:</strong> <code>mensagem de erro: expected 'Account not found!' to not equal 'Account not found!'</code>.</li>
+  </ul>
+  <h4>Impacto</h4>
+  <p>Quem consome a API não distingue “conta inexistente” de “senha errada”, e o código 404 faz o erro parecer de rota
+  ou de recurso, não de autenticação.</p>
+  <h4>Solução proposta</h4>
+  <p>Responder <code>401</code> com uma mensagem genérica de credenciais inválidas sempre que o e-mail e a senha não
+  conferirem, sem dizer qual dos dois está errado.</p>
+  <h4>Critério de aceite</h4>
+  <p>Senha errada em <code>updateAccount</code> e <code>deleteAccount</code> responde 401; teste Cypress do BUG-17 passando.</p>
+</section>
+
+<!-- BUG-18 -->
+<section class="bug">
+  <h3>BUG-18 — E-mail em formato inválido é aceito no cadastro</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td><code>POST /api/createAccount</code> e <code>POST /signup</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (9 de 9 formatos testados)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Enviar <code>POST /api/createAccount</code> com todos os campos obrigatórios e <code>email=semarroba123</code>.</li>
+    <li>Consultar a conta com <code>POST /api/verifyLogin</code> usando esse e-mail e a senha cadastrada.</li>
+    <li>Pela tela: enviar o formulário de cadastro de <code>/login</code> direto ao servidor (sem a validação do
+    navegador), com um e-mail sem <code>@</code>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>O servidor recusa o cadastro com <code>400</code> (na API) ou com uma mensagem de erro (na tela), sem criar a conta.</p>
+  <h4>Resultado obtido</h4>
+  <p>A API responde <code>{"responseCode": 201, "message": "User created!"}</code> e a conta passa a fazer login. Foram
+  aceitos todos os formatos testados: sem <code>@</code>, sem domínio (<code>qa@</code>), sem usuário
+  (<code>@dominio.com</code>), domínio sem ponto, com espaço, com <code>@</code> duplo, com ponto duplo no domínio e com
+  HTML (<code>&lt;b&gt;qa&lt;/b&gt;@teste.com</code>, gravado como veio). Pela tela, o servidor avança para “Enter Account
+  Information” e, ao final, redireciona para <code>/account_created</code>.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> 8 formatos inválidos com <code>201 User created!</code>, login <code>200 User exists!</code> e
+    exclusão logo em seguida; o formulário de <code>/signup</code> criou a conta <code>tela1793681546</code> (excluída);</li>
+    <li><strong>Produção:</strong> já existe no site uma conta de terceiros cujo e-mail é só um espaço (<code>" "</code>);</li>
+    <li><strong>Cypress:</strong> <code>expected 201 to equal 400</code> nos 5 formatos da API e
+    <code>avançou para a 2ª etapa do cadastro: expected true to be false</code> no formulário.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>A única validação de formato é o atributo <code>type="email"</code> do campo na tela, aplicado pelo navegador. O
+  servidor grava o valor recebido sem validar, tanto na API quanto no formulário.</p>
+  <h4>Impacto</h4>
+  <p>Contas com e-mails que não recebem nada (confirmação, recuperação de senha, fatura) e texto arbitrário, inclusive
+  HTML, gravado no campo de e-mail, que pode ser exibido em outras telas ou sistemas.</p>
+  <h4>Solução proposta</h4>
+  <p>Validar o formato do e-mail no servidor (por exemplo com o <code>EmailValidator</code> do Django), na API e no
+  formulário, respondendo <code>400</code> com uma mensagem clara; normalizar espaços antes de validar.</p>
+  <h4>Critério de aceite</h4>
+  <p>E-mails fora do formato são recusados pela API e pelo formulário, sem criar conta; testes Cypress do BUG-18 passando.</p>
+</section>
+
+<!-- BUG-19 -->
+<section class="bug">
+  <h3>BUG-19 — Campos obrigatórios do cadastro aceitam valor vazio</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="media">Média</span> / P2</td></tr>
+    <tr><th>Componente</th><td><code>POST /api/createAccount</code> e <code>POST /signup</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (todos os campos obrigatórios)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Enviar <code>POST /api/createAccount</code> com todos os campos e <code>password=</code> (vazio).</li>
+    <li>Chamar <code>POST /api/verifyLogin</code> com o e-mail dessa conta e a senha vazia.</li>
+    <li>Pela tela: enviar o formulário de cadastro de <code>/login</code> direto ao servidor, sem a validação do
+    navegador, com o nome vazio.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>O servidor recusa campos obrigatórios vazios com <code>400</code> (na API) ou com uma mensagem de erro (na tela),
+  sem criar a conta.</p>
+  <h4>Resultado obtido</h4>
+  <p>A API só confere se o campo foi enviado. Sem o campo, responde
+  <code>400 "Bad request, &lt;campo&gt; parameter is missing in POST request."</code>; com o campo vazio, responde
+  <code>201 "User created!"</code>. Vale para todos os obrigatórios: name, password, firstname, lastname, address1,
+  country, zipcode, state, city e mobile_number. A conta criada com senha vazia faz login com a senha vazia. Pela tela,
+  o servidor aceita o nome vazio e avança para “Enter Account Information”.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> cada campo obrigatório ausente gera 400 com o nome do campo; o mesmo campo vazio gera 201.
+    Conta com senha vazia: <code>verifyLogin</code> com senha vazia responde <code>200 User exists!</code>. Todas as contas
+    de teste foram excluídas em seguida;</li>
+    <li><strong>Produção:</strong> já existe no site uma conta de terceiros com o e-mail vazio;</li>
+    <li><strong>Cypress:</strong> <code>expected 201 to equal 400</code> para password, name, firstname e city vazios, e
+    <code>avançou para a 2ª etapa do cadastro: expected true to be false</code> no formulário.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>O servidor verifica a presença de cada parâmetro na requisição, mas não o conteúdo. Na tela, o atributo
+  <code>required</code> dos campos é aplicado só pelo navegador. Mesma origem do BUG-18: falta de validação no servidor.</p>
+  <h4>Impacto</h4>
+  <p>Contas sem nome, endereço de entrega ou telefone, e contas sem senha, acessíveis só com o e-mail.</p>
+  <h4>Solução proposta</h4>
+  <p>Validar no servidor que cada campo obrigatório tem conteúdo (depois de remover espaços), na API e no formulário,
+  respondendo <code>400</code> com o nome do campo.</p>
+  <h4>Critério de aceite</h4>
+  <p>Campos obrigatórios vazios são recusados pela API e pelo formulário, sem criar conta; testes Cypress do BUG-19 passando.</p>
+</section>
+
 <!-- ============================== 4. PLANO ============================== -->
 <section class="secao">
   <h2>4. Plano de correção recomendado</h2>
@@ -1060,9 +1205,11 @@ def delete_account(request):
       <tr><td>3 — Urgente</td><td>BUG-12, BUG-16</td><td>Sessão autenticada obrigatória em <code>/checkout</code> e <code>/payment</code>; confirmação e fatura montadas a partir do pedido registrado da sessão, nunca da URL</td><td>Baixo a médio</td></tr>
       <tr><td>4</td><td>BUG-08, BUG-10, BUG-11</td><td>Envio real dos três formulários, com persistência e confirmação só após a resposta do servidor</td><td>Médio</td></tr>
       <tr><td>5</td><td>BUG-13</td><td>Verificação no servidor de carrinho com itens em <code>/checkout</code> e <code>/payment</code></td><td>Baixo</td></tr>
-      <tr><td>6</td><td>BUG-04, BUG-05, BUG-14</td><td>Utilitário único de resposta da API com status e Content-Type corretos; lista de marcas sem repetição; atualização da documentação</td><td>Baixo</td></tr>
+      <tr><td>6</td><td>BUG-04, BUG-05, BUG-14</td><td>Utilitário único de resposta da API com status, formato, Content-Type e cabeçalho <code>Allow</code> corretos em todos os métodos; lista de marcas sem repetição; atualização da documentação</td><td>Baixo</td></tr>
       <tr><td>7</td><td>BUG-15</td><td>Termo da busca com <code>encodeURIComponent</code> e <code>trim</code>; normalização de espaços no servidor</td><td>Muito baixo</td></tr>
-      <tr><td>8</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
+      <tr><td>8</td><td>BUG-18, BUG-19</td><td>Validação no servidor do formato do e-mail e do conteúdo dos campos obrigatórios, na API e no formulário de cadastro</td><td>Baixo</td></tr>
+      <tr><td>9</td><td>BUG-17</td><td>Resposta 401 genérica para credenciais inválidas em <code>updateAccount</code> e <code>deleteAccount</code></td><td>Muito baixo</td></tr>
+      <tr><td>10</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
     </tbody>
   </table>
   <div class="nota">As estimativas são qualitativas e baseadas apenas no comportamento observado. O código do servidor não foi analisado diretamente.</div>
@@ -1092,7 +1239,7 @@ def delete_account(request):
 <!-- ============================== 6. RASTREABILIDADE ============================== -->
 <section class="secao">
   <h2>6. Rastreabilidade com os testes automatizados</h2>
-  <p class="pequeno">Execução de 02/11/2026: <code>npm run test:bugs</code>, 26 testes, 26 falhas, todas pelas asserções que descrevem os defeitos.</p>
+  <p class="pequeno">Execução de 03/11/2026: <code>npm run test:bugs</code>, 39 testes, 39 falhas, todas pelas asserções que descrevem os defeitos.</p>
   <table class="dados pequeno">
     <thead><tr><th>Defeito</th><th>Teste Cypress</th><th>Resultado atual</th></tr></thead>
     <tbody>
@@ -1104,6 +1251,8 @@ def delete_account(request):
       <tr><td>BUG-04</td><td>[BUG-04] DELETE /api/verifyLogin deve retornar HTTP 405</td><td>Falha — <code>expected 200 to equal 405</code></td></tr>
       <tr><td>BUG-04</td><td>[BUG-04] POST /api/searchProduct sem parâmetro deve retornar HTTP 400</td><td>Falha — <code>expected 200 to equal 400</code></td></tr>
       <tr><td>BUG-04</td><td>[BUG-04] POST /api/verifyLogin com parâmetros na query string deve retornar HTTP 400</td><td>Falha — <code>expected 200 to equal 400</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] PATCH /api/verifyLogin deve responder no formato da API (com responseCode)</td><td>Falha — corpo <code>{"detail": ...}</code> sem <code>responseCode</code></td></tr>
+      <tr><td>BUG-04</td><td>[BUG-04] OPTIONS /api/verifyLogin: o cabeçalho Allow deve anunciar só os métodos aceitos</td><td>Falha — <code>Allow</code> com DELETE, GET e PUT</td></tr>
       <tr><td>BUG-05</td><td>[BUG-05] GET /api/productsList deve declarar Content-Type JSON</td><td>Falha — <code>expected 'text/html; charset=utf-8' to include 'application/json'</code></td></tr>
       <tr><td>BUG-06</td><td>[BUG-06] GET /delete_account não deve excluir a conta sem confirmação</td><td>Falha — <code>expected 404 to equal 200</code></td></tr>
       <tr><td>BUG-07</td><td>[BUG-07] GET /api/getUserDetailByEmail não deve expor dados pessoais sem autenticação</td><td>Falha — resposta contém <code>user</code></td></tr>
@@ -1122,6 +1271,17 @@ def delete_account(request):
       <tr><td>BUG-16</td><td>[BUG-16] /download_invoice/&lt;valor&gt; não deve emitir fatura sem pedido nem sessão</td><td>Falha — fatura com <code>amount is 999999</code></td></tr>
       <tr><td>BUG-16</td><td>[BUG-16] /payment_done/&lt;valor&gt; não deve confirmar pedido sem pagamento nem sessão</td><td>Falha — <code>order-placed</code> encontrado</td></tr>
       <tr><td>BUG-17</td><td>[BUG-17] PUT /api/updateAccount com senha errada deve retornar 401, não "Account not found!"</td><td>Falha — resposta <code>Account not found!</code></td></tr>
+      <tr><td>BUG-18</td><td>[BUG-18] API: e-mail sem @ deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-18</td><td>[BUG-18] API: e-mail sem domínio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-18</td><td>[BUG-18] API: e-mail sem usuário deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-18</td><td>[BUG-18] API: e-mail com espaço deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-18</td><td>[BUG-18] API: e-mail com @ duplo deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-18</td><td>[BUG-18] formulário de cadastro enviado sem o navegador deve recusar e-mail sem @</td><td>Falha — avançou para a 2ª etapa do cadastro</td></tr>
+      <tr><td>BUG-19</td><td>[BUG-19] API: "password" vazio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-19</td><td>[BUG-19] API: "name" vazio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-19</td><td>[BUG-19] API: "firstname" vazio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-19</td><td>[BUG-19] API: "city" vazio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
+      <tr><td>BUG-19</td><td>[BUG-19] formulário de cadastro enviado sem o navegador deve recusar nome vazio</td><td>Falha — avançou para a 2ª etapa do cadastro</td></tr>
     </tbody>
   </table>
 
@@ -1131,7 +1291,7 @@ def delete_account(request):
     comportamento observado, do HTML, do CSS e do JavaScript públicos. Os trechos de código do back-end são propostas
     ilustrativas, e não cópias do código existente.</li>
     <li>Os resultados refletem o estado do site em 14/10/2026 (BUG-01 a BUG-05) e 16/10/2026 (BUG-06 a BUG-11, e
-    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos) e 02/11/2026 (BUG-17, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
+    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos) e 02/11/2026 (BUG-17, e reteste automatizado de todos) e 03/11/2026 (BUG-18 e BUG-19, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
     <li>O Automation Exercise é um site de prática de automação; parte dos comportamentos (como os formulários sem
     envio) pode ser intencional. Eles foram registrados porque, do ponto de vista do usuário, são defeitos.</li>
     <li>O ataque entre origens do BUG-06 é inferido, não demonstrado. A página de depuração do BUG-09 não foi analisada
