@@ -1,4 +1,25 @@
 import { ordenarIds } from './catalogo'
+import {
+  TENTATIVAS, ESPERA_ENTRE_TENTATIVAS, htmlEhPaginaDeEspera, documentoEhPaginaDeEspera,
+  erroSiteIndisponivel, guardarPaginaDeEspera,
+} from './paginaDeEspera'
+
+// cy.visit confere se carregou o site de verdade, e não a página de espera
+// (ver paginaDeEspera.js). Se for a página de espera, visita de novo; se ela
+// persistir, o teste falha com "Site indisponível" em vez de passar.
+Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
+  // o visit original devolve uma promise, não uma cadeia: roda dentro de um .then
+  return cy.wrap(null, { log: false })
+    .then({ timeout: Cypress.config('pageLoadTimeout') }, () => visitar(url, opcoes))
+    .then(() => cy.document({ log: false }))
+    .then((doc) => {
+      if (!documentoEhPaginaDeEspera(doc)) return cy.window({ log: false })
+      guardarPaginaDeEspera(doc.documentElement.outerHTML, `GET ${url}`)
+      if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(`GET ${url}`)
+      cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
+      return cy.visit(url, opcoes, tentativa + 1)
+    })
+})
 
 Cypress.Commands.add('login', (email, password) => {
   cy.session([email, password], () => {
@@ -76,10 +97,19 @@ Cypress.Commands.add('idsNaTela', () => {
 // automático do corpo quando o Content-Type é "application/json", então
 // sem esse ajuste response.body chegaria como STRING crua nos testes.
 // cy.apiRequest() centraliza esse parse pra todos os outros comandos.
-Cypress.Commands.add('apiRequest', (options) => {
+Cypress.Commands.add('apiRequest', (options, tentativa = 1) => {
+  const onde = `${options.method || 'GET'} ${options.url}`
   return cy.request({ failOnStatusCode: false, ...options }).then((response) => {
     const rawBody = response.body
     let body
+
+    // página de espera do site (ver paginaDeEspera.js): tenta de novo antes de falhar
+    if (htmlEhPaginaDeEspera(rawBody)) {
+      guardarPaginaDeEspera(rawBody, onde)
+      if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde)
+      cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
+      return cy.apiRequest(options, tentativa + 1)
+    }
 
     if (typeof rawBody === 'string') {
       try {
