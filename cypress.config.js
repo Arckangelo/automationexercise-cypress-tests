@@ -18,6 +18,16 @@ module.exports = defineConfig({
   },
   e2e: {
     baseUrl: 'https://automationexercise.com',
+    // anúncios e rastreadores de terceiros: pesados e sem relação com o site testado
+    blockHosts: [
+      '*googlesyndication.com',
+      '*doubleclick.net',
+      '*googletagmanager.com',
+      '*googleadservices.com',
+      '*google-analytics.com',
+      '*adtrafficquality.google',
+      '*fundingchoicesmessages.google.com',
+    ],
     viewportWidth: 1280,
     viewportHeight: 720,
     // o site é público e às vezes responde "heavy load (queue full)";

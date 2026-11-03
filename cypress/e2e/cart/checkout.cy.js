@@ -167,14 +167,29 @@ describe('Carrinho e Checkout', () => {
         })
 
         // CT-CART-CHECKOUT-09
-        it('Place Order leva ao formulário de pagamento', () => {
+        // cartão fictício: o site é de prática e não processa pagamentos
+        it('compra completa: o pagamento confirma o pedido, a fatura traz o total e o carrinho esvazia', function () {
             cy.adicionarAoCarrinho('1')
+            cy.adicionarAoCarrinho('2')
             cy.visit('/checkout')
 
             cy.get('a[href="/payment"]').click()
-
             cy.url().should('include', '/payment')
-            cy.get('[data-qa="pay-button"]').should('be.visible')
+            cy.pagar(this.users.cartoes.valido)
+
+            const total = valorEmRupias(catalogo.produto(1).price) + valorEmRupias(catalogo.produto(2).price)
+            cy.get('[data-qa="order-placed"]').should('be.visible')
+            cy.url().should('include', `/payment_done/${total}`)
+
+            // a fatura é do pedido (valor) e da conta (nome), não do nome digitado no cartão
+            cy.get(`a[href="/download_invoice/${total}"]`).should('be.visible')
+            cy.request(`/download_invoice/${total}`).its('body')
+                .should('eq', `Hi ${conta.firstname} ${conta.lastname}, Your total purchase amount is ${total}. Thank you`)
+
+            // o pedido consome o carrinho, também no servidor
+            cy.visit('/view_cart')
+            linhasDoCarrinho().should('not.exist')
+            cy.get('#empty_cart').should('be.visible')
         })
     })
 

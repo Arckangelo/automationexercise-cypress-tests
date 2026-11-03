@@ -24,9 +24,9 @@ export const htmlEhPaginaDeEspera = (texto) =>
 // usado depois de cy.visit (página já carregada)
 export const documentoEhPaginaDeEspera = (doc) => !doc.querySelector('.logo')
 
-export const erroSiteIndisponivel = (onde) =>
+export const erroSiteIndisponivel = (onde, motivo = 'página de espera') =>
     new Error(
-        `Site indisponível: página de espera em ${onde} após ${TENTATIVAS} tentativas.\n` +
+        `Site indisponível: ${motivo} em ${onde} após ${TENTATIVAS} tentativas.\n` +
         'Não é resultado do teste. Rode novamente mais tarde.'
     )
 

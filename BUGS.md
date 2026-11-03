@@ -22,13 +22,15 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 | [BUG-10](#bug-10--assinatura-da-newsletter-não-é-registrada) | Média | Newsletter | Assinatura exibe sucesso, mas nada é enviado ao servidor | `forms-not-submitted.cy.js` |
 | [BUG-11](#bug-11--avaliação-de-produto-não-é-enviada) | Média | Produto | Avaliação exibe agradecimento, mas nada é enviado ao servidor | `forms-not-submitted.cy.js` |
 | [BUG-12](#bug-12--checkout-e-pagamento-funcionam-sem-login) | Alta | Checkout | Sem login, `/checkout` e `/payment` abrem pela URL e o pagamento é aceito: o pedido é confirmado | `checkout-access.cy.js` |
-| [BUG-13](#bug-13--checkout-oferece-place-order-com-o-carrinho-vazio) | Baixa | Checkout | Com o carrinho vazio, `/checkout` mostra total Rs. 0 e o botão *Place Order* | `checkout-access.cy.js` |
+| [BUG-13](#bug-13--checkout-oferece-place-order-com-o-carrinho-vazio) | Baixa | Checkout | Com o carrinho vazio, `/checkout` mostra total Rs. 0 e o botão *Place Order*, e o pagamento confirma um pedido de Rs. 0 | `checkout-access.cy.js` |
 | [BUG-14](#bug-14--api-de-marcas-repete-a-marca-de-cada-produto) | Baixa | API | `brandsList` devolve a marca de cada produto: 34 itens para 8 marcas | `api-brands.cy.js` |
 | [BUG-15](#bug-15--busca-com-espaço-duplo-ou--no-termo-falha) | Baixa | Busca | Espaço duplo não encontra nada; `&` corta o termo e mostra produtos errados | `search-input.cy.js` |
 | [BUG-16](#bug-16--confirmação-de-pedido-e-fatura-gerados-pela-url) | Alta | Pedido | Confirmação de pedido e fatura de **qualquer valor** gerados pela URL, sem sessão nem compra | `order-confirmation.cy.js` |
 | [BUG-17](#bug-17--senha-errada-é-respondida-como-conta-inexistente) | Baixa | API | `updateAccount` com senha errada responde 404 "Account not found!", embora a conta exista | `account-security.cy.js` |
 | [BUG-18](#bug-18--e-mail-em-formato-inválido-é-aceito-no-cadastro) | Média | Conta | O servidor aceita qualquer texto como e-mail no cadastro (API e formulário); só o navegador valida | `email-format.cy.js` |
 | [BUG-19](#bug-19--campos-obrigatórios-do-cadastro-aceitam-valor-vazio) | Média | Conta | Campos obrigatórios do cadastro aceitam valor vazio, inclusive a senha (API e formulário) | `required-fields.cy.js` |
+| [BUG-20](#bug-20--pagamento-aceita-dados-de-cartão-inválidos) | Alta | Pagamento | Qualquer dado de cartão confirma o pedido: vazio, com letras, vencido, mês 13 | `payment-validation.cy.js` |
+| [BUG-21](#bug-21--produto-inexistente-abre-página-vazia-e-added-to-cart) | Baixa | Produto | ID de produto inexistente abre página vazia com HTTP 200, e o carrinho responde "Added To Cart" | `product-not-found.cy.js` |
 
 ---
 
@@ -320,7 +322,9 @@ se o servidor grava esses pedidos ou só exibe a confirmação.
 **Resultado esperado:** o checkout redireciona para o carrinho ou informa que não há itens.
 
 **Resultado obtido:** a página abre com *Total Amount* Rs. 0 e o botão *Place Order*, que leva ao
-formulário de pagamento. A tela do carrinho esconde o botão, mas o servidor não valida.
+formulário de pagamento. A tela do carrinho esconde o botão, mas o servidor não valida. Pagando
+nesse formulário (cartão fictício), o pedido é confirmado: redireciona para `/payment_done/0` com
+"Order Placed!".
 
 **Correção sugerida:** no servidor, redirecionar `/checkout` e `/payment` para `/view_cart` quando
 o carrinho estiver vazio.
@@ -470,6 +474,52 @@ acessíveis só com o e-mail.
 **Correção sugerida:** validar no servidor que cada campo obrigatório tem conteúdo (após remover
 espaços), na API e no formulário, respondendo `400` com o nome do campo.
 
+## BUG-20 — Pagamento aceita dados de cartão inválidos
+
+**Severidade:** Alta — o pedido é confirmado sem um pagamento válido.
+
+**Passos para reproduzir**
+1. Entrar com uma conta de teste e adicionar um produto ao carrinho.
+2. Abrir `/payment` e preencher o cartão com `abcd efgh ijkl` no número, `xyz` no CVC e `13` no mês.
+3. Clicar em *Pay and Confirm Order*.
+
+**Resultado esperado:** o pagamento é recusado com uma mensagem sobre o cartão, e o pedido não é
+confirmado.
+
+**Resultado obtido:** o servidor redireciona para `/payment_done/500` com "Order Placed!
+Congratulations! Your order has been confirmed!" e esvazia o carrinho. Foram aceitos todos os
+casos testados: número com letras, número com 1 dígito, cartão vencido (01/2000), mês 13, CVC com
+letras e todos os campos vazios (enviados sem o navegador). O formulário só tem o atributo
+`required` nos campos; não há validação do cartão nem na tela nem no servidor.
+
+**Impacto:** qualquer pessoa conclui uma compra com dados de cartão inválidos. Diferente do BUG-12
+(pagamento sem login): aqui o usuário está logado e segue o fluxo normal.
+
+**Correção sugerida:** validar o cartão no servidor (formato e dígito verificador do número,
+validade futura, CVC numérico) ou delegar a um gateway de pagamento, e só confirmar o pedido depois
+da aprovação.
+
+## BUG-21 — Produto inexistente abre página vazia e "Added To Cart"
+
+**Severidade:** Baixa — página enganosa, sem efeito no carrinho.
+
+**Passos para reproduzir**
+1. Abrir `https://automationexercise.com/product_details/9999` (o catálogo não tem esse ID).
+2. Abrir `https://automationexercise.com/add_to_cart/9999`.
+
+**Resultado esperado:** as duas rotas respondem 404 (produto não encontrado).
+
+**Resultado obtido:** `/product_details/9999` responde HTTP 200 com uma página de produto vazia:
+sem nome, preço, categoria nem marca, mas com "Availability: In Stock" e o botão *Add to cart*. O
+mesmo acontece com `/0` e com IDs que faltam no catálogo, como `/9` e `/10`. `/add_to_cart/9999`
+responde "Added To Cart", embora nada entre no carrinho. IDs não numéricos ou negativos dão 404.
+
+**Impacto:** páginas "fantasma" indexáveis por buscadores e uma resposta de sucesso para uma
+operação que não aconteceu.
+
+**Correção sugerida:** responder 404 quando o produto não existir, nas duas rotas (no Django,
+`get_object_or_404`).
+
 ---
 
 ## Como os testes de bug funcionam
@@ -488,4 +538,4 @@ npm run test:bugs        # headless
 npm run test:bugs:open   # interface do Cypress
 ```
 
-Resultado esperado atualmente: **39 testes, 39 falhas**, todas pelas asserções que descrevem os bugs.
+Resultado esperado atualmente: **46 testes, 46 falhas**, todas pelas asserções que descrevem os bugs.

@@ -21,21 +21,94 @@ Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
     })
 })
 
+// cy.request repete só a própria requisição quando o site responde 503 ou 429
+// (sobrecarga), em vez de o Cypress repetir o teste inteiro (retries). Se
+// persistir, falha com "Site indisponível". Os demais status seguem a regra de
+// sempre: com failOnStatusCode (padrão), 4xx/5xx falham o teste.
+const SOBRECARGA = [429, 503]
+
+const opcoesDaRequisicao = (args) => {
+  if (typeof args[0] === 'object') return { ...args[0] }
+  if (args.length === 1) return { url: args[0] }
+  if (args.length === 2) return /^[A-Z]+$/.test(args[0]) ? { method: args[0], url: args[1] } : { url: args[0], body: args[1] }
+  return { method: args[0], url: args[1], body: args[2] }
+}
+
+Cypress.Commands.overwrite('request', (requisitar, ...args) => {
+  const opcoes = opcoesDaRequisicao(args)
+  const onde = `${opcoes.method || 'GET'} ${opcoes.url}`
+  const espera = (opcoes.timeout || Cypress.config('responseTimeout')) + 1000
+
+  const tentar = (tentativa) => cy.wrap(null, { log: false })
+    // o request original devolve uma promise, não uma cadeia: roda dentro de um .then
+    .then({ timeout: espera }, () => requisitar({ ...opcoes, failOnStatusCode: false }))
+    .then((resposta) => {
+      if (SOBRECARGA.includes(resposta.status)) {
+        if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde, `HTTP ${resposta.status}`)
+        cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
+        return tentar(tentativa + 1)
+      }
+      if (opcoes.failOnStatusCode !== false && resposta.status >= 400) {
+        throw new Error(`${onde} respondeu HTTP ${resposta.status}`)
+      }
+      return resposta
+    })
+
+  return tentar(1)
+})
+
+// Login por HTTP (mesmo formulário da tela, sem renderizar a página): para
+// testes em que o login é só preparação. O login pela tela é coberto em login.cy.js.
+Cypress.Commands.add('entrarPorRequisicao', (email, password) => {
+  cy.request('/login').then(({ body }) => {
+    const token = Cypress.$(body).find('form[action="/login"] [name="csrfmiddlewaretoken"]').val()
+    expect(token, 'formulário de login carregado').to.be.a('string').and.not.be.empty
+
+    cy.request({
+      method: 'POST',
+      url: '/login',
+      form: true,
+      headers: { referer: `${Cypress.config('baseUrl')}/login` },
+      body: { csrfmiddlewaretoken: token, email, password },
+      log: false,
+    })
+  })
+  cy.request('/').its('body').should('include', 'Logged in as')
+})
+
 Cypress.Commands.add('login', (email, password) => {
   cy.session([email, password], () => {
-    cy.visit('/login')
-    cy.get('[data-qa="login-email"]').type(email)
-    cy.get('[data-qa="login-password"]').type(password, { log: false })
-    cy.get('[data-qa="login-button"]').click()
-
-    // garante que o login funcionou antes de salvar a sessão
-    cy.get('.shop-menu a:has(.fa-user)').should('be.visible')
+    // por HTTP: o login é preparação; entrarPorRequisicao já confere que funcionou
+    cy.entrarPorRequisicao(email, password)
   }, {
     // a cada teste, confere se a sessão salva ainda é válida
     validate() {
       cy.request('/').its('body').should('include', 'Logged in as')
     },
     cacheAcrossSpecs: true,
+  })
+})
+
+// Login pelo formulário, sem cy.session: para testes que precisam de um login
+// "de verdade" (sessão nova), como os de carrinho entre sessões.
+Cypress.Commands.add('entrarPelaTela', (email, password) => {
+  cy.visit('/login')
+  cy.get('[data-qa="login-email"]').type(email)
+  cy.get('[data-qa="login-password"]').type(password, { log: false })
+  cy.get('[data-qa="login-button"]').click()
+})
+
+// Itens do carrinho no servidor, como { idDoProduto: quantidade }.
+Cypress.Commands.add('itensDoCarrinho', () => {
+  return cy.request('/view_cart').its('body').then((body) => {
+    // a página de espera do site teria um carrinho "vazio": não pode contar como resultado
+    expect(body.includes('class="logo'), 'resposta é uma página do site').to.be.true
+
+    const doc = new DOMParser().parseFromString(body, 'text/html')
+    return Object.fromEntries([...doc.querySelectorAll('tr[id^="product-"]')].map((linha) => [
+      linha.id.replace('product-', ''),
+      Number(linha.querySelector('.cart_quantity button').textContent.trim()),
+    ]))
   })
 })
 
@@ -184,6 +257,42 @@ Cypress.Commands.add('enviarSignupSemNavegador', (name, email) => {
       body: { csrfmiddlewaretoken: token, name, email, form_type: 'signup' },
     })
   }).its('body')
+})
+
+// Preenche o formulário de /payment com um cartão de users.json > cartoes e clica em pagar.
+Cypress.Commands.add('pagar', (cartao) => {
+  cy.get('[data-qa="name-on-card"]').type(cartao.nome)
+  cy.get('[data-qa="card-number"]').type(cartao.numero)
+  cy.get('[data-qa="cvc"]').type(cartao.cvc)
+  cy.get('[data-qa="expiry-month"]').type(cartao.mes)
+  cy.get('[data-qa="expiry-year"]').type(cartao.ano)
+  cy.get('[data-qa="pay-button"]').click()
+})
+
+// Envia o formulário de /payment como o navegador enviaria, mas sem a validação
+// dos campos (required). Não segue o redirecionamento: devolve a resposta do POST.
+Cypress.Commands.add('enviarPagamentoSemNavegador', (cartao) => {
+  return cy.request('/payment').then(({ body }) => {
+    const token = Cypress.$(body).find('#payment-form [name="csrfmiddlewaretoken"]').val()
+    // sem o formulário (ex.: página de espera do site) o POST daria 403 e o teste passaria sem motivo
+    expect(token, 'formulário de pagamento carregado').to.be.a('string').and.not.be.empty
+
+    return cy.request({
+      method: 'POST',
+      url: '/payment',
+      form: true,
+      followRedirect: false,
+      headers: { referer: `${Cypress.config('baseUrl')}/payment` },
+      body: {
+        csrfmiddlewaretoken: token,
+        name_on_card: cartao.nome,
+        card_number: cartao.numero,
+        cvc: cartao.cvc,
+        expiry_month: cartao.mes,
+        expiry_year: cartao.ano,
+      },
+    })
+  })
 })
 
 Cypress.Commands.add('apiUpdateAccount', (dados) => {

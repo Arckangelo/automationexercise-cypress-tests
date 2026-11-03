@@ -35,4 +35,19 @@ describe('[BUG-13] Checkout - pedido com carrinho vazio', () => {
         cy.visit('/checkout')
         cy.get('a[href="/payment"]').should('not.exist')
     })
+
+    // CT-BUGS-CHECKOUT-ACCESS-04
+    // Pagando por /payment com o carrinho vazio, o pedido é confirmado com valor 0.
+    it('[BUG-13] logado e com carrinho vazio, o pagamento não deve confirmar um pedido', function () {
+        cy.login(usuario.email, usuario.password)
+        cy.limparCarrinho()
+        cy.intercept('POST', '/payment').as('pagar')
+
+        cy.visit('/payment')
+        cy.pagar(this.users.cartoes.valido)
+
+        cy.wait('@pagar').then(({ response }) => {
+            expect(response.headers.location || '', 'redireciona para a confirmação do pedido').to.not.include('payment_done')
+        })
+    })
 })
