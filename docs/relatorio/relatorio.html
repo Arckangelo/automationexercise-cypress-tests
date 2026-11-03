@@ -117,8 +117,8 @@
     <tr><th>DATA</th><td>03/11/2026</td></tr>
     <tr><th>AUTOR</th><td>Angelo Roque — Análise de Qualidade</td></tr>
     <tr><th>FERRAMENTAS</th><td>REA 6.5.0 (captura de cenários de navegador e evidências), Chromium 1243 (Playwright), cURL, Cypress 16.2.1</td></tr>
-    <tr><th>STATUS GERAL</th><td>19 defeitos confirmados e reproduzíveis — 6 alta, 7 média, 6 baixa</td></tr>
-    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): <span class="sem-quebra">BUG-01</span> a <span class="sem-quebra">BUG-05</span> · 1.1 (16/10/2026): <span class="sem-quebra">BUG-06</span> a <span class="sem-quebra">BUG-11</span> · 1.2 (26/10/2026): <span class="sem-quebra">BUG-12</span> e <span class="sem-quebra">BUG-13</span> · 1.3 (26/10/2026): <span class="sem-quebra">BUG-14</span> · 1.4 (26/10/2026): <span class="sem-quebra">BUG-15</span> · 1.5 (26/10/2026): impacto do <span class="sem-quebra">BUG-12</span> confirmado e <span class="sem-quebra">BUG-16</span> · 1.6 (02/11/2026): <span class="sem-quebra">BUG-17</span> e reteste automatizado de todos · 1.7 (03/11/2026): <span class="sem-quebra">BUG-18</span>, <span class="sem-quebra">BUG-19</span>, novas evidências do <span class="sem-quebra">BUG-04</span> e detalhamento do <span class="sem-quebra">BUG-17</span></td></tr>
+    <tr><th>STATUS GERAL</th><td>21 defeitos confirmados e reproduzíveis — 7 alta, 7 média, 7 baixa</td></tr>
+    <tr><th>HISTÓRICO</th><td>1.0 (14/10/2026): <span class="sem-quebra">BUG-01</span> a <span class="sem-quebra">BUG-05</span> · 1.1 (16/10/2026): <span class="sem-quebra">BUG-06</span> a <span class="sem-quebra">BUG-11</span> · 1.2 (26/10/2026): <span class="sem-quebra">BUG-12</span> e <span class="sem-quebra">BUG-13</span> · 1.3 (26/10/2026): <span class="sem-quebra">BUG-14</span> · 1.4 (26/10/2026): <span class="sem-quebra">BUG-15</span> · 1.5 (26/10/2026): impacto do <span class="sem-quebra">BUG-12</span> confirmado e <span class="sem-quebra">BUG-16</span> · 1.6 (02/11/2026): <span class="sem-quebra">BUG-17</span> e reteste automatizado de todos · 1.7 (03/11/2026): <span class="sem-quebra">BUG-18</span>, <span class="sem-quebra">BUG-19</span>, <span class="sem-quebra">BUG-20</span>, <span class="sem-quebra">BUG-21</span>, novas evidências do <span class="sem-quebra">BUG-04</span> e do <span class="sem-quebra">BUG-13</span> e detalhamento do <span class="sem-quebra">BUG-17</span></td></tr>
   </table>
 </section>
 
@@ -126,7 +126,7 @@
 <section>
   <h2>1. Sumário executivo</h2>
   <p>Este relatório apresenta os defeitos identificados na aplicação web Automation Exercise durante quatro rodadas de
-  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados dezenove defeitos,
+  análise exploratória apoiada por engenharia reversa da aplicação em execução. Foram confirmados vinte e um defeitos,
   todos reproduzíveis e cobertos por testes automatizados em Cypress que falham enquanto o defeito persistir.</p>
   <p>Os defeitos mais graves envolvem a conta do usuário e o atendimento. Uma simples requisição <code>GET</code> para
   <code>/delete_account</code> apaga a conta de quem estiver logado, sem confirmação nem proteção contra CSRF
@@ -146,6 +146,9 @@
   navegador, criam contas com qualquer texto no lugar do e-mail (BUG-18). E a API responde a uma senha errada como se a
   conta não existisse (BUG-17). Os campos obrigatórios do cadastro também aceitam valor vazio, inclusive a senha
   (BUG-19).</p>
+  <p>No pagamento, nem a tela nem o servidor conferem o cartão: número com letras, cartão vencido ou campos vazios
+  confirmam o pedido (BUG-20), e com o carrinho vazio o pedido é confirmado com valor zero (BUG-13). Por fim, um produto
+  inexistente abre uma página vazia com “In Stock” em vez de 404 (BUG-21).</p>
 
   <table class="dados">
     <thead><tr><th>ID</th><th>Título</th><th>Área</th><th>Severidade</th><th>Prioridade</th></tr></thead>
@@ -169,6 +172,8 @@
       <tr><td>BUG-17</td><td>Senha errada é respondida como conta inexistente</td><td>API REST</td><td class="baixa">Baixa</td><td>P3</td></tr>
       <tr><td>BUG-18</td><td>E-mail em formato inválido é aceito no cadastro</td><td>Conta / Back-end</td><td class="media">Média</td><td>P2</td></tr>
       <tr><td>BUG-19</td><td>Campos obrigatórios do cadastro aceitam valor vazio</td><td>Conta / Back-end</td><td class="media">Média</td><td>P2</td></tr>
+      <tr><td>BUG-20</td><td>Pagamento aceita dados de cartão inválidos</td><td>Pagamento / Back-end</td><td class="alta">Alta</td><td>P1</td></tr>
+      <tr><td>BUG-21</td><td>Produto inexistente abre página vazia e “Added To Cart”</td><td>Produto / Back-end</td><td class="baixa">Baixa</td><td>P3</td></tr>
     </tbody>
   </table>
 </section>
@@ -201,13 +206,16 @@
     <li>Envio do pagamento sem login (uma vez por cenário, com cartão fictício <code>4111 1111 1111 1111</code>) e acesso
     direto às páginas de confirmação e fatura.</li>
   </ul>
-  <p><strong>Rodada 4 (02/11 e 03/11/2026, BUG-17 a BUG-19):</strong></p>
+  <p><strong>Rodada 4 (02/11 e 03/11/2026, BUG-17 a BUG-21):</strong></p>
   <ul>
     <li>Respostas da API de conta a credenciais erradas (atualização e exclusão);</li>
     <li>Validação do formato do e-mail no cadastro: pela API, pela tela e pelo formulário enviado direto ao servidor,
     sem a validação do navegador;</li>
     <li>Cadastro pela API com cada campo ausente e com cada campo vazio, um de cada vez;</li>
-    <li>Métodos HTTP aceitos por <code>/api/verifyLogin</code> (GET, PUT, PATCH, DELETE, HEAD e OPTIONS).</li>
+    <li>Métodos HTTP aceitos por <code>/api/verifyLogin</code> (GET, PUT, PATCH, DELETE, HEAD e OPTIONS);</li>
+    <li>Pagamento com dados de cartão inválidos e com o carrinho vazio, logado (cartão fictício, uma vez por caso);</li>
+    <li>Carrinho entre sessões (visitante, login, logout e outro navegador) e exclusão de conta pela tela;</li>
+    <li>Página de detalhes dos 34 produtos comparada à API, e IDs de produto inexistentes.</li>
   </ul>
   <p><strong>Fora do escopo:</strong> upload de arquivo no <em>Contact Us</em>, meios de pagamento reais e testes
   de carga ou de segurança ofensivos. Os testes de segurança se limitaram a observar o comportamento com contas de
@@ -917,7 +925,7 @@ def delete_account(request):
   <h3>BUG-13 — Checkout oferece Place Order com o carrinho vazio</h3>
   <table class="dados ficha">
     <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
-    <tr><th>Componente</th><td><code>/checkout</code></td></tr>
+    <tr><th>Componente</th><td><code>/checkout</code> e <code>POST /payment</code></td></tr>
     <tr><th>Reprodutibilidade</th><td>100% (2 de 2)</td></tr>
   </table>
   <h4>Passos para reproduzir</h4>
@@ -929,24 +937,28 @@ def delete_account(request):
   <h4>Resultado esperado</h4>
   <p>O checkout redireciona para o carrinho ou informa que não há itens para finalizar.</p>
   <h4>Resultado obtido</h4>
-  <p>A página abre com <em>Total Amount</em> Rs. 0 e o botão <em>Place Order</em>, que leva ao formulário de pagamento.</p>
+  <p>A página abre com <em>Total Amount</em> Rs. 0 e o botão <em>Place Order</em>, que leva ao formulário de pagamento.
+  Pagando nesse formulário (cartão fictício), o pedido é confirmado: o servidor redireciona para
+  <code>/payment_done/0</code> com “Order Placed!”.</p>
   <h4>Evidências</h4>
   <ul>
     <li><strong>cURL:</strong> sessão anônima com carrinho vazio, <code>/checkout</code> com status 200, total
     <code>Rs. 0</code> e link para <code>/payment</code>;</li>
-    <li><strong>Cypress (usuário logado):</strong> <code>Expected &lt;a.btn.btn-default.check_out&gt; not to exist in the DOM, but it was continuously found</code>.</li>
+    <li><strong>cURL (usuário logado):</strong> <code>POST /payment</code> com o carrinho vazio responde 302 para <code>/payment_done/0</code>;</li>
+    <li><strong>Cypress (usuário logado):</strong> <code>Expected &lt;a.btn.btn-default.check_out&gt; not to exist in the DOM, but it was continuously found</code>
+    e <code>redireciona para a confirmação do pedido: expected '/payment_done/0' to not include 'payment_done'</code>.</li>
   </ul>
   <h4>Análise de causa raiz</h4>
   <p>A página do carrinho só deixa de exibir o botão <em>Proceed To Checkout</em> quando não há itens. A rota
   <code>/checkout</code> não confere se o carrinho tem itens antes de montar o pedido.</p>
   <h4>Impacto</h4>
   <p>O usuário pode chegar ao pagamento de um pedido vazio, o que abre espaço para pedidos de valor zero e confunde o
-  fluxo de compra. A criação efetiva de um pedido vazio não foi testada.</p>
+  fluxo de compra. O pedido vazio é de fato confirmado, com valor zero.</p>
   <h4>Solução proposta</h4>
   <p>No servidor, redirecionar <code>/checkout</code> e <code>/payment</code> para <code>/view_cart</code> quando o
   carrinho estiver vazio, e rejeitar o <code>POST /payment</code> nesse caso.</p>
   <h4>Critério de aceite</h4>
-  <p>Com o carrinho vazio, <code>/checkout</code> não oferece <em>Place Order</em>; teste Cypress do BUG-13 passando.</p>
+  <p>Com o carrinho vazio, <code>/checkout</code> não oferece <em>Place Order</em> e o pagamento não confirma pedido; testes Cypress do BUG-13 passando.</p>
 </section>
 
 <!-- BUG-14 -->
@@ -1194,6 +1206,87 @@ def delete_account(request):
   <p>Campos obrigatórios vazios são recusados pela API e pelo formulário, sem criar conta; testes Cypress do BUG-19 passando.</p>
 </section>
 
+<!-- BUG-20 -->
+<section class="bug">
+  <h3>BUG-20 — Pagamento aceita dados de cartão inválidos</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="alta">Alta</span> / P1</td></tr>
+    <tr><th>Componente</th><td><code>/payment</code> (formulário e <code>POST</code>)</td></tr>
+    <tr><th>Reprodutibilidade</th><td>100% (7 de 7 casos)</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Entrar com uma conta de teste e adicionar um produto ao carrinho.</li>
+    <li>Abrir <code>/payment</code> e preencher o cartão com <code>abcd efgh ijkl</code> no número, <code>xyz</code> no CVC
+    e <code>13</code> no mês.</li>
+    <li>Clicar em <em>Pay and Confirm Order</em>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>O pagamento é recusado com uma mensagem sobre o cartão, e o pedido não é confirmado.</p>
+  <h4>Resultado obtido</h4>
+  <p>O servidor redireciona para <code>/payment_done/500</code> com “Order Placed! Congratulations! Your order has been
+  confirmed!” e esvazia o carrinho. Foram aceitos todos os casos testados: número com letras, número com 1 dígito,
+  cartão vencido (01/2000), mês 13, CVC com letras e todos os campos vazios (enviados sem o navegador).</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL (usuário logado):</strong> 7 pagamentos com dados inválidos, todos com 302 para
+    <code>/payment_done/&lt;total&gt;</code> e o carrinho esvaziado em seguida;</li>
+    <li><strong>Código da página:</strong> os campos só têm <code>required</code>; o único script do formulário mostra
+    uma mensagem de sucesso no envio;</li>
+    <li><strong>Cypress:</strong> <code>redireciona para a confirmação do pedido: expected '/payment_done/500' to not include
+    'payment_done'</code> nos 4 casos.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>O servidor confirma o pedido ao receber o formulário, sem validar os dados do cartão e sem consultar um meio de
+  pagamento. A tela também não valida: <code>required</code> só impede campos vazios. É diferente do BUG-12 (pagamento
+  sem login): aqui o usuário está logado e segue o fluxo normal.</p>
+  <h4>Impacto</h4>
+  <p>Qualquer pessoa conclui uma compra com dados de cartão inválidos; o pedido é confirmado sem um pagamento válido.</p>
+  <h4>Solução proposta</h4>
+  <p>Validar o cartão no servidor (formato e dígito verificador do número, validade futura, CVC numérico) ou delegar a
+  um gateway de pagamento, e só confirmar o pedido depois da aprovação.</p>
+  <h4>Critério de aceite</h4>
+  <p>Dados de cartão inválidos são recusados e o pedido não é confirmado; testes Cypress do BUG-20 passando.</p>
+</section>
+
+<!-- BUG-21 -->
+<section class="bug">
+  <h3>BUG-21 — Produto inexistente abre página vazia e “Added To Cart”</h3>
+  <table class="dados ficha">
+    <tr><th>Severidade / Prioridade</th><td><span class="baixa">Baixa</span> / P3</td></tr>
+    <tr><th>Componente</th><td><code>/product_details/{id}</code> e <code>/add_to_cart/{id}</code></td></tr>
+    <tr><th>Reprodutibilidade</th><td>100%</td></tr>
+  </table>
+  <h4>Passos para reproduzir</h4>
+  <ol>
+    <li>Abrir <code>/product_details/9999</code> (o catálogo não tem esse ID).</li>
+    <li>Abrir <code>/add_to_cart/9999</code>.</li>
+  </ol>
+  <h4>Resultado esperado</h4>
+  <p>As duas rotas respondem 404 (produto não encontrado).</p>
+  <h4>Resultado obtido</h4>
+  <p><code>/product_details/9999</code> responde HTTP 200 com uma página de produto vazia: sem nome, preço, categoria nem
+  marca, mas com “Availability: In Stock” e o botão <em>Add to cart</em>. O mesmo acontece com <code>/0</code> e com IDs
+  que faltam no catálogo, como <code>/9</code> e <code>/10</code>. <code>/add_to_cart/9999</code> responde “Added To
+  Cart”, embora nada entre no carrinho. IDs não numéricos ou negativos dão 404.</p>
+  <h4>Evidências</h4>
+  <ul>
+    <li><strong>cURL:</strong> <code>/product_details/9999</code>, <code>/0</code>, <code>/9</code> e <code>/10</code> com 200;
+    <code>/-1</code> e <code>/abc</code> com 404; <code>/add_to_cart/9999</code> com “Added To Cart” e o carrinho vazio;</li>
+    <li><strong>Cypress:</strong> <code>expected 200 to equal 404</code> e <code>resposta: expected 'Added To Cart' to not
+    equal 'Added To Cart'</code>.</li>
+  </ul>
+  <h4>Análise de causa raiz</h4>
+  <p>As rotas aceitam qualquer número e montam a resposta sem verificar se o produto existe; a página é preenchida com
+  campos vazios e textos fixos (“In Stock”, “New”).</p>
+  <h4>Impacto</h4>
+  <p>Páginas “fantasma” indexáveis por buscadores e uma resposta de sucesso para uma operação que não aconteceu.</p>
+  <h4>Solução proposta</h4>
+  <p>Responder 404 quando o produto não existir, nas duas rotas (no Django, <code>get_object_or_404</code>).</p>
+  <h4>Critério de aceite</h4>
+  <p>Produto inexistente responde 404 nas duas rotas; testes Cypress do BUG-21 passando.</p>
+</section>
+
 <!-- ============================== 4. PLANO ============================== -->
 <section class="secao">
   <h2>4. Plano de correção recomendado</h2>
@@ -1203,13 +1296,15 @@ def delete_account(request):
       <tr><td>1 — Urgente</td><td>BUG-06, BUG-07</td><td>Exclusão de conta só por <code>POST</code> com CSRF e confirmação; autenticação no endpoint de dados do usuário</td><td>Baixo a médio</td></tr>
       <tr><td>2 — Urgente</td><td>BUG-01, BUG-02, BUG-09</td><td>Validação de quantidade no back-end (inteiro, 1..99, resposta 400), restrição no banco, validação no front-end, <code>DEBUG = False</code> e saneamento de dados</td><td>Baixo a médio</td></tr>
       <tr><td>3 — Urgente</td><td>BUG-12, BUG-16</td><td>Sessão autenticada obrigatória em <code>/checkout</code> e <code>/payment</code>; confirmação e fatura montadas a partir do pedido registrado da sessão, nunca da URL</td><td>Baixo a médio</td></tr>
-      <tr><td>4</td><td>BUG-08, BUG-10, BUG-11</td><td>Envio real dos três formulários, com persistência e confirmação só após a resposta do servidor</td><td>Médio</td></tr>
-      <tr><td>5</td><td>BUG-13</td><td>Verificação no servidor de carrinho com itens em <code>/checkout</code> e <code>/payment</code></td><td>Baixo</td></tr>
-      <tr><td>6</td><td>BUG-04, BUG-05, BUG-14</td><td>Utilitário único de resposta da API com status, formato, Content-Type e cabeçalho <code>Allow</code> corretos em todos os métodos; lista de marcas sem repetição; atualização da documentação</td><td>Baixo</td></tr>
-      <tr><td>7</td><td>BUG-15</td><td>Termo da busca com <code>encodeURIComponent</code> e <code>trim</code>; normalização de espaços no servidor</td><td>Muito baixo</td></tr>
-      <tr><td>8</td><td>BUG-18, BUG-19</td><td>Validação no servidor do formato do e-mail e do conteúdo dos campos obrigatórios, na API e no formulário de cadastro</td><td>Baixo</td></tr>
-      <tr><td>9</td><td>BUG-17</td><td>Resposta 401 genérica para credenciais inválidas em <code>updateAccount</code> e <code>deleteAccount</code></td><td>Muito baixo</td></tr>
-      <tr><td>10</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
+      <tr><td>4 — Urgente</td><td>BUG-20</td><td>Validação do cartão no servidor (ou gateway de pagamento) antes de confirmar o pedido</td><td>Médio</td></tr>
+      <tr><td>5</td><td>BUG-08, BUG-10, BUG-11</td><td>Envio real dos três formulários, com persistência e confirmação só após a resposta do servidor</td><td>Médio</td></tr>
+      <tr><td>6</td><td>BUG-13</td><td>Verificação no servidor de carrinho com itens em <code>/checkout</code> e <code>/payment</code>, recusando o pagamento de pedido vazio</td><td>Baixo</td></tr>
+      <tr><td>7</td><td>BUG-04, BUG-05, BUG-14</td><td>Utilitário único de resposta da API com status, formato, Content-Type e cabeçalho <code>Allow</code> corretos em todos os métodos; lista de marcas sem repetição; atualização da documentação</td><td>Baixo</td></tr>
+      <tr><td>8</td><td>BUG-15</td><td>Termo da busca com <code>encodeURIComponent</code> e <code>trim</code>; normalização de espaços no servidor</td><td>Muito baixo</td></tr>
+      <tr><td>9</td><td>BUG-18, BUG-19</td><td>Validação no servidor do formato do e-mail e do conteúdo dos campos obrigatórios, na API e no formulário de cadastro</td><td>Baixo</td></tr>
+      <tr><td>10</td><td>BUG-17</td><td>Resposta 401 genérica para credenciais inválidas em <code>updateAccount</code> e <code>deleteAccount</code></td><td>Muito baixo</td></tr>
+      <tr><td>11</td><td>BUG-03</td><td>Fontes via HTTPS no <code>&lt;head&gt;</code>; cabeçalho CSP <code>upgrade-insecure-requests</code></td><td>Muito baixo</td></tr>
+      <tr><td>12</td><td>BUG-21</td><td>Resposta 404 para produto inexistente em <code>/product_details</code> e <code>/add_to_cart</code></td><td>Muito baixo</td></tr>
     </tbody>
   </table>
   <div class="nota">As estimativas são qualitativas e baseadas apenas no comportamento observado. O código do servidor não foi analisado diretamente.</div>
@@ -1239,7 +1334,7 @@ def delete_account(request):
 <!-- ============================== 6. RASTREABILIDADE ============================== -->
 <section class="secao">
   <h2>6. Rastreabilidade com os testes automatizados</h2>
-  <p class="pequeno">Execução de 03/11/2026: <code>npm run test:bugs</code>, 39 testes, 39 falhas, todas pelas asserções que descrevem os defeitos.</p>
+  <p class="pequeno">Execução de 03/11/2026: <code>npm run test:bugs</code>, 46 testes, 46 falhas, todas pelas asserções que descrevem os defeitos.</p>
   <table class="dados pequeno">
     <thead><tr><th>Defeito</th><th>Teste Cypress</th><th>Resultado atual</th></tr></thead>
     <tbody>
@@ -1265,6 +1360,7 @@ def delete_account(request):
       <tr><td>BUG-12</td><td>[BUG-12] sem login, /payment não deve mostrar o formulário de pagamento</td><td>Falha — <code>pay-button</code> encontrado</td></tr>
       <tr><td>BUG-12</td><td>[BUG-12] sem login, /checkout não deve oferecer "Place Order"</td><td>Falha — link para <code>/payment</code> encontrado</td></tr>
       <tr><td>BUG-13</td><td>[BUG-13] logado e com carrinho vazio, /checkout não deve oferecer "Place Order"</td><td>Falha — link para <code>/payment</code> encontrado</td></tr>
+      <tr><td>BUG-13</td><td>[BUG-13] logado e com carrinho vazio, o pagamento não deve confirmar um pedido</td><td>Falha — redireciona para <code>/payment_done/0</code></td></tr>
       <tr><td>BUG-14</td><td>[BUG-14] GET /api/brandsList não deve repetir marcas</td><td>Falha — <code>marcas repetidas: expected [ Array(8) ] to be empty</code></td></tr>
       <tr><td>BUG-15</td><td>[BUG-15] espaço duplo entre as palavras ("blue&nbsp;&nbsp;top") deve encontrar os produtos de "blue top"</td><td>Falha — <code>expected [] to deeply equal [ 1 ]</code></td></tr>
       <tr><td>BUG-15</td><td>[BUG-15] termo com "&amp;" ("Blue &amp; Pink") deve encontrar os produtos de "Blue &amp; Pink"</td><td>Falha — <code>expected [ 1, 16, 21, 37, 41 ] to deeply equal [ 16 ]</code></td></tr>
@@ -1282,6 +1378,12 @@ def delete_account(request):
       <tr><td>BUG-19</td><td>[BUG-19] API: "firstname" vazio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
       <tr><td>BUG-19</td><td>[BUG-19] API: "city" vazio deve ser recusado com 400</td><td>Falha — <code>expected 201 to equal 400</code></td></tr>
       <tr><td>BUG-19</td><td>[BUG-19] formulário de cadastro enviado sem o navegador deve recusar nome vazio</td><td>Falha — avançou para a 2ª etapa do cadastro</td></tr>
+      <tr><td>BUG-20</td><td>[BUG-20] número do cartão com letras não deve confirmar o pedido</td><td>Falha — redireciona para <code>/payment_done/500</code></td></tr>
+      <tr><td>BUG-20</td><td>[BUG-20] cartão vencido (01/2000) não deve confirmar o pedido</td><td>Falha — redireciona para <code>/payment_done/500</code></td></tr>
+      <tr><td>BUG-20</td><td>[BUG-20] mês 13 e CVC com letras não deve confirmar o pedido</td><td>Falha — redireciona para <code>/payment_done/500</code></td></tr>
+      <tr><td>BUG-20</td><td>[BUG-20] campos do cartão vazios (enviados sem o navegador) não devem confirmar o pedido</td><td>Falha — redireciona para <code>/payment_done/500</code></td></tr>
+      <tr><td>BUG-21</td><td>[BUG-21] /product_details/9999 deve responder 404</td><td>Falha — <code>expected 200 to equal 404</code></td></tr>
+      <tr><td>BUG-21</td><td>[BUG-21] /add_to_cart/9999 não deve responder "Added To Cart"</td><td>Falha — resposta <code>Added To Cart</code></td></tr>
     </tbody>
   </table>
 
@@ -1291,13 +1393,13 @@ def delete_account(request):
     comportamento observado, do HTML, do CSS e do JavaScript públicos. Os trechos de código do back-end são propostas
     ilustrativas, e não cópias do código existente.</li>
     <li>Os resultados refletem o estado do site em 14/10/2026 (BUG-01 a BUG-05) e 16/10/2026 (BUG-06 a BUG-11, e
-    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos) e 02/11/2026 (BUG-17, e reteste automatizado de todos) e 03/11/2026 (BUG-18 e BUG-19, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
+    reteste de todos) e 26/10/2026 (BUG-12 a BUG-16, e reteste automatizado de todos) e 02/11/2026 (BUG-17, e reteste automatizado de todos) e 03/11/2026 (BUG-18 a BUG-21, e reteste automatizado de todos). Por ser um ambiente público e compartilhado, o comportamento pode mudar sem aviso.</li>
     <li>O Automation Exercise é um site de prática de automação; parte dos comportamentos (como os formulários sem
     envio) pode ser intencional. Eles foram registrados porque, do ponto de vista do usuário, são defeitos.</li>
     <li>O ataque entre origens do BUG-06 é inferido, não demonstrado. A página de depuração do BUG-09 não foi analisada
     além do necessário para identificar o erro. O pagamento sem login do BUG-12 foi enviado só uma vez por cenário,
-    com cartão fictício; não há como verificar se o servidor grava esses pedidos. O pagamento com carrinho vazio e usuário
-    logado (BUG-13) não foi enviado.</li>
+    com cartão fictício; não há como verificar se o servidor grava esses pedidos. Os pagamentos com carrinho vazio e usuário
+    logado (BUG-13) e com cartão inválido (BUG-20) também foram enviados uma vez por caso, com dados fictícios.</li>
     <li>As áreas listadas como fora do escopo (seção 2.1) não foram avaliadas, e a ausência de defeitos nelas não está comprovada.</li>
   </ul>
 </section>

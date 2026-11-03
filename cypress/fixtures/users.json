@@ -12,6 +12,43 @@
     "comEspaco": "qa {id}@teste.com",
     "arrobaDuplo": "qa.{id}@@teste.com"
   },
+  "cartoes": {
+    "valido": {
+      "nome": "QA Automatizado",
+      "numero": "4111111111111111",
+      "cvc": "123",
+      "mes": "12",
+      "ano": "2099"
+    },
+    "numeroComLetras": {
+      "nome": "QA Automatizado",
+      "numero": "abcd efgh ijkl",
+      "cvc": "123",
+      "mes": "12",
+      "ano": "2099"
+    },
+    "vencido": {
+      "nome": "QA Automatizado",
+      "numero": "4111111111111111",
+      "cvc": "123",
+      "mes": "01",
+      "ano": "2000"
+    },
+    "formatoInvalido": {
+      "nome": "QA Automatizado",
+      "numero": "4111111111111111",
+      "cvc": "xyz",
+      "mes": "13",
+      "ano": "2099"
+    },
+    "vazio": {
+      "nome": "",
+      "numero": "",
+      "cvc": "",
+      "mes": "",
+      "ano": ""
+    }
+  },
   "formularios": {
     "contato": {
       "nome": "QA Automatizado",
