@@ -27,6 +27,7 @@ describe('Cadastro de usuário', () => {
                 .should('be.oneOf', [200, 404])
         })
 
+        // CT-AUTH-SIGNUP-01
         it('cadastro completo cria a conta com os dados informados', () => {
             cy.visit('/login')
             cy.get('[data-qa="signup-name"]').type(dados.name)
@@ -71,6 +72,7 @@ describe('Cadastro de usuário', () => {
         // conta criada via API: o teste não depende do cadastro pela tela
         const existente = usarUsuarioDeTeste()
 
+        // CT-AUTH-SIGNUP-02
         it('e-mail já cadastrado mostra erro e não avança para o formulário completo', function () {
             cy.visit('/login')
             cy.get('[data-qa="signup-name"]').type(this.users.nomeAlternativo)

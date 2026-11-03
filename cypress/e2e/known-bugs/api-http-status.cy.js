@@ -8,10 +8,15 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
 
     // Status HTTP real esperado = responseCode que a própria API devolve no corpo
     const requisicoesDeErro = [
+        // CT-BUGS-API-HTTP-STATUS-01
         { method: 'POST', url: '/api/productsList', esperado: 405 },
+        // CT-BUGS-API-HTTP-STATUS-02
         { method: 'PUT', url: '/api/brandsList', esperado: 405 },
+        // CT-BUGS-API-HTTP-STATUS-03
         { method: 'DELETE', url: '/api/verifyLogin', esperado: 405 },
+        // CT-BUGS-API-HTTP-STATUS-04
         { method: 'POST', url: '/api/searchProduct', cenario: 'sem parâmetro', esperado: 400 },
+        // CT-BUGS-API-HTTP-STATUS-05
         // a API só lê os campos do corpo do formulário; na query string eles são ignorados
         {
             method: 'POST',
@@ -37,6 +42,7 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
         })
     })
 
+    // CT-BUGS-API-HTTP-STATUS-06
     it('[BUG-05] GET /api/productsList deve declarar Content-Type JSON', () => {
         cy.apiGetProductsList().then((response) => {
             expect(response.body.responseCode).to.eq(200)

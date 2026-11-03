@@ -5,6 +5,7 @@ import { usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
 // Acessando a URL direto, as páginas abrem normalmente.
 describe('[BUG-12/13] Checkout - acesso direto pela URL', () => {
 
+    // CT-BUGS-CHECKOUT-ACCESS-01
     // Sem login, /checkout abre com endereço vazio e "Place Order", e /payment
     // mostra o formulário completo de cartão.
     it('[BUG-12] sem login, /payment não deve mostrar o formulário de pagamento', () => {
@@ -12,6 +13,7 @@ describe('[BUG-12/13] Checkout - acesso direto pela URL', () => {
         cy.get('[data-qa="pay-button"]').should('not.exist')
     })
 
+    // CT-BUGS-CHECKOUT-ACCESS-02
     it('[BUG-12] sem login, /checkout não deve oferecer "Place Order"', () => {
         cy.visit('/checkout')
         cy.get('a[href="/payment"]').should('not.exist')
@@ -25,6 +27,7 @@ describe('[BUG-13] Checkout - pedido com carrinho vazio', () => {
 
     const usuario = usarUsuarioDeTeste()
 
+    // CT-BUGS-CHECKOUT-ACCESS-03
     it('[BUG-13] logado e com carrinho vazio, /checkout não deve oferecer "Place Order"', () => {
         cy.login(usuario.email, usuario.password)
         cy.limparCarrinho()

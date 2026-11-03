@@ -22,6 +22,7 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
         cy.apiDeleteAccount(conta.email, conta.password)
     })
 
+    // CT-BUGS-ACCOUNT-SECURITY-01
     // Uma ação destrutiva por GET, sem confirmação nem token CSRF, pode ser
     // disparada por um simples link: quem estiver logado perde a conta.
     it('[BUG-06] GET /delete_account não deve excluir a conta sem confirmação', () => {
@@ -34,6 +35,7 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
         })
     })
 
+    // CT-BUGS-ACCOUNT-SECURITY-02
     // O endpoint é documentado na lista de APIs do site, e account.api.cy.js
     // o usa como contrato. Se o site passar a exigir autenticação, aquele
     // teste da suíte principal precisará ser ajustado junto com este.
@@ -44,6 +46,7 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
             })
     })
 
+    // CT-BUGS-ACCOUNT-SECURITY-03
     // A conta existe; o erro é de credencial, não de recurso inexistente.
     it('[BUG-17] PUT /api/updateAccount com senha errada deve retornar 401, não "Account not found!"', function () {
         cy.fixture('apiData').then(({ novaConta }) => {

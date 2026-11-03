@@ -24,12 +24,14 @@ describe('Login', () => {
             cy.visit('/login')
         })
 
+        // CT-AUTH-LOGIN-01
         it('credenciais válidas logam o usuário certo', () => {
             enviarLogin(usuario.email, usuario.password)
 
             cy.usuarioLogado().should('eq', usuario.name)
         })
 
+        // CT-AUTH-LOGIN-02
         // o erro sozinho não basta: um bug pode mostrar a mensagem e logar mesmo assim
         it('senha incorreta mostra erro e não loga', function () {
             enviarLogin(usuario.email, this.users.senhaIncorreta)
@@ -38,6 +40,7 @@ describe('Login', () => {
             deveEstarDeslogado()
         })
 
+        // CT-AUTH-LOGIN-03
         // mesma mensagem da senha incorreta: o site não revela se o e-mail existe
         it('e-mail não cadastrado mostra o mesmo erro e não loga', function () {
             const naoCadastrado = gerarCredenciais(this.users.contaAleatoria)
@@ -48,6 +51,7 @@ describe('Login', () => {
             deveEstarDeslogado()
         })
 
+        // CT-AUTH-LOGIN-04
         // o navegador só bloqueia o envio enquanto os campos forem "required"
         it('campos vazios são bloqueados antes do envio', () => {
             cy.get('[data-qa="login-button"]').click()
@@ -68,6 +72,7 @@ describe('Login', () => {
             cy.visit('/')
         })
 
+        // CT-AUTH-LOGIN-05
         it('logout encerra a sessão, também após recarregar', () => {
             cy.get('.shop-menu a[href="/logout"]').click()
 
@@ -76,6 +81,7 @@ describe('Login', () => {
             deveEstarDeslogado()
         })
 
+        // CT-AUTH-LOGIN-06
         // o navegador perder o cookie não basta: a sessão tem que morrer no servidor
         it('após o logout, o cookie de sessão antigo não é mais aceito', () => {
             const usarSomenteOCookie = (valor) => {

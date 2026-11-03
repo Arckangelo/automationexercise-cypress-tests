@@ -13,7 +13,9 @@ describe('[BUG-15] Busca - espaço duplo e "&" no termo', () => {
 
     // digitado: o que o usuário escreve; equivalente: o termo que ele quis buscar
     const casos = [
+        // CT-BUGS-SEARCH-INPUT-01
         { cenario: 'espaço duplo entre as palavras', digitado: 'blue  top', equivalente: 'blue top' },
+        // CT-BUGS-SEARCH-INPUT-02
         { cenario: 'termo com "&"', digitado: 'Blue & Pink', equivalente: 'Blue & Pink' },
     ]
 
