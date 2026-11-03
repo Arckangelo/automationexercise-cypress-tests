@@ -2,6 +2,7 @@ describe('API - Produtos e marcas', () => {
 
     const naoVazio = (valor, campo) => expect(valor, campo).to.be.a('string').and.not.be.empty
 
+    // CT-API-PRODUCTS-01
     it('lista de produtos: todos os itens têm formato válido e IDs únicos', () => {
         cy.apiGetProductsList().then(({ body }) => {
             expect(body.responseCode).to.eq(200)
@@ -23,11 +24,13 @@ describe('API - Produtos e marcas', () => {
         })
     })
 
+    // CT-API-PRODUCTS-02
     it('método POST na lista de produtos é rejeitado com 405 (só aceita GET)', () => {
         cy.apiRequest({ method: 'POST', url: '/api/productsList' })
             .its('body').should('deep.equal', { responseCode: 405, message: 'This request method is not supported.' })
     })
 
+    // CT-API-PRODUCTS-03
     it('lista de marcas: todos os itens têm formato válido', () => {
         cy.apiGetBrandsList().then(({ body }) => {
             expect(body.responseCode).to.eq(200)
@@ -41,6 +44,7 @@ describe('API - Produtos e marcas', () => {
         })
     })
 
+    // CT-API-PRODUCTS-04
     // vale com ou sem o BUG-14 (marcas repetidas): compara só o conjunto de nomes
     it('lista de marcas tem exatamente as marcas dos produtos', () => {
         cy.apiGetProductsList().then(({ body: { products } }) => {

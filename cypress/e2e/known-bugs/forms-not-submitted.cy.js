@@ -23,6 +23,7 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         })
     }
 
+    // CT-BUGS-FORMS-NOT-SUBMITTED-01
     // O Cypress aceita o confirm() automaticamente, como um usuário que clica em OK.
     it('[BUG-08] Contact Us deve enviar a mensagem ao servidor', function () {
         const contato = this.users.formularios.contato
@@ -41,6 +42,7 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         deveTerEnviado(envios)
     })
 
+    // CT-BUGS-FORMS-NOT-SUBMITTED-02
     it('[BUG-10] assinatura da newsletter deve ser enviada ao servidor', function () {
         cy.visit('/')
         const envios = registrarEnvios()
@@ -54,6 +56,7 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         deveTerEnviado(envios)
     })
 
+    // CT-BUGS-FORMS-NOT-SUBMITTED-03
     it('[BUG-11] avaliação de produto deve ser enviada ao servidor', function () {
         const avaliacao = this.users.formularios.avaliacao
         cy.visit('/product_details/1')

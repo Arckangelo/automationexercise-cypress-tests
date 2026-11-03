@@ -36,6 +36,7 @@ describe('API - Conta de usuário', () => {
 
     describe('criação', () => {
 
+        // CT-API-ACCOUNT-01
         it('criar conta retorna 201 e a senha cadastrada passa a funcionar', () => {
             novosDados().then((conta) => {
                 cy.apiCreateAccount(conta).its('body').should('deep.equal', { responseCode: 201, message: 'User created!' })
@@ -43,6 +44,7 @@ describe('API - Conta de usuário', () => {
             })
         })
 
+        // CT-API-ACCOUNT-02
         it('sem o campo "name" retorna 400 e não cria a conta', () => {
             novosDados().then(({ name, ...semNome }) => {
                 cy.apiCreateAccount(semNome).its('body').should('deep.equal', {
@@ -53,6 +55,25 @@ describe('API - Conta de usuário', () => {
             })
         })
 
+        // CT-API-ACCOUNT-03
+        // um campo de cada vez; "name" está no teste anterior. title, nascimento,
+        // company e address2 são opcionais (também na tela) e ficam de fora.
+        // Campo enviado VAZIO é aceito: ver BUG-19.
+        it('cada campo obrigatório ausente retorna 400 com o nome do campo', () => {
+            const OBRIGATORIOS = ['email', 'password', 'firstname', 'lastname', 'address1', 'country', 'zipcode', 'state', 'city', 'mobile_number']
+
+            novosDados().then((conta) => {
+                OBRIGATORIOS.forEach((campo) => {
+                    cy.apiCreateAccount(Cypress._.omit(conta, campo)).its('body').should('deep.equal', {
+                        responseCode: 400,
+                        message: `Bad request, ${campo} parameter is missing in POST request.`,
+                    })
+                })
+                credenciaisValidas(conta.email, conta.password).should('eq', 404)
+            })
+        })
+
+        // CT-API-ACCOUNT-04
         // pega: duplicar a conta ou sobrescrever a senha da conta existente
         it('e-mail já cadastrado retorna 400 e mantém a conta original', () => {
             criarConta().then((original) => {
@@ -69,6 +90,7 @@ describe('API - Conta de usuário', () => {
 
     describe('consulta', () => {
 
+        // CT-API-ACCOUNT-05
         it('consulta por e-mail devolve os dados gravados no cadastro', () => {
             criarConta().then((conta) => {
                 cy.contaDeveEstarGravada(conta)
@@ -78,6 +100,7 @@ describe('API - Conta de usuário', () => {
 
     describe('atualização', () => {
 
+        // CT-API-ACCOUNT-06
         it('atualizar com a senha certa altera os dados', () => {
             criarConta().then((conta) => {
                 const atualizada = { ...conta, city: 'Campinas', company: 'Empresa Atualizada' }
@@ -89,6 +112,7 @@ describe('API - Conta de usuário', () => {
             })
         })
 
+        // CT-API-ACCOUNT-07
         // permissão: sem a senha certa, ninguém altera a conta de outra pessoa
         // A resposta "Account not found!" para uma conta que existe é o BUG-17 (ver BUGS.md);
         // aqui ela é checada como o contrato atual da API.
@@ -106,6 +130,7 @@ describe('API - Conta de usuário', () => {
 
     describe('remoção', () => {
 
+        // CT-API-ACCOUNT-08
         it('apagar com a senha certa remove a conta', () => {
             criarConta().then(({ email, password }) => {
                 cy.apiDeleteAccount(email, password)
@@ -116,6 +141,7 @@ describe('API - Conta de usuário', () => {
             })
         })
 
+        // CT-API-ACCOUNT-09
         // permissão: sem a senha certa, ninguém apaga a conta de outra pessoa
         it('apagar com senha errada retorna 404 e mantém a conta', function () {
             criarConta().then(({ email, password }) => {
@@ -126,6 +152,7 @@ describe('API - Conta de usuário', () => {
             })
         })
 
+        // CT-API-ACCOUNT-10
         // e-mail novo a cada execução: um fixo poderia ser cadastrado por alguém no site
         it('apagar conta inexistente retorna 404', function () {
             const inexistente = gerarCredenciais(this.users.contaAleatoria)

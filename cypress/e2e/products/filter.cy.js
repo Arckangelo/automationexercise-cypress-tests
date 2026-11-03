@@ -8,7 +8,9 @@ describe('Filtro de produtos', () => {
     const tituloDaLista = () => cy.get('.features_items h2.title')
 
     const categorias = [
+        // CT-PRODUCTS-FILTER-01
         { painel: 'Women', categoria: 'Dress', href: '/category_products/1' },
+        // CT-PRODUCTS-FILTER-02
         { painel: 'Men', categoria: 'Jeans', href: '/category_products/6' },
     ]
 
@@ -24,6 +26,7 @@ describe('Filtro de produtos', () => {
         })
     })
 
+    // CT-PRODUCTS-FILTER-03
     it('marca Polo mostra exatamente os produtos dessa marca', () => {
         cy.visit('/products')
         cy.get('.brands-name a[href="/brand_products/Polo"]').click()
@@ -32,6 +35,7 @@ describe('Filtro de produtos', () => {
         cy.idsNaTela().should('deep.equal', catalogo.ids((p) => p.brand === 'Polo'))
     })
 
+    // CT-PRODUCTS-FILTER-04
     // pega: contador da lateral desatualizado ou calculado errado
     it('quantidade de cada marca na lateral bate com o catálogo', () => {
         cy.visit('/products')

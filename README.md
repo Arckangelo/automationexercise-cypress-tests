@@ -12,8 +12,8 @@ Suíte de testes automatizados end-to-end para o site [AutomationExercise](https
 
 **Resumo**
 
-- **48 testes** na suíte principal: 26 de interface (login, logout, cadastro, busca, filtros, carrinho e checkout) e 22 de API.
-- **17 bugs encontrados** no site e na API (6 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
+- **50 testes** na suíte principal: 27 de interface (login, logout, cadastro, busca, filtros, carrinho e checkout) e 23 de API.
+- **19 bugs encontrados** no site e na API (6 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
 - **Testes independentes e sem dados fixos:** cada execução cria um usuário descartável pela API e o remove ao final. O carrinho é preparado por HTTP, para que um teste não dependa de outro.
 - **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e asserções reforçadas por análise de mutação.
 - **CI no GitHub Actions:** a suíte roda no Chrome, no Firefox e no Edge a cada push e diariamente, o relatório HTML é publicado no GitHub Pages e o pipeline tem verificações de segurança (gitleaks, npm audit, CodeQL).
@@ -42,12 +42,12 @@ Projeto desenvolvido para praticar e demonstrar habilidades em automação de te
 | Arquivo | Cobertura |
 |---|---|
 | `login.cy.js` | Login com o usuário certo, senha incorreta e e-mail não cadastrado (sem logar), campos obrigatórios e logout com a sessão invalidada no servidor |
-| `signup.cy.js` | Cadastro completo com os dados conferidos no servidor pela API, e bloqueio de e-mail já cadastrado (as contas são removidas ao final) |
+| `signup.cy.js` | Cadastro completo com os dados conferidos no servidor pela API, bloqueio de e-mail já cadastrado e de e-mail em formato inválido (as contas são removidas ao final) |
 | `search.cy.js` | Busca que mostra **exatamente** os produtos com o termo (comparados ao catálogo da API), sem diferenciar maiúsculas, ignorando espaço no fim, e busca sem resultados |
 | `filter.cy.js` | Filtros por categoria (Women > Dress, Men > Jeans) e por marca (Polo) mostrando **exatamente** os produtos do catálogo, e contagem de cada marca na lateral |
 | `checkout.cy.js` | Carrinho (adicionar, somar quantidade, remover com verificação após recarregar, carrinho vazio) e checkout (itens, total, endereço, pagamento e bloqueio sem login) |
 
-**Total: 26 testes automatizados**
+**Total: 27 testes automatizados**
 
 ### API
 
@@ -59,19 +59,19 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 |---|---|
 | `products.api.cy.js` | Formato de **todos** os produtos e marcas (campos, IDs únicos, padrão de preço), marcas coerentes com o catálogo e rejeição de método não suportado |
 | `search.api.cy.js` | Busca em que **cada** resultado contém o termo, busca sem resultados e erro 400 sem o parâmetro |
-| `login.api.cy.js` | Verificação de login: credenciais válidas, senha incorreta, usuário inexistente, e-mail ou senha faltando e método não suportado |
-| `account.api.cy.js` | Criar, consultar, atualizar e remover conta, conferindo o efeito no servidor; permissões (atualizar ou apagar com senha errada não altera a conta), e-mail duplicado e dados incompletos. Cada teste usa a própria conta descartável |
+| `login.api.cy.js` | Verificação de login: credenciais válidas, senha incorreta, usuário inexistente, e-mail ou senha faltando e recusa de GET, PUT, DELETE e PATCH |
+| `account.api.cy.js` | Criar, consultar, atualizar e remover conta, conferindo o efeito no servidor; permissões (atualizar ou apagar com senha errada não altera a conta), e-mail duplicado e cada campo obrigatório ausente. Cada teste usa a própria conta descartável |
 
-**Total: 22 testes automatizados**
+**Total: 23 testes automatizados**
 
-**Suíte completa: 48 testes (26 de UI + 22 de API)**
+**Suíte completa: 50 testes (27 de UI + 23 de API)**
 
 ### 🐞 Bugs conhecidos
 
-Em três rodadas de exploração foram encontrados **17 bugs** no site e na API, documentados com
+Em quatro rodadas de exploração foram encontrados **19 bugs** no site e na API, documentados com
 passos de reprodução, resultado esperado e obtido, causa raiz e proposta de correção:
 
-<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.6 de 02/11/2026, por Angelo Roque: 17 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 5 médias e 6 baixas."></a></p>
+<p align="center"><a href="docs/Relatorio_de_Bugs.pdf"><img src="docs/img/capa-relatorio.png" width="720" alt="Capa do relatório de bugs do Automation Exercise, versão 1.7 de 03/11/2026, por Angelo Roque: 19 defeitos confirmados e reproduzíveis, sendo 6 de severidade alta, 7 médias e 6 baixas."></a></p>
 
 - **[BUGS.md](BUGS.md)**: versão resumida, para leitura rápida no GitHub
 - **[Relatório de Bugs (PDF)](docs/Relatorio_de_Bugs.pdf)**: relatório completo, com análise de causa raiz, soluções propostas e plano de correção.
@@ -82,7 +82,7 @@ passos de reprodução, resultado esperado e obtido, causa raiz e proposta de co
 | BUG-01 | Alta | Carrinho aceita quantidade negativa (total negativo) |
 | BUG-02 | Média | Carrinho aceita quantidade zero |
 | BUG-03 | Baixa | Fontes bloqueadas por Mixed Content (`@import http://` no CSS) |
-| BUG-04 | Média | API retorna HTTP 200 em respostas de erro |
+| BUG-04 | Média | API retorna HTTP 200 em respostas de erro, com formato e cabeçalho `Allow` incoerentes entre métodos |
 | BUG-05 | Baixa | API serve JSON com `Content-Type: text/html` |
 | BUG-06 | Alta | `GET /delete_account` exclui a conta logada sem confirmação nem token CSRF |
 | BUG-07 | Alta | API `getUserDetailByEmail` expõe dados pessoais sem autenticação |
@@ -96,8 +96,10 @@ passos de reprodução, resultado esperado e obtido, causa raiz e proposta de co
 | BUG-15 | Baixa | Busca com espaço duplo não encontra nada, e um `&` no termo corta a busca e mostra produtos errados |
 | BUG-16 | Alta | Confirmação de pedido e fatura de qualquer valor gerados pela URL, sem sessão nem compra |
 | BUG-17 | Baixa | API `updateAccount` com senha errada responde 404 "Account not found!", embora a conta exista |
+| BUG-18 | Média | Cadastro aceita e-mail em formato inválido pela API e pelo formulário (só o navegador valida) |
+| BUG-19 | Média | Campos obrigatórios do cadastro aceitam valor vazio, inclusive a senha (API e formulário) |
 
-Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (26 testes). Esses testes descrevem
+Cada bug tem um **teste de regressão** em `cypress/e2e/known-bugs/` (39 testes). Esses testes descrevem
 o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles ficam fora da suíte
 principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
 **diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
@@ -134,19 +136,21 @@ cypress/
 │   ├── known-bugs/              # testes de regressão de bugs conhecidos (fora da suíte padrão)
 │   │   ├── api-brands.cy.js           # BUG-14: lista de marcas repetida na API
 │   │   ├── account-security.cy.js     # BUG-06/07/17: exclusão de conta por GET, dados expostos e erro de senha na API
-│   │   ├── api-http-status.cy.js      # BUG-04/05: status HTTP e Content-Type da API
+│   │   ├── api-http-status.cy.js      # BUG-04/05: status HTTP, formato, cabeçalho Allow e Content-Type da API
 │   │   ├── cart-quantity.cy.js        # BUG-01/02/09: quantidade negativa, zero e não inteira
 │   │   ├── checkout-access.cy.js      # BUG-12/13: checkout e pagamento sem login ou com carrinho vazio
+│   │   ├── email-format.cy.js         # BUG-18: e-mail em formato inválido aceito no cadastro
 │   │   ├── forms-not-submitted.cy.js  # BUG-08/10/11: Contact Us, newsletter e avaliação sem envio
 │   │   ├── mixed-content.cy.js        # BUG-03: @import http:// nas folhas de estilo
 │   │   ├── order-confirmation.cy.js   # BUG-16: confirmação de pedido e fatura gerados pela URL
+│   │   ├── required-fields.cy.js      # BUG-19: campos obrigatórios do cadastro aceitam valor vazio
 │   │   └── search-input.cy.js         # BUG-15: espaço duplo e "&" no termo da busca
 │   └── products/
 │       ├── filter.cy.js         # cenários de teste de filtro de produtos
 │       └── search.cy.js         # cenários de teste de busca de produtos
 ├── fixtures/
 │   ├── apiData.json             # massa de dados dos testes de API
-│   └── users.json               # e-mails, senhas e dados dos formulários; contas aleatórias seguem o modelo qa.{id}@teste.com
+│   └── users.json               # e-mails, senhas, e-mails inválidos e dados dos formulários; contas aleatórias seguem o modelo qa.{id}@teste.com
 └── support/
     ├── catalogo.js              # carrega o catálogo da API, fonte do que busca, filtro e carrinho devem mostrar
     ├── commands.js              # comandos customizados: login, carrinho, leitura da tela, busca e API
@@ -195,8 +199,8 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 
 | Job | O que faz |
 |---|---|
-| Suíte principal | Roda os 48 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
-| Bugs conhecidos | Roda os 26 testes de regressão no Chrome, sem quebrar o pipeline, e indica no resumo se algum bug foi corrigido |
+| Suíte principal | Roda os 50 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
+| Bugs conhecidos | Roda os 39 testes de regressão no Chrome, sem quebrar o pipeline, e indica no resumo se algum bug foi corrigido |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline

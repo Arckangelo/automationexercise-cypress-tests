@@ -1,4 +1,4 @@
-import { gerarCredenciais, usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+import { gerarCredenciais, gerarEmail, usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
 
 describe('Cadastro de usuário', () => {
 
@@ -27,6 +27,7 @@ describe('Cadastro de usuário', () => {
                 .should('be.oneOf', [200, 404])
         })
 
+        // CT-AUTH-SIGNUP-01
         it('cadastro completo cria a conta com os dados informados', () => {
             cy.visit('/login')
             cy.get('[data-qa="signup-name"]').type(dados.name)
@@ -71,6 +72,7 @@ describe('Cadastro de usuário', () => {
         // conta criada via API: o teste não depende do cadastro pela tela
         const existente = usarUsuarioDeTeste()
 
+        // CT-AUTH-SIGNUP-02
         it('e-mail já cadastrado mostra erro e não avança para o formulário completo', function () {
             cy.visit('/login')
             cy.get('[data-qa="signup-name"]').type(this.users.nomeAlternativo)
@@ -79,6 +81,34 @@ describe('Cadastro de usuário', () => {
 
             cy.get('form[action="/signup"]').contains('p', 'Email Address already exist!').should('be.visible')
             cy.get('[data-qa="create-account"]').should('not.exist')
+        })
+    })
+
+    describe('e-mail em formato inválido', () => {
+
+        // CT-AUTH-SIGNUP-03
+        // O campo é type="email": o navegador recusa o formato antes do envio.
+        // O servidor não valida (BUG-18), então esta é a única barreira hoje.
+        it('e-mail em formato inválido é bloqueado antes do envio', function () {
+            cy.intercept('POST', '/signup').as('signup')
+            cy.visit('/login')
+            cy.get('[data-qa="signup-name"]').type(this.users.nomeAlternativo)
+
+            // "comEspaco" fica de fora: o navegador remove o espaço ao digitar e o
+            // e-mail que sobra é válido (o envio é correto)
+            Object.values(Cypress._.omit(this.users.emailsInvalidos, 'comEspaco')).forEach((modelo) => {
+                const email = gerarEmail(modelo)
+                cy.get('[data-qa="signup-email"]').clear().type(email)
+                cy.get('[data-qa="signup-button"]').click()
+
+                cy.get('[data-qa="signup-email"]').then(($campo) => {
+                    expect($campo[0].validity.typeMismatch, `"${email}" recusado pelo navegador`).to.be.true
+                })
+            })
+
+            cy.url().should('include', '/login')
+            cy.get('[data-qa="create-account"]').should('not.exist')
+            cy.get('@signup.all').should('have.length', 0)
         })
     })
 })

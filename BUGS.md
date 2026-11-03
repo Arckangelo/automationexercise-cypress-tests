@@ -6,14 +6,14 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 > 📄 Relatório completo, com análise de causa raiz, soluções propostas e plano de correção:
 > **[docs/Relatorio_de_Bugs.pdf](docs/Relatorio_de_Bugs.pdf)**
 
-**Última verificação:** 02/11/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome)
+**Última verificação:** 03/11/2026 · **Ambiente:** https://automationexercise.com (produção, Chrome)
 
 | ID | Severidade | Área | Resumo | Teste |
 |----|-----------|------|--------|-------|
 | [BUG-01](#bug-01--carrinho-aceita-quantidade-negativa) | Alta | Carrinho | Aceita quantidade negativa, gerando total negativo | `cart-quantity.cy.js` |
 | [BUG-02](#bug-02--carrinho-aceita-quantidade-zero) | Média | Carrinho | Aceita quantidade zero, gerando item com total Rs. 0 | `cart-quantity.cy.js` |
 | [BUG-03](#bug-03--fontes-bloqueadas-por-mixed-content) | Baixa | Front-end | Fontes importadas via `http://` são bloqueadas (Mixed Content) | `mixed-content.cy.js` |
-| [BUG-04](#bug-04--api-retorna-http-200-em-respostas-de-erro) | Média | API | Respostas de erro retornam HTTP 200 | `api-http-status.cy.js` |
+| [BUG-04](#bug-04--api-retorna-http-200-em-respostas-de-erro) | Média | API | Respostas de erro retornam HTTP 200; PATCH responde em outro formato e o cabeçalho `Allow` anuncia métodos recusados | `api-http-status.cy.js` |
 | [BUG-05](#bug-05--api-declara-content-type-incorreto) | Baixa | API | JSON servido com `Content-Type: text/html` | `api-http-status.cy.js` |
 | [BUG-06](#bug-06--conta-é-excluída-por-um-get-sem-confirmação) | Alta | Conta | `GET /delete_account` exclui a conta logada, sem confirmação nem token CSRF | `account-security.cy.js` |
 | [BUG-07](#bug-07--api-expõe-dados-pessoais-sem-autenticação) | Alta | API | `getUserDetailByEmail` devolve nome, endereço e nascimento de qualquer e-mail, sem autenticação | `account-security.cy.js` |
@@ -27,6 +27,8 @@ automatizado de regressão em [`cypress/e2e/known-bugs/`](cypress/e2e/known-bugs
 | [BUG-15](#bug-15--busca-com-espaço-duplo-ou--no-termo-falha) | Baixa | Busca | Espaço duplo não encontra nada; `&` corta o termo e mostra produtos errados | `search-input.cy.js` |
 | [BUG-16](#bug-16--confirmação-de-pedido-e-fatura-gerados-pela-url) | Alta | Pedido | Confirmação de pedido e fatura de **qualquer valor** gerados pela URL, sem sessão nem compra | `order-confirmation.cy.js` |
 | [BUG-17](#bug-17--senha-errada-é-respondida-como-conta-inexistente) | Baixa | API | `updateAccount` com senha errada responde 404 "Account not found!", embora a conta exista | `account-security.cy.js` |
+| [BUG-18](#bug-18--e-mail-em-formato-inválido-é-aceito-no-cadastro) | Média | Conta | O servidor aceita qualquer texto como e-mail no cadastro (API e formulário); só o navegador valida | `email-format.cy.js` |
+| [BUG-19](#bug-19--campos-obrigatórios-do-cadastro-aceitam-valor-vazio) | Média | Conta | Campos obrigatórios do cadastro aceitam valor vazio, inclusive a senha (API e formulário) | `required-fields.cy.js` |
 
 ---
 
@@ -147,6 +149,11 @@ an insecure stylesheet 'http://fonts.googleapis.com/css?family=Roboto...'. This 
 | `DELETE /api/verifyLogin` | 200 | 405 |
 | `POST /api/searchProduct` (sem `search_product`) | 200 | 400 |
 | `POST /api/verifyLogin` (parâmetros na query string) | 200 | 400 |
+
+O contrato também é incoerente entre métodos. No `/api/verifyLogin`, que só aceita `POST`, o `PATCH`
+recebe um 405 de verdade, mas no formato padrão do framework (`{"detail": "Method \"PATCH\" not allowed."}`),
+sem o `responseCode` que todas as outras respostas têm. E o `OPTIONS` devolve o cabeçalho
+`Allow: POST, PUT, DELETE, GET, OPTIONS`, anunciando métodos que o próprio endpoint recusa.
 
 ## BUG-05 — API declara Content-Type incorreto
 
@@ -408,6 +415,61 @@ o código 404 faz o erro parecer de rota ou de recurso, não de autenticação.
 **Correção sugerida:** responder `401` com uma mensagem genérica de credenciais inválidas sempre que
 o e-mail e a senha não conferirem, sem dizer qual dos dois está errado.
 
+## BUG-18 — E-mail em formato inválido é aceito no cadastro
+
+**Severidade:** Média — contas com e-mails que não recebem nada e texto arbitrário gravado no campo de e-mail.
+
+**Passos para reproduzir**
+1. Enviar `POST /api/createAccount` com todos os campos obrigatórios e `email=semarroba123`.
+2. Chamar `POST /api/verifyLogin` com esse e-mail e a senha cadastrada.
+3. Pela tela: enviar o formulário de cadastro de `/login` direto ao servidor, sem a validação do
+   navegador (por exemplo com `curl` e o token CSRF da página), com um e-mail sem `@`.
+
+**Resultado esperado:** o servidor recusa o cadastro com `400` (na API) ou com uma mensagem de erro
+(na tela), sem criar a conta.
+
+**Resultado obtido:** a API responde `{"responseCode": 201, "message": "User created!"}` e a conta
+passa a fazer login. Todos os formatos testados foram aceitos: sem `@`, sem domínio (`qa@`), sem
+usuário (`@dominio.com`), domínio sem ponto, com espaço, com `@` duplo, com ponto duplo no domínio e
+com HTML (`<b>qa</b>@teste.com`, gravado como veio). Pela tela, o servidor avança para "Enter Account
+Information" e, ao final, redireciona para `/account_created`. Já existe no site uma conta de
+terceiros cujo e-mail é só um espaço.
+
+A tela em si bloqueia esses formatos: o campo é `type="email"` e o navegador recusa o envio (coberto
+na suíte principal, em `signup.cy.js`). Essa é a única validação existente.
+
+**Impacto:** contas com e-mails que não recebem confirmação, recuperação de senha ou fatura, e texto
+arbitrário, inclusive HTML, gravado no campo de e-mail.
+
+**Correção sugerida:** validar o formato do e-mail no servidor, na API e no formulário, respondendo
+`400` com uma mensagem clara.
+
+## BUG-19 — Campos obrigatórios do cadastro aceitam valor vazio
+
+**Severidade:** Média — contas sem nome, sem endereço e até sem senha.
+
+**Passos para reproduzir**
+1. Enviar `POST /api/createAccount` com todos os campos e `password=` (vazio).
+2. Chamar `POST /api/verifyLogin` com o e-mail dessa conta e a senha vazia.
+3. Pela tela: enviar o formulário de cadastro de `/login` direto ao servidor, sem a validação do
+   navegador, com o nome vazio.
+
+**Resultado esperado:** o servidor recusa campos obrigatórios vazios com `400` (na API) ou com uma
+mensagem de erro (na tela), sem criar a conta.
+
+**Resultado obtido:** a API só confere se o campo foi enviado. Sem o campo, responde
+`400 "Bad request, <campo> parameter is missing in POST request."`; com o campo vazio, responde
+`201 "User created!"`. Isso vale para todos os obrigatórios: name, password, firstname, lastname,
+address1, country, zipcode, state, city e mobile_number. A conta criada com senha vazia faz login
+com a senha vazia. Pela tela, o servidor aceita o nome vazio e avança para "Enter Account
+Information". Já existe no site uma conta de terceiros com o e-mail vazio.
+
+**Impacto:** contas sem dados obrigatórios (nome, endereço de entrega, telefone) e contas sem senha,
+acessíveis só com o e-mail.
+
+**Correção sugerida:** validar no servidor que cada campo obrigatório tem conteúdo (após remover
+espaços), na API e no formulário, respondendo `400` com o nome do campo.
+
 ---
 
 ## Como os testes de bug funcionam
@@ -426,4 +488,4 @@ npm run test:bugs        # headless
 npm run test:bugs:open   # interface do Cypress
 ```
 
-Resultado esperado atualmente: **26 testes, 26 falhas**, todas pelas asserções que descrevem os bugs.
+Resultado esperado atualmente: **39 testes, 39 falhas**, todas pelas asserções que descrevem os bugs.

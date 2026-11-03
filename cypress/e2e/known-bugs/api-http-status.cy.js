@@ -8,10 +8,15 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
 
     // Status HTTP real esperado = responseCode que a própria API devolve no corpo
     const requisicoesDeErro = [
+        // CT-BUGS-API-HTTP-STATUS-01
         { method: 'POST', url: '/api/productsList', esperado: 405 },
+        // CT-BUGS-API-HTTP-STATUS-02
         { method: 'PUT', url: '/api/brandsList', esperado: 405 },
+        // CT-BUGS-API-HTTP-STATUS-03
         { method: 'DELETE', url: '/api/verifyLogin', esperado: 405 },
+        // CT-BUGS-API-HTTP-STATUS-04
         { method: 'POST', url: '/api/searchProduct', cenario: 'sem parâmetro', esperado: 400 },
+        // CT-BUGS-API-HTTP-STATUS-05
         // a API só lê os campos do corpo do formulário; na query string eles são ignorados
         {
             method: 'POST',
@@ -37,6 +42,26 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
         })
     })
 
+    // CT-BUGS-API-HTTP-STATUS-06
+    // Só o PATCH recebe um 405 de verdade, mas no formato padrão do framework
+    // ({"detail": ...}), sem o responseCode que todas as outras respostas têm.
+    it('[BUG-04] PATCH /api/verifyLogin deve responder no formato da API (com responseCode)', () => {
+        cy.request({ method: 'PATCH', url: '/api/verifyLogin', failOnStatusCode: false }).then(({ status, body }) => {
+            expect(status, 'status HTTP').to.eq(405)
+            expect(body, 'corpo').to.have.property('responseCode', 405)
+        })
+    })
+
+    // CT-BUGS-API-HTTP-STATUS-07
+    // O cabeçalho Allow anuncia GET, PUT e DELETE, que o próprio endpoint recusa.
+    it('[BUG-04] OPTIONS /api/verifyLogin: o cabeçalho Allow deve anunciar só os métodos aceitos', () => {
+        cy.request({ method: 'OPTIONS', url: '/api/verifyLogin' }).its('headers.allow').then((allow) => {
+            const metodos = allow.split(',').map((m) => m.trim()).sort()
+            expect(metodos, 'métodos anunciados').to.deep.equal(['OPTIONS', 'POST'])
+        })
+    })
+
+    // CT-BUGS-API-HTTP-STATUS-08
     it('[BUG-05] GET /api/productsList deve declarar Content-Type JSON', () => {
         cy.apiGetProductsList().then((response) => {
             expect(response.body.responseCode).to.eq(200)

@@ -3,6 +3,7 @@
 // então as fontes Roboto, Open Sans e Abel nunca carregam.
 describe('[BUG-03] Front-end - Mixed Content nas folhas de estilo', () => {
 
+    // CT-BUGS-MIXED-CONTENT-01
     // Checar só os <link href="http://..."> do HTML NÃO pega este bug: o
     // recurso inseguro vem de um @import dentro do CSS (main.css, linhas 5–7).
     // Por isso o teste baixa cada CSS do próprio site e inspeciona o conteúdo.

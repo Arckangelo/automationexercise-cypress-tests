@@ -5,6 +5,13 @@
   },
   "senhaIncorreta": "senhaerrada",
   "nomeAlternativo": "Outro Nome",
+  "emailsInvalidos": {
+    "semArroba": "qa.{id}",
+    "semDominio": "qa.{id}@",
+    "semUsuario": "@qa{id}.com",
+    "comEspaco": "qa {id}@teste.com",
+    "arrobaDuplo": "qa.{id}@@teste.com"
+  },
   "formularios": {
     "contato": {
       "nome": "QA Automatizado",

@@ -49,6 +49,7 @@ describe('Carrinho e Checkout', () => {
             cy.limparCarrinho()
         })
 
+        // CT-CART-CHECKOUT-01
         it('adicionar pela listagem mostra o produto no carrinho', () => {
             cy.visit('/products')
             cy.get('.productinfo a.add-to-cart[data-product-id="1"]').click()
@@ -60,6 +61,7 @@ describe('Carrinho e Checkout', () => {
             validarItem('1')
         })
 
+        // CT-CART-CHECKOUT-02
         // pega: linha duplicada, quantidade sobrescrita em vez de somada, total errado
         it('adicionar o mesmo produto duas vezes soma quantidade e total', () => {
             cy.adicionarAoCarrinho('1')
@@ -70,6 +72,7 @@ describe('Carrinho e Checkout', () => {
             validarItem('1', 2)
         })
 
+        // CT-CART-CHECKOUT-03
         // o cart.js apaga a linha da tela com qualquer resposta 200; só o
         // reload prova que o servidor removeu o item de fato
         it('remover um item mantém os demais no servidor', () => {
@@ -87,6 +90,7 @@ describe('Carrinho e Checkout', () => {
             validarItem('2')
         })
 
+        // CT-CART-CHECKOUT-04
         it('remover o último item deixa o carrinho vazio no servidor', () => {
             cy.adicionarAoCarrinho('1')
             cy.visit('/view_cart')
@@ -99,6 +103,7 @@ describe('Carrinho e Checkout', () => {
             cy.get('#empty_cart').should('be.visible')
         })
 
+        // CT-CART-CHECKOUT-05
         it('carrinho vazio não oferece o botão de checkout', () => {
             cy.visit('/view_cart')
 
@@ -114,6 +119,7 @@ describe('Carrinho e Checkout', () => {
             cy.limparCarrinho()
         })
 
+        // CT-CART-CHECKOUT-06
         it('Proceed To Checkout leva à página de checkout', () => {
             cy.adicionarAoCarrinho('1')
             cy.visit('/view_cart')
@@ -124,6 +130,7 @@ describe('Carrinho e Checkout', () => {
             cy.get('#address_delivery').should('be.visible')
         })
 
+        // CT-CART-CHECKOUT-07
         it('checkout mostra os itens e o total do pedido', () => {
             cy.adicionarAoCarrinho('1')
             cy.adicionarAoCarrinho('2')
@@ -138,6 +145,7 @@ describe('Carrinho e Checkout', () => {
             })
         })
 
+        // CT-CART-CHECKOUT-08
         // compara cada linha do endereço com o campo certo do cadastro
         // (antes comparava com "name", que só batia por coincidência)
         it('checkout mostra o endereço cadastrado do usuário', () => {
@@ -158,6 +166,7 @@ describe('Carrinho e Checkout', () => {
             })
         })
 
+        // CT-CART-CHECKOUT-09
         it('Place Order leva ao formulário de pagamento', () => {
             cy.adicionarAoCarrinho('1')
             cy.visit('/checkout')
@@ -171,6 +180,7 @@ describe('Carrinho e Checkout', () => {
 
     describe('Checkout (sem login)', () => {
 
+        // CT-CART-CHECKOUT-10
         // sem cy.login: cada teste começa com sessão nova (testIsolation)
         it('Proceed To Checkout pede login em vez de avançar', () => {
             cy.adicionarAoCarrinho('1')

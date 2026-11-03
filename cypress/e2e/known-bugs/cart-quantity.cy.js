@@ -36,6 +36,7 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
         })
     }
 
+    // CT-BUGS-CART-QUANTITY-01
     // O input até declara min="1" no HTML, mas nem o front-end nem o
     // servidor aplicam a regra: GET /add_to_cart/1?quantity=-3 é aceito.
     it('[BUG-01] não deve aceitar quantidade negativa (-3)', () => {
@@ -43,6 +44,7 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
         validarCarrinho()
     })
 
+    // CT-BUGS-CART-QUANTITY-02
     it('[BUG-02] não deve aceitar quantidade zero (0)', () => {
         adicionarComQuantidade('0')
         validarCarrinho()
@@ -61,8 +63,11 @@ describe('[BUG-09] Carrinho - quantidade não inteira derruba o servidor', () =>
     })
 
     const entradas = [
+        // CT-BUGS-CART-QUANTITY-03
         { cenario: 'campo vazio', valor: '' },
+        // CT-BUGS-CART-QUANTITY-04
         { cenario: 'decimal (2.5)', valor: '2.5' },
+        // CT-BUGS-CART-QUANTITY-05
         { cenario: 'notação científica (1e2)', valor: '1e2' },
     ]
 
