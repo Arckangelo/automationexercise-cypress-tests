@@ -191,7 +191,7 @@ A nova suíte atinge o mesmo nível quando todos os itens abaixo forem verdadeir
 ## 5. Fraquezas da suíte atual que não devem ser copiadas
 
 1. **Guarda da página de espera espalhada (corrigido):** cada comando conferia a página por conta própria, e dois (`limparCarrinho` e `enviarSignupSemNavegador`) não conferiam. A guarda foi movida para a sobrescrita do `cy.request`. Na nova suíte, comece já com ela centralizada.
-2. **Resumo do CI só detecta correção total:** o job de bugs conhecidos só avisa quando **todos** passam (`cypress.yml:116-117`). Um bug corrigido sozinho não é notado. O certo é comparar teste a teste.
+2. **Resumo do CI só detectava correção total (corrigido):** o job de bugs conhecidos olhava o resultado geral e só avisava quando todos passavam. Agora `scripts/resumo-bugs.js` lista teste a teste cada bug que parou de reproduzir. Na nova suíte, comece já com o resumo por teste.
 3. **IDs CT só em comentário:** eles não aparecem no título do teste nem no relatório HTML, então a rastreabilidade não chega ao relatório. Na nova suíte, coloque o ID no título.
 4. **Duas camadas de repetição:** o `cy.request` repete até 3 vezes (`commands.js:42-55`) e, por cima, o Cypress repete o teste 2 vezes (`cypress.config.js:35`). No pior caso, o tempo de espera se multiplica.
 5. **Comentário desatualizado:** `entrarPelaTela` diz servir ao carrinho entre sessões (`commands.js:92-93`), que hoje usa `entrarPorRequisicao`.
