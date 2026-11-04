@@ -42,6 +42,11 @@ jobs:
         with:
           command: npm run test:${{ matrix.browser }}
 
+      # testes que só passaram numa nova tentativa (retries) aparecem no resumo
+      - name: Resumo de testes instáveis
+        if: always()
+        run: node scripts/resumo-instaveis.js ${{ matrix.browser }}
+
       - name: Salvar screenshots das falhas
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
