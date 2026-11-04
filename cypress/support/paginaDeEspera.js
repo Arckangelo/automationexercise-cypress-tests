@@ -12,6 +12,9 @@
 // Toda página real do site tem o logo no cabeçalho. Se ele não está lá, é a
 // página de espera: tentamos de novo algumas vezes e, se ela persistir, o
 // teste falha com "Site indisponível", nunca passa nem vira bug.
+//
+// A verificação fica só em dois lugares, nas sobrescritas de cy.visit e de
+// cy.request (commands.js). Comandos e testes não precisam repeti-la.
 
 export const TENTATIVAS = 3
 export const ESPERA_ENTRE_TENTATIVAS = 5000

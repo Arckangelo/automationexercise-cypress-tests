@@ -530,7 +530,7 @@ teste pode ir para a suíte principal.
 
 Eles ficam fora da suíte principal (`npm test`) para que bugs conhecidos do site não
 mascarem regressões reais. No CI, rodam num job separado que não quebra o pipeline, a cada
-push e diariamente, e o relatório HTML fica publicado no
+push e diariamente. O resumo da execução aponta, teste a teste, cada bug que parou de reproduzir, e o relatório HTML fica publicado no
 [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/). Para rodá-los localmente:
 
 ```bash

@@ -21,10 +21,14 @@ Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
     })
 })
 
-// cy.request repete só a própria requisição quando o site responde 503 ou 429
-// (sobrecarga), em vez de o Cypress repetir o teste inteiro (retries). Se
-// persistir, falha com "Site indisponível". Os demais status seguem a regra de
-// sempre: com failOnStatusCode (padrão), 4xx/5xx falham o teste.
+// cy.request é o ponto único de proteção contra a instabilidade do site, para
+// toda leitura por HTTP (inclusive cy.apiRequest e os comandos que leem páginas).
+// Repete só a própria requisição, em vez de o Cypress repetir o teste inteiro:
+//   - 503 ou 429 (sobrecarga);
+//   - resposta 2xx com HTML sem o logo do site: a página de espera
+//     (ver paginaDeEspera.js). JSON, texto puro e páginas 4xx/5xx não entram.
+// Se persistir, falha com "Site indisponível". Os demais status seguem a regra
+// de sempre: com failOnStatusCode (padrão), 4xx/5xx falham o teste.
 const SOBRECARGA = [429, 503]
 
 const opcoesDaRequisicao = (args) => {
@@ -45,6 +49,12 @@ Cypress.Commands.overwrite('request', (requisitar, ...args) => {
     .then((resposta) => {
       if (SOBRECARGA.includes(resposta.status)) {
         if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde, `HTTP ${resposta.status}`)
+        cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
+        return tentar(tentativa + 1)
+      }
+      if (resposta.status >= 200 && resposta.status < 300 && htmlEhPaginaDeEspera(resposta.body)) {
+        guardarPaginaDeEspera(resposta.body, onde)
+        if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde)
         cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
         return tentar(tentativa + 1)
       }
@@ -89,8 +99,8 @@ Cypress.Commands.add('login', (email, password) => {
   })
 })
 
-// Login pelo formulário, sem cy.session: para testes que precisam de um login
-// "de verdade" (sessão nova), como os de carrinho entre sessões.
+// Login pelo formulário, sem cy.session: para quando o próprio login pela tela
+// faz parte do teste (ex.: a tentativa recusada depois de excluir a conta).
 Cypress.Commands.add('entrarPelaTela', (email, password) => {
   cy.visit('/login')
   cy.get('[data-qa="login-email"]').type(email)
@@ -100,10 +110,8 @@ Cypress.Commands.add('entrarPelaTela', (email, password) => {
 
 // Itens do carrinho no servidor, como { idDoProduto: quantidade }.
 Cypress.Commands.add('itensDoCarrinho', () => {
+  // a página de espera (carrinho "vazio") é barrada pelo cy.request
   return cy.request('/view_cart').its('body').then((body) => {
-    // a página de espera do site teria um carrinho "vazio": não pode contar como resultado
-    expect(body.includes('class="logo'), 'resposta é uma página do site').to.be.true
-
     const doc = new DOMParser().parseFromString(body, 'text/html')
     return Object.fromEntries([...doc.querySelectorAll('tr[id^="product-"]')].map((linha) => [
       linha.id.replace('product-', ''),
@@ -170,19 +178,11 @@ Cypress.Commands.add('idsNaTela', () => {
 // automático do corpo quando o Content-Type é "application/json", então
 // sem esse ajuste response.body chegaria como STRING crua nos testes.
 // cy.apiRequest() centraliza esse parse pra todos os outros comandos.
-Cypress.Commands.add('apiRequest', (options, tentativa = 1) => {
-  const onde = `${options.method || 'GET'} ${options.url}`
+// A página de espera e a sobrecarga já são tratadas pelo cy.request.
+Cypress.Commands.add('apiRequest', (options) => {
   return cy.request({ failOnStatusCode: false, ...options }).then((response) => {
     const rawBody = response.body
     let body
-
-    // página de espera do site (ver paginaDeEspera.js): tenta de novo antes de falhar
-    if (htmlEhPaginaDeEspera(rawBody)) {
-      guardarPaginaDeEspera(rawBody, onde)
-      if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde)
-      cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
-      return cy.apiRequest(options, tentativa + 1)
-    }
 
     if (typeof rawBody === 'string') {
       try {
@@ -248,6 +248,7 @@ Cypress.Commands.add('apiCreateAccount', (dados) => {
 Cypress.Commands.add('enviarSignupSemNavegador', (name, email) => {
   return cy.request('/login').then(({ body }) => {
     const token = Cypress.$(body).find('form[action="/signup"] [name="csrfmiddlewaretoken"]').val()
+    expect(token, 'formulário de cadastro carregado').to.be.a('string').and.not.be.empty
 
     return cy.request({
       method: 'POST',

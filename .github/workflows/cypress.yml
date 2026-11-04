@@ -108,19 +108,11 @@ jobs:
           # os bugs são do site, não do navegador: basta um
           command: npm run test:bugs -- --browser chrome
 
+      # teste a teste: aponta cada bug que parou de reproduzir, mesmo que os
+      # outros continuem falhando (o resultado geral do job esconderia isso)
       - name: Resumo
         if: always()
-        env:
-          RESULTADO: ${{ steps.bugs.outcome }}
-        run: |
-          if [ "$RESULTADO" = "success" ]; then
-            echo "### ✅ Todos os bugs conhecidos parecem corrigidos — mova os testes para a suíte principal" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "### 🐞 Bugs conhecidos continuam reproduzindo (resultado esperado). Ver relatório." >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ -f cypress/reports/pagina-de-espera.html ]; then
-            echo "> ⚠️ O site respondeu a página de espera durante a execução. Testes com \"Site indisponível\" não dizem nada sobre os bugs: rode de novo." >> "$GITHUB_STEP_SUMMARY"
-          fi
+        run: node scripts/resumo-bugs.js
 
       - name: Salvar relatório HTML
         if: always()

@@ -167,7 +167,8 @@ cypress/
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
     └── usuarioDeTeste.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/
-└── cypress.js                   # roda o Cypress com um ambiente estável em qualquer sistema (usado pelos scripts npm)
+├── cypress.js                   # roda o Cypress com um ambiente estável em qualquer sistema (usado pelos scripts npm)
+└── resumo-bugs.js               # resumo teste a teste dos bugs conhecidos (usado no CI)
 ```
 
 ## 🚀 Como rodar o projeto
@@ -210,7 +211,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Job | O que faz |
 |---|---|
 | Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
-| Bugs conhecidos | Roda os 46 testes de regressão no Chrome, sem quebrar o pipeline, e indica no resumo se algum bug foi corrigido |
+| Bugs conhecidos | Roda os 46 testes de regressão no Chrome, sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline
@@ -253,7 +254,7 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - Seletores robustos (baseados em atributos `data-qa` e `href`) foram priorizados para reduzir flakiness
 - Só exceções de scripts de anúncio de terceiros são ignoradas (`cypress/support/e2e.js`); qualquer outro erro JavaScript do site falha o teste
 - O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem até 2 novas tentativas (`retries`) — exceto os de bugs conhecidos, em que a falha é o resultado esperado
-- Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.apiRequest` reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [paginaDeEspera.js](cypress/support/paginaDeEspera.js)
+- Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.request` (e, por ele, a API e todo comando que lê páginas por HTTP) reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [paginaDeEspera.js](cypress/support/paginaDeEspera.js)
 - Quando o site responde `503` ou `429` (sobrecarga), o `cy.request` repete só aquela requisição, até 3 vezes, em vez de o Cypress repetir o teste inteiro
 - Anúncios e rastreadores de terceiros são bloqueados (`blockHosts` no `cypress.config.js`): deixam as páginas mais lentas e não fazem parte do site testado
 - Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.entrarPorRequisicao`; o login pela tela é coberto em `login.cy.js`
