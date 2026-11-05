@@ -3,7 +3,6 @@ import { useTestUser } from '../../support/testUser'
 // O carrinho fica gravado na conta: passa do visitante para a conta no login,
 // some da tela no logout e volta ao entrar de novo, inclusive em outro navegador.
 describe('Carrinho entre sessões', () => {
-
     // conta descartável criada via API antes dos testes e removida no final
     const user = useTestUser()
 

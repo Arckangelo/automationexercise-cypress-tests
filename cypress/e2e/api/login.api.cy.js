@@ -1,7 +1,6 @@
 import { generateCredentials, useTestUser } from '../../support/testUser'
 
 describe('API - Verificação de login', () => {
-
     // conta descartável criada via API antes dos testes e removida no final
     const user = useTestUser()
 
@@ -10,13 +9,15 @@ describe('API - Verificação de login', () => {
     // CT-API-LOGIN-01
     it('credenciais válidas retornam 200 "User exists!"', () => {
         cy.apiVerifyLogin(user.email, user.password)
-            .its('body').should('deep.equal', { responseCode: 200, message: 'User exists!' })
+            .its('body')
+            .should('deep.equal', { responseCode: 200, message: 'User exists!' })
     })
 
     // CT-API-LOGIN-02
     it('senha incorreta retorna 404', function () {
         cy.apiVerifyLogin(user.email, this.users.wrongPassword)
-            .its('body').should('deep.equal', { responseCode: 404, message: 'User not found!' })
+            .its('body')
+            .should('deep.equal', { responseCode: 404, message: 'User not found!' })
     })
 
     // CT-API-LOGIN-03
@@ -25,19 +26,22 @@ describe('API - Verificação de login', () => {
         const unregistered = generateCredentials(this.users.randomAccount)
 
         cy.apiVerifyLogin(unregistered.email, unregistered.password)
-            .its('body').should('deep.equal', { responseCode: 404, message: 'User not found!' })
+            .its('body')
+            .should('deep.equal', { responseCode: 404, message: 'User not found!' })
     })
 
     // CT-API-LOGIN-04
     it('sem o e-mail retorna 400', () => {
         cy.apiVerifyLogin(undefined, user.password)
-            .its('body').should('deep.equal', { responseCode: 400, message: MISSING_PARAMETER })
+            .its('body')
+            .should('deep.equal', { responseCode: 400, message: MISSING_PARAMETER })
     })
 
     // CT-API-LOGIN-05
     it('sem a senha retorna 400', () => {
         cy.apiVerifyLogin(user.email, undefined)
-            .its('body').should('deep.equal', { responseCode: 400, message: MISSING_PARAMETER })
+            .its('body')
+            .should('deep.equal', { responseCode: 400, message: MISSING_PARAMETER })
     })
 
     // CT-API-LOGIN-06

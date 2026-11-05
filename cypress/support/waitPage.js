@@ -30,7 +30,7 @@ export const isWaitPageDocument = (doc) => !doc.querySelector('.logo')
 export const siteUnavailableError = (target, reason = 'página de espera') =>
     new Error(
         `Site indisponível: ${reason} em ${target} após ${MAX_ATTEMPTS} tentativas.\n` +
-        'Não é resultado do teste. Rode novamente mais tarde.'
+            'Não é resultado do teste. Rode novamente mais tarde.',
     )
 
 // Disjuntor: depois que o site é declarado indisponível, as próximas respostas
@@ -40,7 +40,9 @@ export const siteUnavailableError = (target, reason = 'página de espera') =>
 // O estado vale para o spec em execução (o Cypress recarrega o suporte a cada spec).
 let siteDown = false
 
-export const markSiteAvailable = () => { siteDown = false }
+export const markSiteAvailable = () => {
+    siteDown = false
+}
 
 // Chamado a cada resposta instável (página de espera, 503, 429). Lança o erro
 // quando deve parar; se não lançar, quem chamou espera e tenta de novo.
@@ -48,7 +50,7 @@ export const handleInstability = (target, attempt, reason) => {
     if (siteDown) {
         throw new Error(
             `Site indisponível: ${reason} em ${target}. O site já estava fora do ar nesta execução, ` +
-            'então não houve novas tentativas.\nNão é resultado do teste. Rode novamente mais tarde.'
+                'então não houve novas tentativas.\nNão é resultado do teste. Rode novamente mais tarde.',
         )
     }
     if (attempt >= MAX_ATTEMPTS) {

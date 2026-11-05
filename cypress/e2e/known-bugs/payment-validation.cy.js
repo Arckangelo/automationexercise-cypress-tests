@@ -6,7 +6,6 @@ import { useTestUser } from '../../support/testUser'
 // inclusive pela própria tela, sem contornar nada. Os cartões vêm de
 // users.json > cards; o site é de prática e não processa pagamentos.
 describe('[BUG-20] Pagamento - dados de cartão inválidos confirmam o pedido', () => {
-
     const user = useTestUser()
 
     beforeEach(() => {
@@ -17,7 +16,9 @@ describe('[BUG-20] Pagamento - dados de cartão inválidos confirmam o pedido', 
     })
 
     const shouldNotConfirm = (response) => {
-        expect(response.headers.location || '', 'redireciona para a confirmação do pedido').to.not.include('payment_done')
+        expect(response.headers.location || '', 'redireciona para a confirmação do pedido').to.not.include(
+            'payment_done',
+        )
     }
 
     const cases = [

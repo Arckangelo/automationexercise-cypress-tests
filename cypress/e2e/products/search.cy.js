@@ -1,7 +1,6 @@
 import { useCatalog } from '../../support/catalog'
 
 describe('Busca de produtos', () => {
-
     // catálogo da API: fonte independente para saber o que cada busca deve encontrar
     const catalog = useCatalog()
 

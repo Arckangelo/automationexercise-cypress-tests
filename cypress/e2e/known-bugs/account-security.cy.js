@@ -5,7 +5,6 @@ import { generateCredentials } from '../../support/testUser'
 // afterEach que não exige sucesso: enquanto o BUG-06 existir, a conta já terá
 // sido apagada pelo próprio teste.
 describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e erro de senha', () => {
-
     const account = {}
 
     beforeEach(function () {
@@ -40,17 +39,21 @@ describe('[BUG-06/07/17] Conta - exclusão por GET, dados pessoais expostos e er
     // o usa como contrato. Se o site passar a exigir autenticação, aquele
     // teste da suíte principal precisará ser ajustado junto com este.
     it('[BUG-07] GET /api/getUserDetailByEmail não deve expor dados pessoais sem autenticação', () => {
-        cy.apiGetUserDetail(account.email)
-            .then((response) => {
-                expect(response.body, 'dados pessoais na resposta sem autenticação').to.not.have.property('user')
-            })
+        cy.apiGetUserDetail(account.email).then((response) => {
+            expect(response.body, 'dados pessoais na resposta sem autenticação').to.not.have.property('user')
+        })
     })
 
     // CT-BUGS-ACCOUNT-SECURITY-03
     // A conta existe; o erro é de credencial, não de recurso inexistente.
     it('[BUG-17] PUT /api/updateAccount com senha errada deve retornar 401, não "Account not found!"', function () {
         cy.fixture('apiData').then(({ newAccount }) => {
-            const attempt = { ...newAccount, email: account.email, password: this.users.wrongPassword, city: 'Alterada Indevidamente' }
+            const attempt = {
+                ...newAccount,
+                email: account.email,
+                password: this.users.wrongPassword,
+                city: 'Alterada Indevidamente',
+            }
 
             cy.apiUpdateAccount(attempt)
                 .its('body')

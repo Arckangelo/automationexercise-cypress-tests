@@ -1,7 +1,6 @@
 import { useCatalog } from '../../support/catalog'
 
 describe('Detalhes do produto', () => {
-
     // catálogo da API: fonte independente do que cada página deve mostrar
     const catalog = useCatalog()
 
@@ -9,8 +8,11 @@ describe('Detalhes do produto', () => {
     const readDetails = (html) => {
         const info = new DOMParser().parseFromString(html, 'text/html').querySelector('.product-information')
         const textOf = (selector) => info.querySelector(selector).textContent.trim()
-        const field = (label) => [...info.querySelectorAll('p')]
-            .find((p) => p.textContent.trim().startsWith(label)).textContent.replace(label, '').trim()
+        const field = (label) =>
+            [...info.querySelectorAll('p')]
+                .find((p) => p.textContent.trim().startsWith(label))
+                .textContent.replace(label, '')
+                .trim()
 
         return {
             name: textOf('h2'),
@@ -29,7 +31,12 @@ describe('Detalhes do produto', () => {
         expect(catalog.products, 'catálogo carregado').to.not.be.empty
 
         const representatives = catalog.representatives()
-        const sampledId = Cypress.expose('sampledProduct') || catalog.pickRandom(1, representatives.map((r) => r.id))[0].id
+        const sampledId =
+            Cypress.expose('sampledProduct') ||
+            catalog.pickRandom(
+                1,
+                representatives.map((r) => r.id),
+            )[0].id
         const sample = [...representatives, { id: Number(sampledId), reasons: ['sorteado'] }]
         cy.log(`amostra: ${sample.map((p) => p.id).join(', ')} (sorteado: ${sampledId})`)
 
@@ -37,14 +44,16 @@ describe('Detalhes do produto', () => {
             const product = catalog.product(id)
             expect(product, `produto ${id} existe no catálogo`).to.exist
 
-            cy.request(`/product_details/${id}`).its('body').then((html) => {
-                expect(readDetails(html), `produto ${id} (${reasons.join(', ')})`).to.deep.equal({
-                    name: product.name,
-                    price: product.price,
-                    category: catalog.categoryOf(product),
-                    brand: product.brand,
+            cy.request(`/product_details/${id}`)
+                .its('body')
+                .then((html) => {
+                    expect(readDetails(html), `produto ${id} (${reasons.join(', ')})`).to.deep.equal({
+                        name: product.name,
+                        price: product.price,
+                        category: catalog.categoryOf(product),
+                        brand: product.brand,
+                    })
                 })
-            })
         })
     })
 

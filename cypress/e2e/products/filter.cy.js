@@ -1,7 +1,6 @@
 import { useCatalog } from '../../support/catalog'
 
 describe('Filtro de produtos', () => {
-
     // catálogo da API: fonte independente para saber quais produtos cada filtro deve mostrar
     const catalog = useCatalog()
 
@@ -21,8 +20,10 @@ describe('Filtro de produtos', () => {
             cy.get(`#${panel} a[href="${href}"]`).click()
 
             listTitle().should('have.text', `${panel} - ${category} Products`)
-            cy.idsOnScreen().should('deep.equal', catalog.ids((p) =>
-                p.category.usertype.usertype === panel && p.category.category === category))
+            cy.idsOnScreen().should(
+                'deep.equal',
+                catalog.ids((p) => p.category.usertype.usertype === panel && p.category.category === category),
+            )
         })
     })
 
@@ -32,7 +33,10 @@ describe('Filtro de produtos', () => {
         cy.get('.brands-name a[href="/brand_products/Polo"]').click()
 
         listTitle().should('have.text', 'Brand - Polo Products')
-        cy.idsOnScreen().should('deep.equal', catalog.ids((p) => p.brand === 'Polo'))
+        cy.idsOnScreen().should(
+            'deep.equal',
+            catalog.ids((p) => p.brand === 'Polo'),
+        )
     })
 
     // CT-PRODUCTS-FILTER-04
@@ -40,12 +44,14 @@ describe('Filtro de produtos', () => {
     it('quantidade de cada marca na lateral bate com o catálogo', () => {
         cy.visit('/products')
 
-        cy.get('.brands-name a[href^="/brand_products/"]').should('have.length.greaterThan', 0).each(($brand) => {
-            const name = decodeURIComponent($brand.attr('href').replace('/brand_products/', ''))
-            const inSidebar = Number($brand.find('span').text().replace(/\D/g, ''))
-            const inCatalog = catalog.ids((p) => p.brand === name).length
+        cy.get('.brands-name a[href^="/brand_products/"]')
+            .should('have.length.greaterThan', 0)
+            .each(($brand) => {
+                const name = decodeURIComponent($brand.attr('href').replace('/brand_products/', ''))
+                const inSidebar = Number($brand.find('span').text().replace(/\D/g, ''))
+                const inCatalog = catalog.ids((p) => p.brand === name).length
 
-            expect(inSidebar, `quantidade de ${name}`).to.eq(inCatalog)
-        })
+                expect(inSidebar, `quantidade de ${name}`).to.eq(inCatalog)
+            })
     })
 })

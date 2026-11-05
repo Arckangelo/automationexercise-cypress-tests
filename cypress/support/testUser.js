@@ -28,21 +28,19 @@ export const useTestUser = () => {
     const user = {}
 
     before(() => {
-    // before() roda uma vez por describe, antes do alias @users existir
-    cy.fixture('users').then(({ randomAccount }) => Object.assign(user, generateCredentials(randomAccount)))
+        // before() roda uma vez por describe, antes do alias @users existir
+        cy.fixture('users').then(({ randomAccount }) => Object.assign(user, generateCredentials(randomAccount)))
 
-    cy.fixture('apiData').then(({ newAccount }) => {
-        user.name = newAccount.name   // << expõe o nome para os testes
-        cy.apiCreateAccount({ ...newAccount, email: user.email, password: user.password })
-            .its('body.responseCode')
-            .should('eq', 201)
+        cy.fixture('apiData').then(({ newAccount }) => {
+            user.name = newAccount.name // << expõe o nome para os testes
+            cy.apiCreateAccount({ ...newAccount, email: user.email, password: user.password })
+                .its('body.responseCode')
+                .should('eq', 201)
+        })
     })
-})
 
     after(() => {
-        cy.apiDeleteAccount(user.email, user.password)
-            .its('body.responseCode')
-            .should('eq', 200)
+        cy.apiDeleteAccount(user.email, user.password).its('body.responseCode').should('eq', 200)
     })
 
     return user

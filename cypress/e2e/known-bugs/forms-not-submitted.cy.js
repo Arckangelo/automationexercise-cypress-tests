@@ -6,7 +6,6 @@
 // requisição que não seja GET para o próprio site, exceto /cdn-cgi/ (métricas
 // da Cloudflare, enviadas em toda página).
 describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
-
     const recordSubmissions = () => {
         const submissions = []
         cy.intercept({ hostname: 'automationexercise.com' }, (req) => {
@@ -50,9 +49,7 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
         cy.get('#susbscribe_email').type(this.users.forms.newsletter.email)
         cy.get('#subscribe').click()
 
-        cy.get('#success-subscribe')
-            .should('be.visible')
-            .and('contain.text', 'You have been successfully subscribed!')
+        cy.get('#success-subscribe').should('be.visible').and('contain.text', 'You have been successfully subscribed!')
         shouldHaveSubmitted(submissions)
     })
 
@@ -69,9 +66,7 @@ describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
 
         // a caixa da mensagem, não o #review-section: ele tem altura 0 (a coluna
         // interna flutua) e o Cypress trata elementos sem altura como invisíveis
-        cy.get('#review-section .alert-success')
-            .should('be.visible')
-            .and('contain.text', 'Thank you for your review.')
+        cy.get('#review-section .alert-success').should('be.visible').and('contain.text', 'Thank you for your review.')
         shouldHaveSubmitted(submissions)
     })
 })

@@ -1,5 +1,4 @@
 describe('API - Produtos e marcas', () => {
-
     const assertNotEmpty = (value, field) => expect(value, field).to.be.a('string').and.not.be.empty
 
     // CT-API-PRODUCTS-01
@@ -27,7 +26,8 @@ describe('API - Produtos e marcas', () => {
     // CT-API-PRODUCTS-02
     it('método POST na lista de produtos é rejeitado com 405 (só aceita GET)', () => {
         cy.apiRequest({ method: 'POST', url: '/api/productsList' })
-            .its('body').should('deep.equal', { responseCode: 405, message: 'This request method is not supported.' })
+            .its('body')
+            .should('deep.equal', { responseCode: 405, message: 'This request method is not supported.' })
     })
 
     // CT-API-PRODUCTS-03

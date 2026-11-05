@@ -5,7 +5,6 @@ import { useTestUser } from '../../support/testUser'
 // carrinho por HTTP, para que uma falha no botão "Add to cart" não derrube
 // testes que verificam outra coisa (remoção, checkout, endereço).
 describe('Carrinho e Checkout', () => {
-
     // conta descartável criada via API antes dos testes e removida no final
     const user = useTestUser()
 
@@ -15,7 +14,9 @@ describe('Carrinho e Checkout', () => {
     let account = {}
 
     before(() => {
-        cy.fixture('apiData').then(({ newAccount }) => { account = newAccount })
+        cy.fixture('apiData').then(({ newAccount }) => {
+            account = newAccount
+        })
     })
 
     beforeEach(() => {
@@ -43,7 +44,6 @@ describe('Carrinho e Checkout', () => {
     const cartRows = () => cy.get('.cart_quantity_delete')
 
     describe('Carrinho (logado)', () => {
-
         beforeEach(() => {
             cy.login(user.email, user.password)
             cy.clearCart()
@@ -113,7 +113,6 @@ describe('Carrinho e Checkout', () => {
     })
 
     describe('Checkout (logado)', () => {
-
         beforeEach(() => {
             cy.login(user.email, user.password)
             cy.clearCart()
@@ -154,7 +153,10 @@ describe('Carrinho e Checkout', () => {
 
             ;['#address_delivery', '#address_invoice'].forEach((box) => {
                 cy.get(box).within(() => {
-                    cy.textOf('.address_firstname').should('eq', `${account.title}. ${account.firstname} ${account.lastname}`)
+                    cy.textOf('.address_firstname').should(
+                        'eq',
+                        `${account.title}. ${account.firstname} ${account.lastname}`,
+                    )
                     cy.get('.address_address1').should('contain', account.address1)
                     cy.get('.address_city')
                         .should('contain', account.city)
@@ -183,8 +185,12 @@ describe('Carrinho e Checkout', () => {
 
             // a fatura é do pedido (valor) e da conta (nome), não do nome digitado no cartão
             cy.get(`a[href="/download_invoice/${total}"]`).should('be.visible')
-            cy.request(`/download_invoice/${total}`).its('body')
-                .should('eq', `Hi ${account.firstname} ${account.lastname}, Your total purchase amount is ${total}. Thank you`)
+            cy.request(`/download_invoice/${total}`)
+                .its('body')
+                .should(
+                    'eq',
+                    `Hi ${account.firstname} ${account.lastname}, Your total purchase amount is ${total}. Thank you`,
+                )
 
             // o pedido consome o carrinho, também no servidor
             cy.visit('/view_cart')
@@ -194,7 +200,6 @@ describe('Carrinho e Checkout', () => {
     })
 
     describe('Checkout (sem login)', () => {
-
         // CT-CART-CHECKOUT-10
         // sem cy.login: cada teste começa com sessão nova (testIsolation)
         it('Proceed To Checkout pede login em vez de avançar', () => {
@@ -203,8 +208,7 @@ describe('Carrinho e Checkout', () => {
 
             cy.get('.check_out').click()
 
-            cy.get('#checkoutModal').should('be.visible')
-                .find('a[href="/login"]').should('be.visible')
+            cy.get('#checkoutModal').should('be.visible').find('a[href="/login"]').should('be.visible')
             cy.url().should('include', '/view_cart')
         })
     })

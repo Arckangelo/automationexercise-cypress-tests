@@ -6,7 +6,6 @@ import { generateCredentials } from '../../support/testUser'
 // Se o campo vier vazio, a conta é criada, inclusive sem senha. O formulário da
 // tela marca os campos como required, mas o servidor também não confere.
 describe('[BUG-19] Cadastro - campos obrigatórios aceitam valor vazio', () => {
-
     const cases = [
         // CT-BUGS-REQUIRED-FIELDS-01
         // a conta sem senha faz login com a senha vazia

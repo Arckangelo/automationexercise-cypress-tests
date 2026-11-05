@@ -15,7 +15,9 @@ export const useCatalog = () => {
     const catalog = { products: [] }
 
     before(() => {
-        cy.apiGetProductsList().then(({ body }) => { catalog.products = body.products })
+        cy.apiGetProductsList().then(({ body }) => {
+            catalog.products = body.products
+        })
     })
 
     // IDs em ordem crescente, no mesmo formato de cy.idsOnScreen()
@@ -23,7 +25,8 @@ export const useCatalog = () => {
 
     // o site procura o termo no nome ou na categoria do produto, sem diferenciar maiúsculas
     const matchesTerm = (text, term) => text.toLowerCase().includes(term.toLowerCase())
-    catalog.idsContaining = (term) => catalog.ids((p) => matchesTerm(p.name, term) || matchesTerm(p.category.category, term))
+    catalog.idsContaining = (term) =>
+        catalog.ids((p) => matchesTerm(p.name, term) || matchesTerm(p.category.category, term))
 
     catalog.product = (id) => catalog.products.find((p) => String(p.id) === String(id))
 
@@ -41,27 +44,40 @@ export const useCatalog = () => {
             if (product) chosen.set(product.id, [...(chosen.get(product.id) || []), reason])
         }
         // cobre cada valor do campo, reaproveitando produtos já escolhidos
-        const cover = (field, label) => byId.forEach((p) => {
-            const alreadyCovered = [...chosen.keys()].some((id) => field(catalog.product(id)) === field(p))
-            if (!alreadyCovered) choose(p, `${label} ${field(p)}`)
-        })
+        const cover = (field, label) =>
+            byId.forEach((p) => {
+                const alreadyCovered = [...chosen.keys()].some((id) => field(catalog.product(id)) === field(p))
+                if (!alreadyCovered) choose(p, `${label} ${field(p)}`)
+            })
         const price = (p) => Number(p.price.replace(/\D/g, ''))
 
         cover(catalog.categoryOf, 'categoria')
         cover((p) => p.brand, 'marca')
         choose(Cypress._.minBy(byId, price), 'menor preço')
         choose(Cypress._.maxBy(byId, price), 'maior preço')
-        choose(Cypress._.maxBy(byId, (p) => p.name.length), 'nome mais longo')
+        choose(
+            Cypress._.maxBy(byId, (p) => p.name.length),
+            'nome mais longo',
+        )
         choose(Cypress._.last(byId), 'último ID')
-        choose(byId.find((p) => p.brand.includes('&')), '"&" na marca')
-        choose(byId.find((p) => catalog.categoryOf(p).includes('&')), '"&" na categoria')
+        choose(
+            byId.find((p) => p.brand.includes('&')),
+            '"&" na marca',
+        )
+        choose(
+            byId.find((p) => catalog.categoryOf(p).includes('&')),
+            '"&" na categoria',
+        )
 
         return [...chosen].map(([id, reasons]) => ({ id, reasons }))
     }
 
     // produtos ao acaso, fora dos IDs informados: cada execução cobre outros
     catalog.pickRandom = (quantity, exclude = []) =>
-        Cypress._.sampleSize(catalog.products.filter((p) => !exclude.includes(p.id)), quantity)
+        Cypress._.sampleSize(
+            catalog.products.filter((p) => !exclude.includes(p.id)),
+            quantity,
+        )
 
     return catalog
 }

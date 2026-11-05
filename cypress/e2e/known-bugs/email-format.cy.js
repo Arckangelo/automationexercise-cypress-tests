@@ -6,7 +6,6 @@ import { generateCredentials, generateEmail } from '../../support/testUser'
 // não valida o formato: a API e o próprio formulário de cadastro, enviado sem
 // passar pelo navegador, aceitam qualquer texto como e-mail.
 describe('[BUG-18] Cadastro - e-mail em formato inválido é aceito pelo servidor', () => {
-
     // chave = modelo em users.json > invalidEmails
     const cases = [
         // CT-BUGS-EMAIL-FORMAT-01

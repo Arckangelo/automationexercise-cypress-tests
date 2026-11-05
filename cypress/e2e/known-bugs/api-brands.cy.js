@@ -3,7 +3,6 @@
 // os "id" são IDs de produto e cada marca aparece uma vez por produto
 // (34 itens para 8 marcas), enquanto a documentação promete "All brands list".
 describe('[BUG-14] API - lista de marcas repetida', () => {
-
     // CT-BUGS-API-BRANDS-01
     it('[BUG-14] GET /api/brandsList não deve repetir marcas', () => {
         cy.apiGetBrandsList().then(({ body }) => {

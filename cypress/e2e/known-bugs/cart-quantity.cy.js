@@ -2,7 +2,6 @@
 // Testes de regressão: descrevem o comportamento esperado e FALHAM enquanto
 // o bug existir. Passarão a passar quando o site validar a quantidade.
 describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
-
     beforeEach(() => {
         cy.intercept('GET', '/add_to_cart/*').as('addToCart')
     })
@@ -22,9 +21,13 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
     // exige apenas que nenhuma quantidade seja menor ou igual a zero nem total negativo.
     const assertCart = () => {
         cy.get('#cart_items').then(($cart) => {
-            const quantities = $cart.find('.cart_quantity button').toArray()
+            const quantities = $cart
+                .find('.cart_quantity button')
+                .toArray()
                 .map((el) => Number(el.textContent.trim()))
-            const totals = $cart.find('.cart_total_price').toArray()
+            const totals = $cart
+                .find('.cart_total_price')
+                .toArray()
                 .map((el) => el.textContent.trim())
 
             quantities.forEach((quantity) => {
@@ -57,7 +60,6 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
 // validar e o servidor quebra (HTTP 500, página de debug do Django), enquanto
 // a tela não mostra nem o aviso "Added" nem um erro.
 describe('[BUG-09] Carrinho - quantidade não inteira derruba o servidor', () => {
-
     beforeEach(() => {
         cy.intercept('GET', '/add_to_cart/*').as('addToCart')
     })

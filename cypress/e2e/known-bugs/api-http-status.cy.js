@@ -5,7 +5,6 @@ import { generateCredentials } from '../../support/testUser'
 // responseCode no corpo e fazem o parse manual do JSON). Aqui elas são
 // tratadas como o que são: violações do protocolo HTTP.
 describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
-
     // Status HTTP real esperado = responseCode que a própria API devolve no corpo
     const errorRequests = [
         // CT-BUGS-API-HTTP-STATUS-01
@@ -55,10 +54,15 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
     // CT-BUGS-API-HTTP-STATUS-07
     // O cabeçalho Allow anuncia GET, PUT e DELETE, que o próprio endpoint recusa.
     it('[BUG-04] OPTIONS /api/verifyLogin: o cabeçalho Allow deve anunciar só os métodos aceitos', () => {
-        cy.request({ method: 'OPTIONS', url: '/api/verifyLogin' }).its('headers.allow').then((allow) => {
-            const methods = allow.split(',').map((m) => m.trim()).sort()
-            expect(methods, 'métodos anunciados').to.deep.equal(['OPTIONS', 'POST'])
-        })
+        cy.request({ method: 'OPTIONS', url: '/api/verifyLogin' })
+            .its('headers.allow')
+            .then((allow) => {
+                const methods = allow
+                    .split(',')
+                    .map((m) => m.trim())
+                    .sort()
+                expect(methods, 'métodos anunciados').to.deep.equal(['OPTIONS', 'POST'])
+            })
     })
 
     // CT-BUGS-API-HTTP-STATUS-08

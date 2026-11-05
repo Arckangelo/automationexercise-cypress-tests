@@ -2,7 +2,6 @@
 // O navegador bloqueia recursos http:// em páginas https:// (Mixed Content),
 // então as fontes Roboto, Open Sans e Abel nunca carregam.
 describe('[BUG-03] Front-end - Mixed Content nas folhas de estilo', () => {
-
     // CT-BUGS-MIXED-CONTENT-01
     // Checar só os <link href="http://..."> do HTML NÃO pega este bug: o
     // recurso inseguro vem de um @import dentro do CSS (main.css, linhas 5–7).
@@ -18,10 +17,12 @@ describe('[BUG-03] Front-end - Mixed Content nas folhas de estilo', () => {
             expect(siteStylesheets, 'folhas de estilo do site').to.not.be.empty
 
             siteStylesheets.forEach((href) => {
-                cy.request(href).its('body').then((css) => {
-                    const insecureImports = css.match(/@import\s+url\(\s*['"]?http:\/\/[^)]+\)/g) || []
-                    expect(insecureImports, `@import http:// em ${href}`).to.be.empty
-                })
+                cy.request(href)
+                    .its('body')
+                    .then((css) => {
+                        const insecureImports = css.match(/@import\s+url\(\s*['"]?http:\/\/[^)]+\)/g) || []
+                        expect(insecureImports, `@import http:// em ${href}`).to.be.empty
+                    })
             })
         })
     })

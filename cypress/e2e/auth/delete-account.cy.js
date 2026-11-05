@@ -3,14 +3,15 @@ import { generateCredentials } from '../../support/testUser'
 // O link "Delete Account" exclui a conta sem pedir confirmação (BUG-06); aqui
 // o que se confere é o efeito: a conta deixa de existir de fato.
 describe('Excluir conta', () => {
-
     let account
 
     beforeEach(function () {
         account = generateCredentials(this.users.randomAccount)
 
         cy.fixture('apiData').then(({ newAccount }) => {
-            cy.apiCreateAccount({ ...newAccount, ...account }).its('body.responseCode').should('eq', 201)
+            cy.apiCreateAccount({ ...newAccount, ...account })
+                .its('body.responseCode')
+                .should('eq', 201)
         })
     })
 

@@ -8,7 +8,6 @@ import { useCatalog } from '../../support/catalog'
 // resto vira outro parâmetro da URL). Espaço no fim não é afetado: o navegador
 // o remove da URL (coberto na suíte principal, em search.cy.js).
 describe('[BUG-15] Busca - espaço duplo e "&" no termo', () => {
-
     const catalog = useCatalog()
 
     // digitado: o que o usuário escreve; equivalente: o termo que ele quis buscar

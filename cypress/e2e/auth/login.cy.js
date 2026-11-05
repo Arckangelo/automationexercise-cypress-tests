@@ -1,7 +1,6 @@
 import { generateCredentials, useTestUser } from '../../support/testUser'
 
 describe('Login', () => {
-
     // conta descartável criada via API antes dos testes e removida no final
     const user = useTestUser()
 
@@ -19,7 +18,6 @@ describe('Login', () => {
     }
 
     describe('pelo formulário', () => {
-
         beforeEach(() => {
             cy.visit('/login')
         })
@@ -66,7 +64,6 @@ describe('Login', () => {
     })
 
     describe('logout', () => {
-
         beforeEach(() => {
             cy.login(user.email, user.password)
             cy.visit('/')
@@ -89,19 +86,21 @@ describe('Login', () => {
                 cy.setCookie('sessionid', value)
             }
 
-            cy.getCookie('sessionid').should('exist').then(({ value: oldCookie }) => {
-                // controle: antes do logout, só esse cookie já basta para estar logado
-                // (sem isso, o teste passaria mesmo se o cookie nunca fosse usado)
-                useOnlyCookie(oldCookie)
-                cy.request('/').its('body').should('include', 'Logged in as')
+            cy.getCookie('sessionid')
+                .should('exist')
+                .then(({ value: oldCookie }) => {
+                    // controle: antes do logout, só esse cookie já basta para estar logado
+                    // (sem isso, o teste passaria mesmo se o cookie nunca fosse usado)
+                    useOnlyCookie(oldCookie)
+                    cy.request('/').its('body').should('include', 'Logged in as')
 
-                cy.visit('/')
-                cy.get('.shop-menu a[href="/logout"]').click()
-                cy.url().should('include', '/login')
+                    cy.visit('/')
+                    cy.get('.shop-menu a[href="/logout"]').click()
+                    cy.url().should('include', '/login')
 
-                useOnlyCookie(oldCookie)
-                cy.request('/').its('body').should('not.include', 'Logged in as')
-            })
+                    useOnlyCookie(oldCookie)
+                    cy.request('/').its('body').should('not.include', 'Logged in as')
+                })
         })
     })
 })

@@ -16,15 +16,15 @@ const label = process.argv[2] ? ` (${process.argv[2]})` : ''
 const lines = []
 const addLine = (text = '') => lines.push(text)
 const publish = () => {
-  const text = lines.join('\n') + '\n'
-  if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, text)
-  else process.stdout.write(text)
+    const text = lines.join('\n') + '\n'
+    if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, text)
+    else process.stdout.write(text)
 }
 
 if (!fs.existsSync(SUMMARY_FILE)) {
-  addLine(`### ⚠️ Suíte principal${label}: a execução não terminou (sem resumo dos testes)`)
-  publish()
-  process.exit(0)
+    addLine(`### ⚠️ Suíte principal${label}: a execução não terminou (sem resumo dos testes)`)
+    publish()
+    process.exit(0)
 }
 
 const { tests } = JSON.parse(fs.readFileSync(SUMMARY_FILE, 'utf8'))
@@ -33,20 +33,24 @@ const failed = tests.filter((t) => t.state === 'failed')
 const unavailable = failed.filter((t) => t.siteUnavailable)
 
 if (!flaky.length) {
-  addLine(`### ✅ Suíte principal${label}: nenhum teste precisou de nova tentativa`)
+    addLine(`### ✅ Suíte principal${label}: nenhum teste precisou de nova tentativa`)
 } else {
-  addLine(`### ⚠️ Suíte principal${label}: ${flaky.length} teste(s) só passaram numa nova tentativa`)
-  addLine()
-  addLine('Ficaram verdes, mas falharam antes. Investigue a causa (espera, dado compartilhado, site lento):')
-  for (const t of flaky) {
-    addLine(`- \`${t.title}\` (${t.file}): passou na tentativa ${t.attempts.length}`)
-    console.log(`::warning title=Teste instável${label}::${t.title} só passou na tentativa ${t.attempts.length} (${t.file})`)
-  }
+    addLine(`### ⚠️ Suíte principal${label}: ${flaky.length} teste(s) só passaram numa nova tentativa`)
+    addLine()
+    addLine('Ficaram verdes, mas falharam antes. Investigue a causa (espera, dado compartilhado, site lento):')
+    for (const t of flaky) {
+        addLine(`- \`${t.title}\` (${t.file}): passou na tentativa ${t.attempts.length}`)
+        console.log(
+            `::warning title=Teste instável${label}::${t.title} só passou na tentativa ${t.attempts.length} (${t.file})`,
+        )
+    }
 }
 
 if (unavailable.length) {
-  addLine()
-  addLine(`> ${unavailable.length} de ${failed.length} falha(s) foram por "Site indisponível": não indicam defeito; rode de novo.`)
+    addLine()
+    addLine(
+        `> ${unavailable.length} de ${failed.length} falha(s) foram por "Site indisponível": não indicam defeito; rode de novo.`,
+    )
 }
 
 publish()

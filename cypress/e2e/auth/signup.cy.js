@@ -1,9 +1,7 @@
 import { generateCredentials, generateEmail, useTestUser } from '../../support/testUser'
 
 describe('Cadastro de usuário', () => {
-
     describe('novo usuário', () => {
-
         // e-mail único por execução; a mesma conta é reaproveitada se o teste for repetido (retries)
         let account
 
@@ -22,9 +20,7 @@ describe('Cadastro de usuário', () => {
 
         // remove a conta mesmo se o teste falhar no meio; 404 = nem chegou a ser criada
         afterEach(() => {
-            cy.apiDeleteAccount(account.email, account.password)
-                .its('body.responseCode')
-                .should('be.oneOf', [200, 404])
+            cy.apiDeleteAccount(account.email, account.password).its('body.responseCode').should('be.oneOf', [200, 404])
         })
 
         // CT-AUTH-SIGNUP-01
@@ -68,7 +64,6 @@ describe('Cadastro de usuário', () => {
     })
 
     describe('e-mail já cadastrado', () => {
-
         // conta criada via API: o teste não depende do cadastro pela tela
         const existing = useTestUser()
 
@@ -85,7 +80,6 @@ describe('Cadastro de usuário', () => {
     })
 
     describe('e-mail em formato inválido', () => {
-
         // CT-AUTH-SIGNUP-03
         // O campo é type="email": o navegador recusa o formato antes do envio.
         // O servidor não valida (BUG-18), então esta é a única barreira hoje.

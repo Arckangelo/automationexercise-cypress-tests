@@ -5,7 +5,6 @@ import { useCatalog } from '../../support/catalog'
 // vazia (sem nome, preço nem marca), com "In Stock" e o botão "Add to cart".
 // E /add_to_cart/<ID inexistente> responde "Added To Cart", sem adicionar nada.
 describe('[BUG-21] Produto inexistente - página vazia e "Added To Cart"', () => {
-
     const catalog = useCatalog()
     const NONEXISTENT_ID = 9999
 
@@ -16,7 +15,8 @@ describe('[BUG-21] Produto inexistente - página vazia e "Added To Cart"', () =>
     // CT-BUGS-PRODUCT-NOT-FOUND-01
     it(`[BUG-21] /product_details/${NONEXISTENT_ID} deve responder 404`, () => {
         cy.request({ url: `/product_details/${NONEXISTENT_ID}`, failOnStatusCode: false })
-            .its('status').should('eq', 404)
+            .its('status')
+            .should('eq', 404)
     })
 
     // CT-BUGS-PRODUCT-NOT-FOUND-02

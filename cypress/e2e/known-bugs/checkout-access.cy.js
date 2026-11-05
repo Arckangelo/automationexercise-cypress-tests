@@ -4,7 +4,6 @@ import { useTestUser } from '../../support/testUser'
 // O site só impede o checkout pelo modal do botão "Proceed To Checkout".
 // Acessando a URL direto, as páginas abrem normalmente.
 describe('[BUG-12/13] Checkout - acesso direto pela URL', () => {
-
     // CT-BUGS-CHECKOUT-ACCESS-01
     // Sem login, /checkout abre com endereço vazio e "Place Order", e /payment
     // mostra o formulário completo de cartão.
@@ -18,13 +17,11 @@ describe('[BUG-12/13] Checkout - acesso direto pela URL', () => {
         cy.visit('/checkout')
         cy.get('a[href="/payment"]').should('not.exist')
     })
-
 })
 
 // Com o carrinho vazio a tela do carrinho esconde o botão de checkout,
 // mas /checkout aberto direto mostra Total "Rs. 0" e "Place Order".
 describe('[BUG-13] Checkout - pedido com carrinho vazio', () => {
-
     const user = useTestUser()
 
     // CT-BUGS-CHECKOUT-ACCESS-03
@@ -47,7 +44,9 @@ describe('[BUG-13] Checkout - pedido com carrinho vazio', () => {
         cy.pay(this.users.cards.valid)
 
         cy.wait('@pay').then(({ response }) => {
-            expect(response.headers.location || '', 'redireciona para a confirmação do pedido').to.not.include('payment_done')
+            expect(response.headers.location || '', 'redireciona para a confirmação do pedido').to.not.include(
+                'payment_done',
+            )
         })
     })
 })
