@@ -1,4 +1,4 @@
-import { usarCatalogo } from '../../support/catalogo'
+import { useCatalog } from '../../support/catalog'
 
 // BUG-15 (ver BUGS.md)
 // O script da página /products monta a URL da busca concatenando o texto do
@@ -9,23 +9,23 @@ import { usarCatalogo } from '../../support/catalogo'
 // o remove da URL (coberto na suíte principal, em search.cy.js).
 describe('[BUG-15] Busca - espaço duplo e "&" no termo', () => {
 
-    const catalogo = usarCatalogo()
+    const catalog = useCatalog()
 
     // digitado: o que o usuário escreve; equivalente: o termo que ele quis buscar
-    const casos = [
+    const cases = [
         // CT-BUGS-SEARCH-INPUT-01
-        { cenario: 'espaço duplo entre as palavras', digitado: 'blue  top', equivalente: 'blue top' },
+        { scenario: 'espaço duplo entre as palavras', typed: 'blue  top', equivalent: 'blue top' },
         // CT-BUGS-SEARCH-INPUT-02
-        { cenario: 'termo com "&"', digitado: 'Blue & Pink', equivalente: 'Blue & Pink' },
+        { scenario: 'termo com "&"', typed: 'Blue & Pink', equivalent: 'Blue & Pink' },
     ]
 
-    casos.forEach(({ cenario, digitado, equivalente }) => {
-        it(`[BUG-15] ${cenario} ("${digitado}") deve encontrar os produtos de "${equivalente}"`, () => {
-            const esperados = catalogo.idsQueContem(equivalente)
-            expect(esperados, `o catálogo tem produtos com "${equivalente}"`).to.not.be.empty
+    cases.forEach(({ scenario, typed, equivalent }) => {
+        it(`[BUG-15] ${scenario} ("${typed}") deve encontrar os produtos de "${equivalent}"`, () => {
+            const expectedIds = catalog.idsContaining(equivalent)
+            expect(expectedIds, `o catálogo tem produtos com "${equivalent}"`).to.not.be.empty
 
-            cy.buscarProduto(digitado)
-            cy.idsNaTela().should('deep.equal', esperados)
+            cy.searchProduct(typed)
+            cy.idsOnScreen().should('deep.equal', expectedIds)
         })
     })
 })

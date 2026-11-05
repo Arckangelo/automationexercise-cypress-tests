@@ -1,28 +1,28 @@
-import { gerarCredenciais, gerarEmail, usarUsuarioDeTeste } from '../../support/usuarioDeTeste'
+import { generateCredentials, generateEmail, useTestUser } from '../../support/testUser'
 
 describe('Cadastro de usuário', () => {
 
     describe('novo usuário', () => {
 
         // e-mail único por execução; a mesma conta é reaproveitada se o teste for repetido (retries)
-        let conta
+        let account
 
         // mesmos dados do cadastro via API; o país muda porque "Brazil" não existe no select
-        let dados = {}
+        let data = {}
 
         before(() => {
-            cy.fixture('apiData').then(({ novaConta }) => {
-                dados = { ...novaConta, country: 'Canada', address2: 'Apto 45' }
+            cy.fixture('apiData').then(({ newAccount }) => {
+                data = { ...newAccount, country: 'Canada', address2: 'Apto 45' }
             })
         })
 
         beforeEach(function () {
-            if (!conta) conta = gerarCredenciais(this.users.contaAleatoria)
+            if (!account) account = generateCredentials(this.users.randomAccount)
         })
 
         // remove a conta mesmo se o teste falhar no meio; 404 = nem chegou a ser criada
         afterEach(() => {
-            cy.apiDeleteAccount(conta.email, conta.password)
+            cy.apiDeleteAccount(account.email, account.password)
                 .its('body.responseCode')
                 .should('be.oneOf', [200, 404])
         })
@@ -30,53 +30,53 @@ describe('Cadastro de usuário', () => {
         // CT-AUTH-SIGNUP-01
         it('cadastro completo cria a conta com os dados informados', () => {
             cy.visit('/login')
-            cy.get('[data-qa="signup-name"]').type(dados.name)
-            cy.get('[data-qa="signup-email"]').type(conta.email)
+            cy.get('[data-qa="signup-name"]').type(data.name)
+            cy.get('[data-qa="signup-email"]').type(account.email)
             cy.get('[data-qa="signup-button"]').click()
 
             cy.get('[data-qa="create-account"]').should('be.visible')
 
             cy.get('#id_gender1').check()
-            cy.get('[data-qa="password"]').type(conta.password, { log: false })
-            cy.get('[data-qa="days"]').select(dados.birth_date)
-            cy.get('[data-qa="months"]').select(dados.birth_month)
-            cy.get('[data-qa="years"]').select(dados.birth_year)
+            cy.get('[data-qa="password"]').type(account.password, { log: false })
+            cy.get('[data-qa="days"]').select(data.birth_date)
+            cy.get('[data-qa="months"]').select(data.birth_month)
+            cy.get('[data-qa="years"]').select(data.birth_year)
             cy.get('#newsletter').check()
             cy.get('#optin').check()
 
-            cy.get('[data-qa="first_name"]').type(dados.firstname)
-            cy.get('[data-qa="last_name"]').type(dados.lastname)
-            cy.get('[data-qa="company"]').type(dados.company)
-            cy.get('[data-qa="address"]').type(dados.address1)
-            cy.get('[data-qa="address2"]').type(dados.address2)
-            cy.get('[data-qa="country"]').select(dados.country)
-            cy.get('[data-qa="state"]').type(dados.state)
-            cy.get('[data-qa="city"]').type(dados.city)
-            cy.get('[data-qa="zipcode"]').type(dados.zipcode)
-            cy.get('[data-qa="mobile_number"]').type(dados.mobile_number)
+            cy.get('[data-qa="first_name"]').type(data.firstname)
+            cy.get('[data-qa="last_name"]').type(data.lastname)
+            cy.get('[data-qa="company"]').type(data.company)
+            cy.get('[data-qa="address"]').type(data.address1)
+            cy.get('[data-qa="address2"]').type(data.address2)
+            cy.get('[data-qa="country"]').select(data.country)
+            cy.get('[data-qa="state"]').type(data.state)
+            cy.get('[data-qa="city"]').type(data.city)
+            cy.get('[data-qa="zipcode"]').type(data.zipcode)
+            cy.get('[data-qa="mobile_number"]').type(data.mobile_number)
             cy.get('[data-qa="create-account"]').click()
 
             cy.get('[data-qa="account-created"]').should('be.visible')
             cy.get('[data-qa="continue-button"]').click()
-            cy.usuarioLogado().should('eq', dados.name)
+            cy.loggedInUser().should('eq', data.name)
 
             // persistência: a senha cadastrada funciona e os dados foram gravados como digitados
-            cy.apiVerifyLogin(conta.email, conta.password).its('body.responseCode').should('eq', 200)
+            cy.apiVerifyLogin(account.email, account.password).its('body.responseCode').should('eq', 200)
 
-            cy.contaDeveEstarGravada({ ...dados, email: conta.email })
+            cy.accountShouldBeSaved({ ...data, email: account.email })
         })
     })
 
     describe('e-mail já cadastrado', () => {
 
         // conta criada via API: o teste não depende do cadastro pela tela
-        const existente = usarUsuarioDeTeste()
+        const existing = useTestUser()
 
         // CT-AUTH-SIGNUP-02
         it('e-mail já cadastrado mostra erro e não avança para o formulário completo', function () {
             cy.visit('/login')
-            cy.get('[data-qa="signup-name"]').type(this.users.nomeAlternativo)
-            cy.get('[data-qa="signup-email"]').type(existente.email)
+            cy.get('[data-qa="signup-name"]').type(this.users.alternativeName)
+            cy.get('[data-qa="signup-email"]').type(existing.email)
             cy.get('[data-qa="signup-button"]').click()
 
             cy.get('form[action="/signup"]').contains('p', 'Email Address already exist!').should('be.visible')
@@ -92,17 +92,17 @@ describe('Cadastro de usuário', () => {
         it('e-mail em formato inválido é bloqueado antes do envio', function () {
             cy.intercept('POST', '/signup').as('signup')
             cy.visit('/login')
-            cy.get('[data-qa="signup-name"]').type(this.users.nomeAlternativo)
+            cy.get('[data-qa="signup-name"]').type(this.users.alternativeName)
 
-            // "comEspaco" fica de fora: o navegador remove o espaço ao digitar e o
+            // "withSpace" fica de fora: o navegador remove o espaço ao digitar e o
             // e-mail que sobra é válido (o envio é correto)
-            Object.values(Cypress._.omit(this.users.emailsInvalidos, 'comEspaco')).forEach((modelo) => {
-                const email = gerarEmail(modelo)
+            Object.values(Cypress._.omit(this.users.invalidEmails, 'withSpace')).forEach((template) => {
+                const email = generateEmail(template)
                 cy.get('[data-qa="signup-email"]').clear().type(email)
                 cy.get('[data-qa="signup-button"]').click()
 
-                cy.get('[data-qa="signup-email"]').then(($campo) => {
-                    expect($campo[0].validity.typeMismatch, `"${email}" recusado pelo navegador`).to.be.true
+                cy.get('[data-qa="signup-email"]').then(($field) => {
+                    expect($field[0].validity.typeMismatch, `"${email}" recusado pelo navegador`).to.be.true
                 })
             })
 

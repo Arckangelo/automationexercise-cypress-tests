@@ -1,4 +1,4 @@
-import { gerarCredenciais, gerarEmail } from '../../support/usuarioDeTeste'
+import { generateCredentials, generateEmail } from '../../support/testUser'
 
 // BUG-18 (ver BUGS.md)
 // Na tela, o campo de e-mail é type="email": o navegador bloqueia formatos
@@ -7,38 +7,38 @@ import { gerarCredenciais, gerarEmail } from '../../support/usuarioDeTeste'
 // passar pelo navegador, aceitam qualquer texto como e-mail.
 describe('[BUG-18] Cadastro - e-mail em formato inválido é aceito pelo servidor', () => {
 
-    // chave = modelo em users.json > emailsInvalidos
-    const casos = [
+    // chave = modelo em users.json > invalidEmails
+    const cases = [
         // CT-BUGS-EMAIL-FORMAT-01
-        { cenario: 'sem @', chave: 'semArroba' },
+        { scenario: 'sem @', key: 'noAt' },
         // CT-BUGS-EMAIL-FORMAT-02
-        { cenario: 'sem domínio', chave: 'semDominio' },
+        { scenario: 'sem domínio', key: 'noDomain' },
         // CT-BUGS-EMAIL-FORMAT-03
-        { cenario: 'sem usuário', chave: 'semUsuario' },
+        { scenario: 'sem usuário', key: 'noUser' },
         // CT-BUGS-EMAIL-FORMAT-04
-        { cenario: 'com espaço', chave: 'comEspaco' },
+        { scenario: 'com espaço', key: 'withSpace' },
         // CT-BUGS-EMAIL-FORMAT-05
-        { cenario: 'com @ duplo', chave: 'arrobaDuplo' },
+        { scenario: 'com @ duplo', key: 'doubleAt' },
     ]
 
     // enquanto o bug existir a conta é criada de fato: apaga ao final de cada teste
-    const contasCriadas = []
+    const createdAccounts = []
 
     afterEach(() => {
-        contasCriadas.splice(0).forEach(({ email, password }) => {
+        createdAccounts.splice(0).forEach(({ email, password }) => {
             cy.apiDeleteAccount(email, password)
         })
     })
 
-    casos.forEach(({ cenario, chave }) => {
-        it(`[BUG-18] API: e-mail ${cenario} deve ser recusado com 400`, function () {
-            const email = gerarEmail(this.users.emailsInvalidos[chave])
-            const { password } = gerarCredenciais(this.users.contaAleatoria)
+    cases.forEach(({ scenario, key }) => {
+        it(`[BUG-18] API: e-mail ${scenario} deve ser recusado com 400`, function () {
+            const email = generateEmail(this.users.invalidEmails[key])
+            const { password } = generateCredentials(this.users.randomAccount)
 
-            cy.fixture('apiData').then(({ novaConta }) => {
-                contasCriadas.push({ email, password })
+            cy.fixture('apiData').then(({ newAccount }) => {
+                createdAccounts.push({ email, password })
 
-                cy.apiCreateAccount({ ...novaConta, email, password })
+                cy.apiCreateAccount({ ...newAccount, email, password })
                     .its('body.responseCode')
                     .should('eq', 400)
             })
@@ -49,12 +49,12 @@ describe('[BUG-18] Cadastro - e-mail em formato inválido é aceito pelo servido
     // Envia a 1ª etapa do cadastro como o navegador enviaria, mas sem a
     // validação do campo type="email". Só essa etapa: nenhuma conta é criada.
     it('[BUG-18] formulário de cadastro enviado sem o navegador deve recusar e-mail sem @', function () {
-        const email = gerarEmail(this.users.emailsInvalidos.semArroba)
+        const email = generateEmail(this.users.invalidEmails.noAt)
 
-        cy.enviarSignupSemNavegador(this.users.nomeAlternativo, email).then((pagina) => {
+        cy.submitSignupWithoutBrowser(this.users.alternativeName, email).then((page) => {
             // a página de espera do site também não teria a 2ª etapa: não pode contar como acerto
-            expect(pagina.includes('class="logo'), 'resposta é uma página do site').to.be.true
-            expect(pagina.includes('Enter Account Information'), 'avançou para a 2ª etapa do cadastro').to.be.false
+            expect(page.includes('class="logo'), 'resposta é uma página do site').to.be.true
+            expect(page.includes('Enter Account Information'), 'avançou para a 2ª etapa do cadastro').to.be.false
         })
     })
 })

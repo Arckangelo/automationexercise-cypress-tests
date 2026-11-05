@@ -1,26 +1,26 @@
-import { ordenarIds } from './catalogo'
+import { sortIds } from './catalog'
 import {
-  ESPERA_ENTRE_TENTATIVAS, htmlEhPaginaDeEspera, documentoEhPaginaDeEspera,
-  guardarPaginaDeEspera, siteRespondeu, tratarInstabilidade,
-} from './paginaDeEspera'
+  RETRY_DELAY_MS, isWaitPageHtml, isWaitPageDocument,
+  saveWaitPage, markSiteAvailable, handleInstability,
+} from './waitPage'
 
 // cy.visit confere se carregou o site de verdade, e não a página de espera
-// (ver paginaDeEspera.js). Se for a página de espera, visita de novo; se ela
+// (ver waitPage.js). Se for a página de espera, visita de novo; se ela
 // persistir, o teste falha com "Site indisponível" em vez de passar.
-Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
+Cypress.Commands.overwrite('visit', (originalVisit, url, options, attempt = 1) => {
   // o visit original devolve uma promise, não uma cadeia: roda dentro de um .then
   return cy.wrap(null, { log: false })
-    .then({ timeout: Cypress.config('pageLoadTimeout') }, () => visitar(url, opcoes))
+    .then({ timeout: Cypress.config('pageLoadTimeout') }, () => originalVisit(url, options))
     .then(() => cy.document({ log: false }))
     .then((doc) => {
-      if (!documentoEhPaginaDeEspera(doc)) {
-        siteRespondeu()
+      if (!isWaitPageDocument(doc)) {
+        markSiteAvailable()
         return cy.window({ log: false })
       }
-      guardarPaginaDeEspera(doc.documentElement.outerHTML, `GET ${url}`)
-      tratarInstabilidade(`GET ${url}`, tentativa, 'página de espera')
-      cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
-      return cy.visit(url, opcoes, tentativa + 1)
+      saveWaitPage(doc.documentElement.outerHTML, `GET ${url}`)
+      handleInstability(`GET ${url}`, attempt, 'página de espera')
+      cy.wait(RETRY_DELAY_MS, { log: false })
+      return cy.visit(url, options, attempt + 1)
     })
 })
 
@@ -29,52 +29,52 @@ Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
 // Repete só a própria requisição, em vez de o Cypress repetir o teste inteiro:
 //   - 503 ou 429 (sobrecarga);
 //   - resposta 2xx com HTML sem o logo do site: a página de espera
-//     (ver paginaDeEspera.js). JSON, texto puro e páginas 4xx/5xx não entram.
+//     (ver waitPage.js). JSON, texto puro e páginas 4xx/5xx não entram.
 // Se persistir, falha com "Site indisponível" e arma o disjuntor (ver
-// paginaDeEspera.js): a próxima instabilidade falha sem esperar. Os demais status seguem a regra
+// waitPage.js): a próxima instabilidade falha sem esperar. Os demais status seguem a regra
 // de sempre: com failOnStatusCode (padrão), 4xx/5xx falham o teste.
-const SOBRECARGA = [429, 503]
+const OVERLOAD_STATUSES = [429, 503]
 
-const opcoesDaRequisicao = (args) => {
+const normalizeRequestArgs = (args) => {
   if (typeof args[0] === 'object') return { ...args[0] }
   if (args.length === 1) return { url: args[0] }
   if (args.length === 2) return /^[A-Z]+$/.test(args[0]) ? { method: args[0], url: args[1] } : { url: args[0], body: args[1] }
   return { method: args[0], url: args[1], body: args[2] }
 }
 
-Cypress.Commands.overwrite('request', (requisitar, ...args) => {
-  const opcoes = opcoesDaRequisicao(args)
-  const onde = `${opcoes.method || 'GET'} ${opcoes.url}`
-  const espera = (opcoes.timeout || Cypress.config('responseTimeout')) + 1000
+Cypress.Commands.overwrite('request', (originalRequest, ...args) => {
+  const options = normalizeRequestArgs(args)
+  const target = `${options.method || 'GET'} ${options.url}`
+  const timeoutMs = (options.timeout || Cypress.config('responseTimeout')) + 1000
 
-  const tentar = (tentativa) => cy.wrap(null, { log: false })
+  const tryRequest = (attempt) => cy.wrap(null, { log: false })
     // o request original devolve uma promise, não uma cadeia: roda dentro de um .then
-    .then({ timeout: espera }, () => requisitar({ ...opcoes, failOnStatusCode: false }))
-    .then((resposta) => {
-      if (SOBRECARGA.includes(resposta.status)) {
-        tratarInstabilidade(onde, tentativa, `HTTP ${resposta.status}`)
-        cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
-        return tentar(tentativa + 1)
+    .then({ timeout: timeoutMs }, () => originalRequest({ ...options, failOnStatusCode: false }))
+    .then((response) => {
+      if (OVERLOAD_STATUSES.includes(response.status)) {
+        handleInstability(target, attempt, `HTTP ${response.status}`)
+        cy.wait(RETRY_DELAY_MS, { log: false })
+        return tryRequest(attempt + 1)
       }
-      if (resposta.status >= 200 && resposta.status < 300 && htmlEhPaginaDeEspera(resposta.body)) {
-        guardarPaginaDeEspera(resposta.body, onde)
-        tratarInstabilidade(onde, tentativa, 'página de espera')
-        cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
-        return tentar(tentativa + 1)
+      if (response.status >= 200 && response.status < 300 && isWaitPageHtml(response.body)) {
+        saveWaitPage(response.body, target)
+        handleInstability(target, attempt, 'página de espera')
+        cy.wait(RETRY_DELAY_MS, { log: false })
+        return tryRequest(attempt + 1)
       }
-      siteRespondeu()
-      if (opcoes.failOnStatusCode !== false && resposta.status >= 400) {
-        throw new Error(`${onde} respondeu HTTP ${resposta.status}`)
+      markSiteAvailable()
+      if (options.failOnStatusCode !== false && response.status >= 400) {
+        throw new Error(`${target} respondeu HTTP ${response.status}`)
       }
-      return resposta
+      return response
     })
 
-  return tentar(1)
+  return tryRequest(1)
 })
 
 // Login por HTTP (mesmo formulário da tela, sem renderizar a página): para
 // testes em que o login é só preparação. O login pela tela é coberto em login.cy.js.
-Cypress.Commands.add('entrarPorRequisicao', (email, password) => {
+Cypress.Commands.add('loginByRequest', (email, password) => {
   cy.request('/login').then(({ body }) => {
     const token = Cypress.$(body).find('form[action="/login"] [name="csrfmiddlewaretoken"]').val()
     expect(token, 'formulário de login carregado').to.be.a('string').and.not.be.empty
@@ -93,8 +93,8 @@ Cypress.Commands.add('entrarPorRequisicao', (email, password) => {
 
 Cypress.Commands.add('login', (email, password) => {
   cy.session([email, password], () => {
-    // por HTTP: o login é preparação; entrarPorRequisicao já confere que funcionou
-    cy.entrarPorRequisicao(email, password)
+    // por HTTP: o login é preparação; loginByRequest já confere que funcionou
+    cy.loginByRequest(email, password)
   }, {
     // a cada teste, confere se a sessão salva ainda é válida
     validate() {
@@ -106,7 +106,7 @@ Cypress.Commands.add('login', (email, password) => {
 
 // Login pelo formulário, sem cy.session: para quando o próprio login pela tela
 // faz parte do teste (ex.: a tentativa recusada depois de excluir a conta).
-Cypress.Commands.add('entrarPelaTela', (email, password) => {
+Cypress.Commands.add('loginViaUi', (email, password) => {
   cy.visit('/login')
   cy.get('[data-qa="login-email"]').type(email)
   cy.get('[data-qa="login-password"]').type(password, { log: false })
@@ -114,18 +114,18 @@ Cypress.Commands.add('entrarPelaTela', (email, password) => {
 })
 
 // Itens do carrinho no servidor, como { idDoProduto: quantidade }.
-Cypress.Commands.add('itensDoCarrinho', () => {
+Cypress.Commands.add('cartItems', () => {
   // a página de espera (carrinho "vazio") é barrada pelo cy.request
   return cy.request('/view_cart').its('body').then((body) => {
     const doc = new DOMParser().parseFromString(body, 'text/html')
-    return Object.fromEntries([...doc.querySelectorAll('tr[id^="product-"]')].map((linha) => [
-      linha.id.replace('product-', ''),
-      Number(linha.querySelector('.cart_quantity button').textContent.trim()),
+    return Object.fromEntries([...doc.querySelectorAll('tr[id^="product-"]')].map((row) => [
+      row.id.replace('product-', ''),
+      Number(row.querySelector('.cart_quantity button').textContent.trim()),
     ]))
   })
 })
 
-Cypress.Commands.add('limparCarrinho', () => {
+Cypress.Commands.add('clearCart', () => {
   cy.request('/view_cart').then(({ body }) => {
     const doc = new DOMParser().parseFromString(body, 'text/html')
     const ids = [...doc.querySelectorAll('.cart_quantity_delete')]
@@ -140,35 +140,35 @@ Cypress.Commands.add('limparCarrinho', () => {
 // Adiciona o produto pelo mesmo endpoint do botão "Add to cart", sem passar
 // pela tela: para testes que precisam de um carrinho montado, mas verificam
 // outra coisa (remoção, checkout, endereço).
-Cypress.Commands.add('adicionarAoCarrinho', (id) => {
+Cypress.Commands.add('addToCart', (id) => {
   cy.request(`/add_to_cart/${id}`).its('status').should('eq', 200)
 })
 
 // --- Comandos de leitura da tela ---
 
 // texto exato do elemento, sem espaços nas pontas (respeita o .within())
-Cypress.Commands.add('textoDe', (seletor) => {
-  return cy.get(seletor).invoke('text').invoke('trim')
+Cypress.Commands.add('textOf', (selector) => {
+  return cy.get(selector).invoke('text').invoke('trim')
 })
 
 // nome exibido no menu em "Logged in as <nome>" (item com o ícone de usuário)
-Cypress.Commands.add('usuarioLogado', () => {
-  return cy.textoDe('.shop-menu a:has(.fa-user) b')
+Cypress.Commands.add('loggedInUser', () => {
+  return cy.textOf('.shop-menu a:has(.fa-user) b')
 })
 
 // busca pela caixa da página /products e espera a lista de resultados
-Cypress.Commands.add('buscarProduto', (termo) => {
+Cypress.Commands.add('searchProduct', (term) => {
   cy.visit('/products')
-  cy.get('#search_product').type(termo)
+  cy.get('#search_product').type(term)
   cy.get('#submit_search').click()
   cy.get('.features_items h2.title').should('have.text', 'Searched Products')
 })
 
 // IDs dos produtos na lista principal, em ordem crescente (lista vazia se não
-// houver nenhum), para comparar com os IDs de usarCatalogo()
-Cypress.Commands.add('idsNaTela', () => {
-  return cy.get('.features_items').then(($lista) => ordenarIds(
-    $lista.find('.productinfo a.add-to-cart').toArray().map((botao) => Number(botao.dataset.productId))))
+// houver nenhum), para comparar com os IDs de useCatalog()
+Cypress.Commands.add('idsOnScreen', () => {
+  return cy.get('.features_items').then(($list) => sortIds(
+    $list.find('.productinfo a.add-to-cart').toArray().map((button) => Number(button.dataset.productId))))
 })
 
 // --- Comandos de API ---
@@ -244,13 +244,13 @@ Cypress.Commands.add('apiVerifyLogin', (email, password) => {
   return cy.apiRequest({ method: 'POST', url: '/api/verifyLogin', form: true, body })
 })
 
-Cypress.Commands.add('apiCreateAccount', (dados) => {
-  return cy.apiRequest({ method: 'POST', url: '/api/createAccount', form: true, body: dados })
+Cypress.Commands.add('apiCreateAccount', (data) => {
+  return cy.apiRequest({ method: 'POST', url: '/api/createAccount', form: true, body: data })
 })
 
 // Envia a 1ª etapa do cadastro (/login -> /signup) como o navegador enviaria, mas
 // sem a validação dos campos na tela (type="email", required). Devolve o HTML da resposta.
-Cypress.Commands.add('enviarSignupSemNavegador', (name, email) => {
+Cypress.Commands.add('submitSignupWithoutBrowser', (name, email) => {
   return cy.request('/login').then(({ body }) => {
     const token = Cypress.$(body).find('form[action="/signup"] [name="csrfmiddlewaretoken"]').val()
     expect(token, 'formulário de cadastro carregado').to.be.a('string').and.not.be.empty
@@ -265,19 +265,19 @@ Cypress.Commands.add('enviarSignupSemNavegador', (name, email) => {
   }).its('body')
 })
 
-// Preenche o formulário de /payment com um cartão de users.json > cartoes e clica em pagar.
-Cypress.Commands.add('pagar', (cartao) => {
-  cy.get('[data-qa="name-on-card"]').type(cartao.nome)
-  cy.get('[data-qa="card-number"]').type(cartao.numero)
-  cy.get('[data-qa="cvc"]').type(cartao.cvc)
-  cy.get('[data-qa="expiry-month"]').type(cartao.mes)
-  cy.get('[data-qa="expiry-year"]').type(cartao.ano)
+// Preenche o formulário de /payment com um cartão de users.json > cards e clica em pagar.
+Cypress.Commands.add('pay', (card) => {
+  cy.get('[data-qa="name-on-card"]').type(card.name)
+  cy.get('[data-qa="card-number"]').type(card.number)
+  cy.get('[data-qa="cvc"]').type(card.cvc)
+  cy.get('[data-qa="expiry-month"]').type(card.month)
+  cy.get('[data-qa="expiry-year"]').type(card.year)
   cy.get('[data-qa="pay-button"]').click()
 })
 
 // Envia o formulário de /payment como o navegador enviaria, mas sem a validação
 // dos campos (required). Não segue o redirecionamento: devolve a resposta do POST.
-Cypress.Commands.add('enviarPagamentoSemNavegador', (cartao) => {
+Cypress.Commands.add('submitPaymentWithoutBrowser', (card) => {
   return cy.request('/payment').then(({ body }) => {
     const token = Cypress.$(body).find('#payment-form [name="csrfmiddlewaretoken"]').val()
     // sem o formulário (ex.: página de espera do site) o POST daria 403 e o teste passaria sem motivo
@@ -291,18 +291,18 @@ Cypress.Commands.add('enviarPagamentoSemNavegador', (cartao) => {
       headers: { referer: `${Cypress.config('baseUrl')}/payment` },
       body: {
         csrfmiddlewaretoken: token,
-        name_on_card: cartao.nome,
-        card_number: cartao.numero,
-        cvc: cartao.cvc,
-        expiry_month: cartao.mes,
-        expiry_year: cartao.ano,
+        name_on_card: card.name,
+        card_number: card.number,
+        cvc: card.cvc,
+        expiry_month: card.month,
+        expiry_year: card.year,
       },
     })
   })
 })
 
-Cypress.Commands.add('apiUpdateAccount', (dados) => {
-  return cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: dados })
+Cypress.Commands.add('apiUpdateAccount', (data) => {
+  return cy.apiRequest({ method: 'PUT', url: '/api/updateAccount', form: true, body: data })
 })
 
 Cypress.Commands.add('apiDeleteAccount', (email, password) => {
@@ -318,17 +318,17 @@ Cypress.Commands.add('apiGetUserDetail', (email) => {
 // A consulta devolve os dados do cadastro com 3 campos renomeados e sem a senha
 // e o celular. O comando converte a conta enviada no cadastro para esse formato
 // e confere que todos os campos foram gravados como enviados.
-const NOMES_NA_CONSULTA = { birth_date: 'birth_day', firstname: 'first_name', lastname: 'last_name' }
-const FORA_DA_CONSULTA = ['password', 'mobile_number']
+const DETAIL_FIELD_NAMES = { birth_date: 'birth_day', firstname: 'first_name', lastname: 'last_name' }
+const FIELDS_NOT_IN_DETAIL = ['password', 'mobile_number']
 
-Cypress.Commands.add('contaDeveEstarGravada', (conta) => {
-  const esperado = Cypress._.mapKeys(
-    Cypress._.omit(conta, FORA_DA_CONSULTA),
-    (_valor, campo) => NOMES_NA_CONSULTA[campo] || campo,
+Cypress.Commands.add('accountShouldBeSaved', (account) => {
+  const expected = Cypress._.mapKeys(
+    Cypress._.omit(account, FIELDS_NOT_IN_DETAIL),
+    (_value, field) => DETAIL_FIELD_NAMES[field] || field,
   )
 
-  return cy.apiGetUserDetail(conta.email).then(({ body }) => {
+  return cy.apiGetUserDetail(account.email).then(({ body }) => {
     expect(body.responseCode, 'conta encontrada').to.eq(200)
-    expect(body.user, 'dados gravados').to.include(esperado)
+    expect(body.user, 'dados gravados').to.include(expected)
   })
 })

@@ -1,8 +1,8 @@
 {
-  "busca": {
-    "termoValido": "top"
+  "search": {
+    "validTerm": "top"
   },
-  "novaConta": {
+  "newAccount": {
     "name": "QA Automatizado",
     "title": "Mr",
     "birth_date": "10",

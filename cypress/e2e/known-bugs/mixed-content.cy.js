@@ -11,16 +11,16 @@ describe('[BUG-03] Front-end - Mixed Content nas folhas de estilo', () => {
         cy.visit('/')
 
         cy.document().then((doc) => {
-            const cssDoSite = [...doc.querySelectorAll('link[rel="stylesheet"]')]
+            const siteStylesheets = [...doc.querySelectorAll('link[rel="stylesheet"]')]
                 .map((link) => link.href)
                 .filter((href) => new URL(href).origin === doc.location.origin)
 
-            expect(cssDoSite, 'folhas de estilo do site').to.not.be.empty
+            expect(siteStylesheets, 'folhas de estilo do site').to.not.be.empty
 
-            cssDoSite.forEach((href) => {
+            siteStylesheets.forEach((href) => {
                 cy.request(href).its('body').then((css) => {
-                    const importsInseguros = css.match(/@import\s+url\(\s*['"]?http:\/\/[^)]+\)/g) || []
-                    expect(importsInseguros, `@import http:// em ${href}`).to.be.empty
+                    const insecureImports = css.match(/@import\s+url\(\s*['"]?http:\/\/[^)]+\)/g) || []
+                    expect(insecureImports, `@import http:// em ${href}`).to.be.empty
                 })
             })
         })

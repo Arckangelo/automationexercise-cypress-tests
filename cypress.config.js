@@ -8,23 +8,23 @@ const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/li
 // rodam quando pedidos explicitamente com --env knownBugs=true
 // (ver script "test:bugs" no package.json).
 const KNOWN_BUGS_SPECS = 'cypress/e2e/known-bugs/**'
-const RESUMO_DOS_BUGS = 'cypress/reports/known-bugs/resumo.json'
-const RESUMO_DA_SUITE = 'cypress/reports/suite/resumo.json'
+const BUG_SUMMARY_FILE = 'cypress/reports/known-bugs/resumo.json'
+const SUITE_SUMMARY_FILE = 'cypress/reports/suite/resumo.json'
 
 // Estado de cada teste ao fim da execução, lido pelos scripts de resumo do CI:
-// - bugs conhecidos (scripts/resumo-bugs.js): quais bugs pararam de reproduzir;
-// - suíte principal (scripts/resumo-instaveis.js): quais testes só passaram
+// - bugs conhecidos (scripts/bug-summary.js): quais bugs pararam de reproduzir;
+// - suíte principal (scripts/flaky-summary.js): quais testes só passaram
 //   numa nova tentativa, para que o retries não esconda instabilidade.
-const gravarResumo = (arquivo, resultados) => {
-  const testes = (resultados?.runs || []).flatMap((run) => run.tests.map((teste) => ({
-    arquivo: run.spec.relative,
-    titulo: teste.title.join(' › '),
-    estado: teste.state,
-    tentativas: (teste.attempts || []).map((tentativa) => tentativa.state),
-    siteIndisponivel: String(teste.displayError || '').includes('Site indisponível'),
+const writeSummary = (file, results) => {
+  const tests = (results?.runs || []).flatMap((run) => run.tests.map((test) => ({
+    file: run.spec.relative,
+    title: test.title.join(' › '),
+    state: test.state,
+    attempts: (test.attempts || []).map((attempt) => attempt.state),
+    siteUnavailable: String(test.displayError || '').includes('Site indisponível'),
   })))
-  fs.mkdirSync(path.dirname(arquivo), { recursive: true })
-  fs.writeFileSync(arquivo, JSON.stringify({ testes }, null, 2))
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, JSON.stringify({ tests }, null, 2))
 }
 
 module.exports = defineConfig({
@@ -53,7 +53,7 @@ module.exports = defineConfig({
     // Instabilidade do site (página de espera, 503/429) é tratada na própria
     // requisição (commands.js), com disjuntor. A nova tentativa do teste inteiro
     // fica só para falhas raras de tela; quem precisar dela aparece como
-    // "instável" no resumo do CI (scripts/resumo-instaveis.js).
+    // "instável" no resumo do CI (scripts/flaky-summary.js).
     retries: { runMode: 1, openMode: 0 },
     setupNodeEvents(on, config) {
       if (config.env.knownBugs) {
@@ -67,14 +67,14 @@ module.exports = defineConfig({
 
       // o Cypress chama um só handler por evento: o do relatório HTML e o do
       // resumo dos testes rodam no mesmo after:run
-      on('before:run', (detalhes) => {
+      on('before:run', (details) => {
         // a cópia da página de espera é desta execução, não de uma anterior
         fs.rmSync('cypress/reports/pagina-de-espera.html', { force: true })
-        return beforeRunHook(detalhes)
+        return beforeRunHook(details)
       })
-      on('after:run', async (resultados) => {
-        await afterRunHook(resultados)
-        gravarResumo(config.env.knownBugs ? RESUMO_DOS_BUGS : RESUMO_DA_SUITE, resultados)
+      on('after:run', async (results) => {
+        await afterRunHook(results)
+        writeSummary(config.env.knownBugs ? BUG_SUMMARY_FILE : SUITE_SUMMARY_FILE, results)
       })
       return config
     },

@@ -9,9 +9,9 @@ describe('[BUG-14] API - lista de marcas repetida', () => {
         cy.apiGetBrandsList().then(({ body }) => {
             expect(body.responseCode).to.eq(200)
 
-            const nomes = body.brands.map((b) => b.brand)
-            const repetidas = [...new Set(nomes.filter((n, i) => nomes.indexOf(n) !== i))]
-            expect(repetidas, 'marcas repetidas').to.be.empty
+            const names = body.brands.map((b) => b.brand)
+            const duplicates = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))]
+            expect(duplicates, 'marcas repetidas').to.be.empty
         })
     })
 })
