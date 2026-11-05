@@ -24,7 +24,7 @@ describe('Cadastro de usuário', () => {
         })
 
         // CT-AUTH-SIGNUP-01
-        it('cadastro completo cria a conta com os dados informados', () => {
+        it('cadastro completo cria a conta com os dados informados', { tags: ['@smoke'] }, () => {
             cy.visit('/login')
             cy.get('[data-qa="signup-name"]').type(data.name)
             cy.get('[data-qa="signup-email"]').type(account.email)

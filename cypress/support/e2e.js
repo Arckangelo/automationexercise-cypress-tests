@@ -44,6 +44,11 @@ beforeEach(() => {
 })
 
 import 'cypress-mochawesome-reporter/register'
+// Filtro por tags (@cypress/grep): ver "Tags" no README
+import { register as registerCypressGrep } from '@cypress/grep'
+registerCypressGrep()
+// Registro dos pedidos que cada teste criou (conferido com a tag @creates-order)
+import './orders'
 // Comandos customizados, um arquivo por assunto. protection.js vem primeiro:
 // as sobrescritas de cy.visit e cy.request valem para todos os outros.
 import './commands/protection'

@@ -5,7 +5,7 @@ describe('Busca de produtos', () => {
     const catalog = useCatalog()
 
     // CT-PRODUCTS-SEARCH-01
-    it('termo existente mostra exatamente os produtos que contêm o termo', () => {
+    it('termo existente mostra exatamente os produtos que contêm o termo', { tags: ['@smoke'] }, () => {
         cy.searchProduct('jeans')
 
         cy.idsOnScreen().should('deep.equal', catalog.idsContaining('jeans')).and('not.be.empty')

@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   formatacao:
-    name: Formatação (Prettier)
+    name: Formatação e tags
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
@@ -30,12 +30,17 @@ jobs:
           node-version-file: .nvmrc
 
       # só o Prettier: não precisa baixar o Cypress
-      - name: Conferir a formatação
+      - name: Instalar dependências
         env:
           CYPRESS_INSTALL_BINARY: 0
-        run: |
-          npm ci
-          npm run format:check
+        run: npm ci
+
+      - name: Conferir a formatação
+        run: npm run format:check
+
+      # tags só da lista permitida e sempre como texto literal (it e describe)
+      - name: Conferir as tags
+        run: npm run check:tags
 
   suite:
     name: Suíte principal (${{ matrix.browser }})
@@ -68,6 +73,11 @@ jobs:
       - name: Resumo de testes instáveis
         if: always()
         run: node scripts/flaky-summary.js ${{ matrix.browser }}
+
+      # pedido criado sem a tag @creates-order falha; tag sem pedido gera aviso
+      - name: Conferir pedidos e tag @creates-order
+        if: always()
+        run: npm run check:orders -- cypress/reports/suite/resumo.json ${{ matrix.browser }}
 
       - name: Salvar screenshots das falhas
         if: failure()
@@ -132,14 +142,20 @@ jobs:
         continue-on-error: true
         uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
         with:
-          # os bugs são do site, não do navegador: basta um
-          command: npm run test:bugs -- --browser chrome
+          # os bugs são do site, não do navegador: basta um. Em PR, os testes que
+          # criam pedido (@creates-order) ficam de fora; push na main, execução
+          # diária e manual rodam todos (ver "Tags" no README)
+          command: npm run ${{ github.event_name == 'pull_request' && 'test:bugs:pr' || 'test:bugs' }} -- --browser chrome
 
       # teste a teste: aponta cada bug que parou de reproduzir, mesmo que os
       # outros continuem falhando (o resultado geral do job esconderia isso)
       - name: Resumo
         if: always()
         run: node scripts/bug-summary.js
+
+      - name: Conferir pedidos e tag @creates-order
+        if: always()
+        run: npm run check:orders -- cypress/reports/known-bugs/resumo.json bugs-conhecidos
 
       - name: Salvar relatório HTML
         if: always()
