@@ -1,7 +1,7 @@
 import { ordenarIds } from './catalogo'
 import {
-  TENTATIVAS, ESPERA_ENTRE_TENTATIVAS, htmlEhPaginaDeEspera, documentoEhPaginaDeEspera,
-  erroSiteIndisponivel, guardarPaginaDeEspera,
+  ESPERA_ENTRE_TENTATIVAS, htmlEhPaginaDeEspera, documentoEhPaginaDeEspera,
+  guardarPaginaDeEspera, siteRespondeu, tratarInstabilidade,
 } from './paginaDeEspera'
 
 // cy.visit confere se carregou o site de verdade, e não a página de espera
@@ -13,9 +13,12 @@ Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
     .then({ timeout: Cypress.config('pageLoadTimeout') }, () => visitar(url, opcoes))
     .then(() => cy.document({ log: false }))
     .then((doc) => {
-      if (!documentoEhPaginaDeEspera(doc)) return cy.window({ log: false })
+      if (!documentoEhPaginaDeEspera(doc)) {
+        siteRespondeu()
+        return cy.window({ log: false })
+      }
       guardarPaginaDeEspera(doc.documentElement.outerHTML, `GET ${url}`)
-      if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(`GET ${url}`)
+      tratarInstabilidade(`GET ${url}`, tentativa, 'página de espera')
       cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
       return cy.visit(url, opcoes, tentativa + 1)
     })
@@ -27,7 +30,8 @@ Cypress.Commands.overwrite('visit', (visitar, url, opcoes, tentativa = 1) => {
 //   - 503 ou 429 (sobrecarga);
 //   - resposta 2xx com HTML sem o logo do site: a página de espera
 //     (ver paginaDeEspera.js). JSON, texto puro e páginas 4xx/5xx não entram.
-// Se persistir, falha com "Site indisponível". Os demais status seguem a regra
+// Se persistir, falha com "Site indisponível" e arma o disjuntor (ver
+// paginaDeEspera.js): a próxima instabilidade falha sem esperar. Os demais status seguem a regra
 // de sempre: com failOnStatusCode (padrão), 4xx/5xx falham o teste.
 const SOBRECARGA = [429, 503]
 
@@ -48,16 +52,17 @@ Cypress.Commands.overwrite('request', (requisitar, ...args) => {
     .then({ timeout: espera }, () => requisitar({ ...opcoes, failOnStatusCode: false }))
     .then((resposta) => {
       if (SOBRECARGA.includes(resposta.status)) {
-        if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde, `HTTP ${resposta.status}`)
+        tratarInstabilidade(onde, tentativa, `HTTP ${resposta.status}`)
         cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
         return tentar(tentativa + 1)
       }
       if (resposta.status >= 200 && resposta.status < 300 && htmlEhPaginaDeEspera(resposta.body)) {
         guardarPaginaDeEspera(resposta.body, onde)
-        if (tentativa >= TENTATIVAS) throw erroSiteIndisponivel(onde)
+        tratarInstabilidade(onde, tentativa, 'página de espera')
         cy.wait(ESPERA_ENTRE_TENTATIVAS, { log: false })
         return tentar(tentativa + 1)
       }
+      siteRespondeu()
       if (opcoes.failOnStatusCode !== false && resposta.status >= 400) {
         throw new Error(`${onde} respondeu HTTP ${resposta.status}`)
       }

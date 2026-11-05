@@ -33,6 +33,8 @@ const { testes } = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'))
 // agrupa pelo ID no título do teste: "[BUG-15] ..."
 const bugs = new Map()
 for (const teste of testes) {
+  // o título vem como "describe › teste"; o ID do bug é o do próprio teste
+  teste.titulo = teste.titulo.split(' › ').pop()
   const id = (teste.titulo.match(/\[(BUG-\d+)\]/) || [])[1] || 'sem ID de bug'
   if (!bugs.has(id)) bugs.set(id, [])
   bugs.get(id).push(teste)

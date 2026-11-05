@@ -33,6 +33,30 @@ export const erroSiteIndisponivel = (onde, motivo = 'página de espera') =>
         'Não é resultado do teste. Rode novamente mais tarde.'
     )
 
+// Disjuntor: depois que o site é declarado indisponível, as próximas respostas
+// instáveis falham na hora, sem novas tentativas nem espera. Assim uma queda no
+// meio da execução não faz cada teste seguinte esperar ~10 s (vezes as novas
+// tentativas do próprio teste). A primeira resposta normal desarma o disjuntor.
+// O estado vale para o spec em execução (o Cypress recarrega o suporte a cada spec).
+let siteForaDoAr = false
+
+export const siteRespondeu = () => { siteForaDoAr = false }
+
+// Chamado a cada resposta instável (página de espera, 503, 429). Lança o erro
+// quando deve parar; se não lançar, quem chamou espera e tenta de novo.
+export const tratarInstabilidade = (onde, tentativa, motivo) => {
+    if (siteForaDoAr) {
+        throw new Error(
+            `Site indisponível: ${motivo} em ${onde}. O site já estava fora do ar nesta execução, ` +
+            'então não houve novas tentativas.\nNão é resultado do teste. Rode novamente mais tarde.'
+        )
+    }
+    if (tentativa >= TENTATIVAS) {
+        siteForaDoAr = true
+        throw erroSiteIndisponivel(onde, motivo)
+    }
+}
+
 // guarda a primeira ocorrência da execução para análise (sai junto do relatório no CI)
 let jaGuardada = false
 export const guardarPaginaDeEspera = (html, onde) => {
