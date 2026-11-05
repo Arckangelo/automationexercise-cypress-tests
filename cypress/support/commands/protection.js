@@ -11,6 +11,7 @@ import {
     handleInstability,
 } from '../waitPage'
 import { recordPaymentResponse } from '../orders'
+import { mutateRequestResponse } from '../mutations'
 
 // cy.visit confere se carregou o site de verdade, e não a página de espera
 // (ver waitPage.js). Se for a página de espera, visita de novo; se ela
@@ -83,6 +84,8 @@ Cypress.Commands.overwrite('request', (originalRequest, ...args) => {
                 if (options.failOnStatusCode !== false && response.status >= 400) {
                     throw new Error(`${target} respondeu HTTP ${response.status}`)
                 }
+                // análise de mutação: só com --expose mutant=<id> (ver ../mutations.js)
+                mutateRequestResponse(options, response)
                 return response
             })
 

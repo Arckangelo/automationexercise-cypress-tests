@@ -14,6 +14,7 @@ describe('Filtro de produtos', () => {
     ]
 
     categories.forEach(({ panel, category, href }) => {
+        // pega: produto de outra categoria no filtro (mutante M04)
         it(`categoria ${panel} > ${category} mostra exatamente os produtos dessa categoria`, () => {
             cy.visit('/products')
             cy.get(`a[href="#${panel}"]`).click()

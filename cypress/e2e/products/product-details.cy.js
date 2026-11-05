@@ -27,6 +27,7 @@ describe('Detalhes do produto', () => {
     // cada classe de equivalência (catalog.representatives) mais um sorteado, que
     // muda a cada execução. O formato de TODOS os produtos é conferido pela API
     // (CT-API-PRODUCTS-01). Para repetir um sorteio: --expose sampledProduct=<id>
+    // pega: preço da página diferente da API (mutante M08)
     it(
         'a página mostra nome, preço, categoria e marca iguais aos da API (classes de equivalência + 1 sorteado)',
         { tags: ['@smoke'] },

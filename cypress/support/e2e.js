@@ -49,6 +49,8 @@ import { register as registerCypressGrep } from '@cypress/grep'
 registerCypressGrep()
 // Registro dos pedidos que cada teste criou (conferido com a tag @creates-order)
 import './orders'
+// Defeitos simulados da análise de mutação (só com --expose mutant=<id>)
+import './mutations'
 // Comandos customizados, um arquivo por assunto. protection.js vem primeiro:
 // as sobrescritas de cy.visit e cy.request valem para todos os outros.
 import './commands/protection'

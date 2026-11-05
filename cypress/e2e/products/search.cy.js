@@ -5,6 +5,7 @@ describe('Busca de produtos', () => {
     const catalog = useCatalog()
 
     // CT-PRODUCTS-SEARCH-01
+    // pega: produto que não contém o termo na lista (mutante M03)
     it('termo existente mostra exatamente os produtos que contêm o termo', { tags: ['@smoke'] }, () => {
         cy.searchProduct('jeans')
 

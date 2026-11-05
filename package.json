@@ -13,6 +13,7 @@
     "test:smoke": "node scripts/cypress.js run --browser chrome --expose grepTags=@smoke",
     "test:smoke:mobile": "node scripts/cypress.js run --browser chrome --env mobile=true --expose grepTags=@smoke",
     "test:mobile": "node scripts/cypress.js run --browser chrome --env mobile=true",
+    "test:mutation": "node scripts/mutation-run.js",
     "test:bugs": "node scripts/cypress.js run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\"",
     "test:bugs:pr": "node scripts/cypress.js run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\" --expose grepTags=-@creates-order",
     "test:bugs:open": "node scripts/cypress.js open --e2e --env knownBugs=true",

@@ -59,7 +59,7 @@ describe('Carrinho entre sessões', () => {
     })
 
     // CT-CART-SESSION-04
-    // pega: carrinho do visitante descartado, ou sobrescrevendo o da conta
+    // pega: carrinho do visitante descartado, ou sobrescrevendo o da conta (mutante M10)
     it('itens do visitante são somados ao carrinho que a conta já tinha', () => {
         logIn()
         cy.addToCart('2')
