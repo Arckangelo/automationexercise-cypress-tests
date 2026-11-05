@@ -11,6 +11,9 @@ const { plugin: cypressGrepPlugin } = require('@cypress/grep/plugin')
 const KNOWN_BUGS_SPECS = 'cypress/e2e/known-bugs/**'
 const BUG_SUMMARY_FILE = 'cypress/reports/known-bugs/resumo.json'
 const SUITE_SUMMARY_FILE = 'cypress/reports/suite/resumo.json'
+const MOBILE_SUMMARY_FILE = 'cypress/reports/mobile/resumo.json'
+// tela de celular (--env mobile=true): tamanho de um iPhone
+const MOBILE_VIEWPORT = { width: 375, height: 667 }
 // lido por scripts/cypress.js: filtro ativo e nenhum teste executado = falha
 const NO_TESTS_MARKER = 'cypress/reports/.nenhum-teste-executado'
 
@@ -87,6 +90,14 @@ module.exports = defineConfig({
             } else {
                 config.excludeSpecPattern = [].concat(config.excludeSpecPattern, KNOWN_BUGS_SPECS)
             }
+            if (config.env.mobile) {
+                // a mesma suíte numa tela de celular; relatório e resumo em pasta própria,
+                // para não sobrescrever os da execução no computador do mesmo job
+                config.viewportWidth = MOBILE_VIEWPORT.width
+                config.viewportHeight = MOBILE_VIEWPORT.height
+                config.reporterOptions.reportDir = 'cypress/reports/mobile'
+                config.reporterOptions.reportPageTitle = 'AutomationExercise - Relatório de testes (celular)'
+            }
 
             // Filtro por tags. Se nenhum spec casar, o plugin não falha: volta a rodar
             // todos e filtra teste a teste (o que terminaria com zero testes). Como as
@@ -125,7 +136,12 @@ module.exports = defineConfig({
             on('after:run', async (results) => {
                 // resumo e registro antes do relatório HTML: o gerador do relatório
                 // quebra quando nenhum teste rodou, e isso não pode esconder a falha
-                writeSummary(config.env.knownBugs ? BUG_SUMMARY_FILE : SUITE_SUMMARY_FILE, results, {
+                const summaryFile = config.env.knownBugs
+                    ? BUG_SUMMARY_FILE
+                    : config.env.mobile
+                      ? MOBILE_SUMMARY_FILE
+                      : SUITE_SUMMARY_FILE
+                writeSummary(summaryFile, results, {
                     filter,
                     ordersByTest,
                 })

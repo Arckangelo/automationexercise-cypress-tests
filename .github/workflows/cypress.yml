@@ -103,6 +103,38 @@ jobs:
           path: cypress/reports/pagina-de-espera.html
           if-no-files-found: ignore
 
+      # Fluxos críticos (@smoke) também numa tela de celular, só no Chrome. Vem
+      # depois de salvar os artefatos acima: o Cypress apaga as screenshots a cada
+      # execução. Relatório e resumo ficam em cypress/reports/mobile.
+      - name: Fumaça no celular
+        if: ${{ !cancelled() && matrix.browser == 'chrome' }}
+        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        with:
+          install: false
+          command: npm run test:smoke:mobile
+
+      - name: Resumo e pedidos (celular)
+        if: ${{ !cancelled() && matrix.browser == 'chrome' }}
+        run: |
+          node scripts/flaky-summary.js chrome-celular cypress/reports/mobile/resumo.json
+          npm run check:orders -- cypress/reports/mobile/resumo.json chrome-celular
+
+      - name: Salvar screenshots das falhas (celular)
+        if: ${{ failure() && matrix.browser == 'chrome' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: celular-screenshots-fumaca
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Salvar relatório HTML (celular)
+        if: ${{ !cancelled() && matrix.browser == 'chrome' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: celular-relatorio-fumaca
+          path: cypress/reports/mobile
+          if-no-files-found: ignore
+
   # A proteção da main exige um check chamado "Suíte principal". Com a matriz,
   # cada navegador vira um job próprio; este junta os resultados num só check,
   # que passa apenas se a suíte passou em todos os navegadores.
@@ -118,6 +150,58 @@ jobs:
         run: |
           echo "Resultado da matriz: $RESULTADO"
           [ "$RESULTADO" = "success" ]
+
+  # A suíte inteira numa tela de celular, uma vez por dia (e na execução manual).
+  # Nos PRs, só a fumaça roda no celular (no job do Chrome acima).
+  suite-celular:
+    name: Suíte no celular (diária)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Rodar a suíte no celular
+        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        with:
+          command: npm run test:mobile
+
+      - name: Resumo e pedidos
+        if: ${{ !cancelled() }}
+        run: |
+          node scripts/flaky-summary.js chrome-celular cypress/reports/mobile/resumo.json
+          npm run check:orders -- cypress/reports/mobile/resumo.json chrome-celular
+
+      - name: Salvar screenshots das falhas
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: celular-screenshots-suite
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Salvar relatório HTML
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: celular-relatorio-suite
+          path: cypress/reports/mobile
+          if-no-files-found: ignore
+
+      - name: Salvar página de espera do site
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pagina-de-espera-celular
+          path: cypress/reports/pagina-de-espera.html
+          if-no-files-found: ignore
 
   known-bugs:
     name: Bugs conhecidos

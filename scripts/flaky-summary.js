@@ -6,11 +6,12 @@
 // Lê cypress/reports/suite/resumo.json (gravado pelo cypress.config.js).
 // No GitHub Actions, escreve no resumo da execução e cria avisos (::warning::);
 // fora dele, imprime no terminal. Nunca falha o job.
-// Uso: node scripts/flaky-summary.js [rótulo, ex.: o navegador]
+// Uso: node scripts/flaky-summary.js [rótulo, ex.: o navegador] [arquivo do resumo]
 
 const fs = require('fs')
 
-const SUMMARY_FILE = 'cypress/reports/suite/resumo.json'
+// resumo da suíte no computador, ou o da tela de celular (2º argumento)
+const SUMMARY_FILE = process.argv[3] || 'cypress/reports/suite/resumo.json'
 const label = process.argv[2] ? ` (${process.argv[2]})` : ''
 
 const lines = []

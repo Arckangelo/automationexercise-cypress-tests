@@ -120,8 +120,9 @@ marcado como teste (nome "QA Automatizado", e-mails `qa.*@teste.com`, textos com
 - **Carrinho:** fica preso à conta descartável ou à sessão do visitante e some com elas.
 - **Pedidos:** **ficam no site**, porque ele não oferece forma de apagá-los. Todo teste que cria pedido
   leva a tag `@creates-order` (ver a seção Tags), e a regra é conferida automaticamente. Num PR, o CI
-  confirma 3 pedidos (a compra completa de `checkout.cy.js`, um por navegador): os testes de bug que
-  pagam ficam de fora. No push na `main` e na execução diária são 8 (mais 4 do BUG-20 e 1 do BUG-13).
+  confirma 4 pedidos: a compra completa de `checkout.cy.js` nos três navegadores e na fumaça no celular;
+  os testes de bug que pagam ficam de fora. No push na `main` são 9 (mais 4 do BUG-20 e 1 do BUG-13) e
+  na execução diária, 10 (mais a suíte inteira no celular).
   Todos são feitos com contas descartáveis, apagadas logo depois, e com o cartão fictício de `users.json`.
 - **Formulários (Contact Us, newsletter, avaliação):** hoje nada é enviado, porque esse é o próprio
   bug (BUG-08, 10 e 11). Quando o site corrigir, esses testes passarão a enviar mensagens reais a cada
@@ -256,6 +257,8 @@ npm test               # roda toda a suíte sem abrir o navegador (no Electron)
 npm run test:chrome    # a suíte no Chrome (também test:firefox e test:edge, como no CI)
 npm run test:open      # abre a interface do Cypress
 npm run test:smoke     # só os testes @smoke, no Chrome (~1 min)
+npm run test:smoke:mobile  # os testes @smoke numa tela de celular (375x667)
+npm run test:mobile    # a suíte inteira numa tela de celular (no CI, só na execução diária)
 npm run test:bugs      # roda só os testes de bugs conhecidos (falham enquanto os bugs existirem)
 npm run test:bugs:pr   # bugs conhecidos sem os testes que criam pedido (como nos PRs)
 npm run check:tags     # confere as tags dos specs
@@ -276,7 +279,8 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Job | O que faz |
 |---|---|
 | Formatação e tags | Confere a formatação com o Prettier (`npm run format:check`) e as tags dos specs (`npm run check:tags`) |
-| Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador; confere a tag `@creates-order` com os pedidos criados |
+| Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador; confere a tag `@creates-order` com os pedidos criados. No Chrome, roda também os testes `@smoke` numa tela de celular (375x667) |
+| Suíte no celular (diária) | Roda a suíte inteira numa tela de celular, só na execução diária e na manual |
 | Bugs conhecidos | Roda os 46 testes de regressão no Chrome (num PR, sem os de `@creates-order`), sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
@@ -318,6 +322,7 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - O carrinho é limpo automaticamente antes de cada teste via requisição HTTP direta (`cy.request`), sem passar pela interface — mais rápido e estável que remover item por item na UI
 - Os testes de carrinho aguardam a confirmação real do servidor (`cy.intercept`/`cy.wait`) em vez de usar esperas fixas (`cy.wait(ms)`)
 - Seletores robustos (baseados em atributos `data-qa` e `href`) foram priorizados para reduzir flakiness
+- **Celular:** o site é responsivo, então os fluxos críticos (`@smoke`) rodam também numa tela de 375x667 em todo PR, e a suíte inteira roda nessa tela uma vez por dia (`--env mobile=true`, relatório em `cypress/reports/mobile`). A tela pequena simula o layout do celular, mas não toque nem navegadores móveis (Safari do iPhone, Chrome do Android)
 - Nenhum erro JavaScript da página é ignorado (`cypress/support/e2e.js`); quando vem de um script de terceiros, a falha lista os domínios de terceiros que rodaram na página
 - O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem 1 nova tentativa (`retries`), exceto os de bugs conhecidos, em que a falha é o resultado esperado. A instabilidade do próprio site é tratada antes, na requisição (veja abaixo)
 - Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.request` (e, por ele, a API e todo comando que lê páginas por HTTP) reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [waitPage.js](cypress/support/waitPage.js)
