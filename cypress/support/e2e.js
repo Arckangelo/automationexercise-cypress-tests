@@ -1,14 +1,40 @@
-// Scripts de anúncio de terceiros (Google Ads e afins) às vezes lançam
-// exceções que não têm relação com o site sob teste. Só esses erros são
-// ignorados: qualquer outra exceção não tratada continua falhando o teste,
-// para que erros reais do site não passem despercebidos.
-const AD_SCRIPTS =
-    /googlesyndication|doubleclick|googletagmanager|googleadservices|adtrafficquality|fundingchoicesmessages/
+// Toda exceção não tratada da página falha o teste; nenhuma é ignorada.
+// Anúncios e rastreadores conhecidos nem chegam a carregar (blockHosts no
+// cypress.config.js). Quando a exceção vem de um script de outro domínio, o
+// navegador esconde os detalhes (muitas vezes só "Script error.", sem arquivo
+// nem linha). Para a falha apontar a origem, a mensagem ganha a lista de
+// scripts de terceiros que rodaram na página; se for um provedor novo de
+// anúncio ou rastreador, é só acrescentar o domínio ao blockHosts.
+let appWindow
+Cypress.on('window:load', (win) => {
+    appWindow = win
+})
+
+const thirdPartyScripts = () => {
+    const site = new URL(Cypress.config('baseUrl')).hostname
+    const blocked = Cypress.config('blockHosts') || []
+    const hosts = appWindow.performance
+        .getEntriesByType('resource')
+        .filter((entry) => entry.initiatorType === 'script')
+        .map((entry) => new URL(entry.name).hostname)
+        // o próprio site e os domínios bloqueados (a tentativa fica registrada, mas não rodou)
+        .filter((host) => host !== site && !host.endsWith(`.${site}`))
+        .filter((host) => !blocked.some((pattern) => Cypress.minimatch(host, pattern)))
+    return [...new Set(hosts)]
+}
 
 Cypress.on('uncaught:exception', (err) => {
-    if (AD_SCRIPTS.test(`${err.message}\n${err.stack}`)) {
-        return false
+    try {
+        const hosts = thirdPartyScripts()
+        if (hosts.length) {
+            err.message +=
+                `\n\nScripts de terceiros que rodaram nesta página: ${hosts.join(', ')}.` +
+                '\nSe o erro vier de um deles (anúncio, rastreador), acrescente o domínio ao blockHosts do cypress.config.js.'
+        }
+    } catch {
+        // sem a lista, a falha segue com a mensagem original
     }
+    // sem "return false": o teste falha, com a mensagem acima
 })
 
 // E-mails e senhas usados nos testes ficam em fixtures/users.json, disponível em
