@@ -4,7 +4,7 @@
     "password": "Qa@{id}"
   },
   "wrongPassword": "senhaerrada",
-  "alternativeName": "Outro Nome",
+  "alternativeName": "QA Nome Alternativo",
   "invalidEmails": {
     "noAt": "qa.{id}",
     "noDomain": "qa.{id}@",
@@ -53,8 +53,8 @@
     "contact": {
       "name": "QA Automatizado",
       "email": "qa.contato@teste.com",
-      "subject": "Teste de regressão",
-      "message": "Mensagem de teste do BUG-08."
+      "subject": "[QA automatizado] Teste de regressão",
+      "message": "Mensagem de teste automatizado (QA) do BUG-08. Pode ser apagada."
     },
     "newsletter": {
       "email": "qa.newsletter@teste.com"
@@ -62,7 +62,7 @@
     "review": {
       "name": "QA Automatizado",
       "email": "qa.avaliacao@teste.com",
-      "text": "Avaliação de teste do BUG-11."
+      "text": "Avaliação de teste automatizado (QA) do BUG-11. Pode ser apagada."
     }
   }
 }

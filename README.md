@@ -109,6 +109,23 @@ o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles fic
 principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
 **diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
 
+## 🧹 Dados que os testes criam
+
+Os testes rodam no site público, então tudo o que eles enviam fica gravado lá. Todo dado enviado é
+marcado como teste (nome "QA Automatizado", e-mails `qa.*@teste.com`, textos com "teste automatizado
+(QA)"), para poder ser identificado e apagado por quem administra o site.
+
+- **Contas:** criadas com e-mail único (`qa.<id>@teste.com`) e apagadas ao final de cada teste ou
+  `describe`, por um hook que roda mesmo quando o teste falha. **Não ficam no site.**
+- **Carrinho:** fica preso à conta descartável ou à sessão do visitante e some com elas.
+- **Pedidos:** **ficam no site**, porque ele não oferece forma de apagá-los. Cada execução completa
+  do CI confirma 8 pedidos: 3 da compra completa (`checkout.cy.js`, um por navegador), 4 do BUG-20 e 1
+  do BUG-13 (bugs conhecidos). Todos são feitos com contas descartáveis, apagadas logo depois, e com o
+  cartão fictício de `users.json`.
+- **Formulários (Contact Us, newsletter, avaliação):** hoje nada é enviado, porque esse é o próprio
+  bug (BUG-08, 10 e 11). Quando o site corrigir, esses testes passarão a enviar mensagens reais a cada
+  execução; o aviso está no cabeçalho de `forms-not-submitted.cy.js`.
+
 ## ✍️ Convenções do código
 
 - **Idioma:** identificadores (variáveis, funções, comandos customizados, arquivos de código, chaves das fixtures) em inglês; comentários, títulos dos testes, mensagens, documentação, commits e PRs em português
