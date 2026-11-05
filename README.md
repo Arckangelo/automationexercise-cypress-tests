@@ -109,6 +109,12 @@ o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles fic
 principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
 **diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
 
+## ✍️ Convenções do código
+
+- **Idioma:** identificadores (variáveis, funções, comandos customizados, arquivos de código, chaves das fixtures) em inglês; comentários, títulos dos testes, mensagens, documentação, commits e PRs em português
+- **Formatação:** Prettier ([`.prettierrc.json`](.prettierrc.json)) e [`.editorconfig`](.editorconfig). Antes do commit: `npm run format`. O CI confere com `npm run format:check`
+- **IDs de caso de teste:** cada `it` tem um comentário `// CT-<ÁREA>-<ARQUIVO>-NN`; testes de bug conhecido começam com `[BUG-NN]`
+
 ## 📁 Estrutura do projeto
 ```
 .github/
@@ -121,7 +127,10 @@ docs/
 ├── Relatorio_de_Bugs.pdf        # relatório completo de bugs (gerado)
 ├── img/capa-relatorio.png       # capa do relatório usada neste README (gerada)
 └── relatorio/                   # fontes HTML do PDF e da capa, e o gerar.sh que os produz
+.editorconfig                    # padrão de formatação para o editor (igual ao Prettier)
+.git-blame-ignore-revs           # commits só de formatação, ignorados pelo git blame
 .nvmrc                           # versão do Node usada localmente e no CI
+.prettierrc.json                 # padrão de formatação do código (npm run format)
 .gitleaks.toml                   # regras do gitleaks e exceções comentadas para falsos positivos
 .pre-commit-config.yaml          # hook local opcional que bloqueia segredos antes do commit
 BUGS.md                          # resumo dos bugs encontrados
@@ -211,6 +220,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 
 | Job | O que faz |
 |---|---|
+| Formatação | Confere com o Prettier se o código segue o padrão do projeto (`npm run format:check`) |
 | Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
 | Bugs conhecidos | Roda os 46 testes de regressão no Chrome, sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
