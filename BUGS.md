@@ -167,7 +167,7 @@ sem o `responseCode` que todas as outras respostas têm. E o `OPTIONS` devolve o
 
 **Resultado obtido:** o corpo é JSON, mas a resposta declara `Content-Type: text/html; charset=utf-8`.
 Por isso clientes como o Cypress não fazem o parse automático (ver `cy.apiRequest` em
-[`cypress/support/commands.js`](cypress/support/commands.js)).
+[`cypress/support/commands/api.js`](cypress/support/commands/api.js)).
 
 ## BUG-06 — Conta é excluída por um GET sem confirmação
 
@@ -204,7 +204,7 @@ API3 *Broken Object Property Level Authorization*).
 
 **Observação:** o endpoint aparece na lista pública de APIs do site e é usado pela suíte principal para
 conferir os dados gravados (cadastro e conta). Todas as chamadas passam pelo comando `cy.apiGetUserDetail` em
-[`cypress/support/commands.js`](cypress/support/commands.js): se o site passar a exigir autenticação, o ajuste é
+[`cypress/support/commands/api.js`](cypress/support/commands/api.js): se o site passar a exigir autenticação, o ajuste é
 feito só nele.
 
 ## BUG-08 — Contact Us confirma o envio, mas não envia nada

@@ -18,4 +18,11 @@ beforeEach(() => {
 })
 
 import 'cypress-mochawesome-reporter/register'
-import './commands.js'
+// Comandos customizados, um arquivo por assunto. protection.js vem primeiro:
+// as sobrescritas de cy.visit e cy.request valem para todos os outros.
+import './commands/protection'
+import './commands/session'
+import './commands/cart'
+import './commands/ui'
+import './commands/forms'
+import './commands/api'

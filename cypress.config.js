@@ -53,7 +53,7 @@ module.exports = defineConfig({
         viewportWidth: 1280,
         viewportHeight: 720,
         // Instabilidade do site (página de espera, 503/429) é tratada na própria
-        // requisição (commands.js), com disjuntor. A nova tentativa do teste inteiro
+        // requisição (commands/protection.js), com disjuntor. A nova tentativa do teste inteiro
         // fica só para falhas raras de tela; quem precisar dela aparece como
         // "instável" no resumo do CI (scripts/flaky-summary.js).
         retries: { runMode: 1, openMode: 0 },

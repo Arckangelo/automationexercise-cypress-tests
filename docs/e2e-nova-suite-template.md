@@ -57,7 +57,7 @@ Para cada item: **o que informar**, **por que importa** e **o que dá errado se 
 10. **Comportamentos conhecidos do ambiente.** Informe instabilidades (páginas de espera, 503, limite
     de requisições) e particularidades do contrato da API.
     *Por que:* a suíte trata a página de espera (`cypress/support/waitPage.js`), o 503/429
-    (`commands.js:24-58`) e a API que sempre responde HTTP 200 (`commands.js:161-172`).
+    (`commands/protection.js`) e a API que sempre responde HTTP 200 (`commands/api.js`).
     *Se faltar:* falsos positivos (testes que passam na página errada) e falsos bugs.
 11. **Política para bugs conhecidos.** Diga se um bug encontrado deve virar teste que falha
     (separado da suíte principal) e onde documentá-lo.
@@ -91,14 +91,14 @@ Regras curtas, cada uma verificável por leitura ou busca no código.
 3. Seletor por `data-qa`/`data-testid` quando existir; senão, atributo estável (`id`, `href`, `action`). Texto só para conferir mensagens.
 4. Nenhum e-mail, senha ou dado pessoal escrito no spec: tudo em fixtures, e contas únicas geradas a partir de um modelo com `{id}`.
 5. Todo dado criado é removido em `after`/`afterEach`, que aceita “já removido” (200 ou 404) (`account.api.cy.js:27-31`).
-6. Preparação por API ou HTTP; a tela só é usada para o que está sendo testado (`checkout.cy.js:4-6`, `commands.js:127-132`).
-7. Login reaproveitado com `cy.session` e `validate` (`commands.js:79-90`).
+6. Preparação por API ou HTTP; a tela só é usada para o que está sendo testado (`checkout.cy.js:4-6`, `commands/cart.js`).
+7. Login reaproveitado com `cy.session` e `validate` (`commands/session.js`).
 8. Valor esperado vem de fonte independente (API, banco), nunca da própria tela testada.
 9. Valor conhecido é comparado de forma exata (`eq`, `deep.equal`), não com `contain`.
 10. Efeito no servidor confirmado depois da ação (recarregar a página ou consultar a API), não só a mensagem de sucesso.
-11. Asserção negativa (“não aparece”) só depois de garantir que a página certa carregou: a guarda da página de espera no `cy.visit` (`commands.js:7-22`) ou um controle positivo (`login.cy.js:93-96`).
+11. Asserção negativa (“não aparece”) só depois de garantir que a página certa carregou: a guarda da página de espera no `cy.visit` (`commands/protection.js`) ou um controle positivo (`login.cy.js:93-96`).
 12. Asserções com mensagem: `expect(valor, 'o que é').to...`.
-13. A guarda contra página inválida fica só nas sobrescritas de `cy.visit` e `cy.request` (`commands.js`), nunca espalhada pelos comandos; assim todo comando novo já nasce protegido.
+13. A guarda contra página inválida fica só nas sobrescritas de `cy.visit` e `cy.request` (`commands/protection.js`), nunca espalhada pelos comandos; assim todo comando novo já nasce protegido.
 14. Instabilidade do ambiente termina em “Site indisponível”, nunca em teste aprovado nem em bug.
 15. Bug conhecido: spec em `known-bugs/`, título começando por `[BUG-NN]`, descrevendo o comportamento **correto**, sem retries.
 16. Quando não for óbvio, um comentário `// pega:` diz qual defeito a asserção detecta (`checkout.cy.js:65`).
@@ -160,7 +160,8 @@ RASTREABILIDADE
 REAPROVEITE (adaptando ao novo sistema)
 - scripts/cypress.js (ambiente do navegador em qualquer SO)
 - cypress.config.js (reporter, separação de known-bugs, blockHosts, retries)
-- cypress/support/waitPage.js e as sobrescritas de cy.visit/cy.request em commands.js
+- cypress/support/waitPage.js e cypress/support/commands/protection.js (sobrescritas de cy.visit e cy.request)
+- a organização de cypress/support/commands/ (um arquivo por assunto)
 - cypress/support/testUser.js (conta descartável por describe)
 - cypress/support/catalog.js (fonte de verdade, partição de equivalência, sorteio)
 - .github/workflows/cypress.yml, security.yml, codeql.yml e dependabot.yml
@@ -198,7 +199,7 @@ A nova suíte atinge o mesmo nível quando todos os itens abaixo forem verdadeir
 4. **Duas camadas de repetição (corrigido):** o `cy.request` repetia até 3 vezes e o Cypress repetia o teste inteiro 2 vezes. Agora há um disjuntor (`waitPage.js`), o teste é repetido só 1 vez (`cypress.config.js`) e o resumo do CI mostra quem precisou da repetição. Na nova suíte, comece já assim.
 5. **Comentário desatualizado (corrigido):** `loginViaUi` dizia servir ao carrinho entre sessões, que passou a usar `loginByRequest`. O comentário agora diz que ele serve para quando o próprio login pela tela faz parte do teste. Na nova suíte, revise os comentários sempre que um comando mudar de uso.
 6. **Estilo inconsistente (corrigido):** nomes de comandos misturavam inglês e português, e a indentação variava entre 2 e 4 espaços. Agora os identificadores estão em inglês (comentários e documentação em português) e o Prettier, conferido no CI, padroniza a formatação. Na nova suíte, defina o idioma dos identificadores e o formatador desde o primeiro commit.
-7. **Ordem confusa no `commands.js`:** comandos de tela e de formulário (`submitSignupWithoutBrowser`, `pagar`) ficam no meio da seção “Comandos de API” (`commands.js:246-296`).
+7. **Ordem confusa no `commands.js` (corrigido):** comandos de tela e de formulário ficavam no meio da seção de API. O arquivo foi dividido em `cypress/support/commands/`, um arquivo por assunto (proteção, sessão, carrinho, tela, formulários e API). Na nova suíte, comece já com essa divisão.
 8. **Tratamento de exceções de anúncios redundante:** `e2e.js:5-11` ignora erros de anúncios que o `blockHosts` (`cypress.config.js:22-30`) já impede de carregar. Mantenha só um mecanismo, ou documente por que existem os dois.
 9. **Efeitos colaterais não limpáveis:** os testes de pagamento criam pedidos reais no site (`payment-validation.cy.js`, `checkout.cy.js:169-193`) sem forma de apagá-los.
 10. **Sem tags nem subconjunto rápido:** a separação é só por pasta (`known-bugs/`); não existe um conjunto de fumaça.
