@@ -5,6 +5,13 @@
 // O teste não fixa o endpoint de uma futura correção: aceita qualquer
 // requisição que não seja GET para o próprio site, exceto /cdn-cgi/ (métricas
 // da Cloudflare, enviadas em toda página).
+//
+// ATENÇÃO quando o site corrigir estes bugs: os testes passam a enviar
+// mensagens, inscrições e avaliações de verdade, a cada execução do CI. Os
+// dados já são marcados como teste (users.json > forms), mas ao mover estes
+// testes para a suíte principal decida entre manter o envio real ou trocá-lo
+// por um cy.intercept que só confere a requisição, sem deixá-la chegar ao
+// servidor (ver "Dados que os testes criam" no README).
 describe('[BUG-08/10/11] Formulários - mensagem de sucesso sem envio', () => {
     const recordSubmissions = () => {
         const submissions = []

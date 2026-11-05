@@ -40,7 +40,9 @@ module.exports = defineConfig({
     },
     e2e: {
         baseUrl: 'https://automationexercise.com',
-        // anúncios e rastreadores de terceiros: pesados e sem relação com o site testado
+        // Anúncios e rastreadores de terceiros: pesados e sem relação com o site testado.
+        // Se um teste falhar por exceção de um domínio novo desse tipo, a mensagem
+        // lista os scripts de terceiros da página (e2e.js): acrescente o domínio aqui.
         blockHosts: [
             '*googlesyndication.com',
             '*doubleclick.net',
