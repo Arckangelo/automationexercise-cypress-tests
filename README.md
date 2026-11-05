@@ -172,7 +172,13 @@ cypress/
 │   └── users.json               # e-mails, senhas, e-mails inválidos e dados dos formulários; contas aleatórias seguem o modelo qa.{id}@teste.com
 └── support/
     ├── catalog.js              # carrega o catálogo da API, fonte do que busca, filtro e carrinho devem mostrar
-    ├── commands.js              # comandos customizados: login, carrinho, leitura da tela, busca e API
+    ├── commands/                # comandos customizados, um arquivo por assunto (importados em e2e.js)
+    │   ├── protection.js        # sobrescritas de cy.visit e cy.request: proteção contra a instabilidade do site
+    │   ├── session.js           # login por HTTP, com cy.session, e pela tela
+    │   ├── cart.js              # carrinho montado, lido e limpo por HTTP
+    │   ├── ui.js                # leitura e ações na tela (texto, busca, pagamento)
+    │   ├── forms.js             # formulários enviados sem a validação do navegador
+    │   └── api.js               # cy.apiRequest e um comando por endpoint da API
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
     └── testUser.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/

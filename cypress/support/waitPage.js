@@ -14,7 +14,7 @@
 // teste falha com "Site indisponível", nunca passa nem vira bug.
 //
 // A verificação fica só em dois lugares, nas sobrescritas de cy.visit e de
-// cy.request (commands.js). Comandos e testes não precisam repeti-la.
+// cy.request (commands/protection.js). Comandos e testes não precisam repeti-la.
 
 export const MAX_ATTEMPTS = 3
 export const RETRY_DELAY_MS = 5000
