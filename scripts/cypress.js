@@ -22,7 +22,18 @@ if (process.platform === 'linux' && env.XDG_SESSION_TYPE === 'wayland') {
 
 // o pacote não exporta "bin/cypress"; localiza o executável pela pasta dele
 const cli = path.join(path.dirname(require.resolve('cypress/package.json')), 'bin', 'cypress')
+const fs = require('fs')
+const NO_TESTS_MARKER = 'cypress/reports/.nenhum-teste-executado'
+fs.rmSync(NO_TESTS_MARKER, { force: true })
+
 const { status, error } = spawnSync(process.execPath, [cli, ...process.argv.slice(2)], { stdio: 'inherit', env })
 
 if (error) throw error
+
+// gravado pelo cypress.config.js quando há filtro por tags e nenhum teste rodou:
+// sem isto, a execução terminaria verde sem ter testado nada
+if (fs.existsSync(NO_TESTS_MARKER)) {
+    console.error(`\nFiltro sem resultados (${fs.readFileSync(NO_TESTS_MARKER, 'utf8')}): nenhum teste foi executado.`)
+    process.exit(1)
+}
 process.exit(status ?? 1)

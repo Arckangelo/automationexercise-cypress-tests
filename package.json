@@ -10,10 +10,14 @@
     "test:edge": "node scripts/cypress.js run --browser edge",
     "test:open": "node scripts/cypress.js open",
     "test:headed": "node scripts/cypress.js run --headed",
+    "test:smoke": "node scripts/cypress.js run --browser chrome --expose grepTags=@smoke",
     "test:bugs": "node scripts/cypress.js run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\"",
+    "test:bugs:pr": "node scripts/cypress.js run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\" --expose grepTags=-@creates-order",
     "test:bugs:open": "node scripts/cypress.js open --e2e --env knownBugs=true",
     "format": "prettier --write \"cypress/**/*.{js,json}\" \"scripts/*.js\" cypress.config.js",
-    "format:check": "prettier --check \"cypress/**/*.{js,json}\" \"scripts/*.js\" cypress.config.js"
+    "format:check": "prettier --check \"cypress/**/*.{js,json}\" \"scripts/*.js\" cypress.config.js",
+    "check:tags": "node scripts/check-tags.js",
+    "check:orders": "node scripts/check-order-tags.js"
   },
   "keywords": [
     "cypress",
@@ -30,6 +34,8 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@babel/parser": "7.29.9",
+    "@cypress/grep": "7.0.0",
     "cypress": "^16.2.1",
     "cypress-mochawesome-reporter": "^5.0.0",
     "prettier": "3.9.10"

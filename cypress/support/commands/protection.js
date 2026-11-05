@@ -10,6 +10,7 @@ import {
     markSiteAvailable,
     handleInstability,
 } from '../waitPage'
+import { recordPaymentResponse } from '../orders'
 
 // cy.visit confere se carregou o site de verdade, e não a página de espera
 // (ver waitPage.js). Se for a página de espera, visita de novo; se ela
@@ -35,13 +36,14 @@ Cypress.Commands.overwrite('visit', (originalVisit, url, options, attempt = 1) =
 // cy.request é o ponto único de proteção contra a instabilidade do site, para
 // toda leitura por HTTP (inclusive cy.apiRequest e os comandos que leem páginas).
 // Repete só a própria requisição, em vez de o Cypress repetir o teste inteiro:
-//   - 503 ou 429 (sobrecarga);
+//   - site fora do ar ou sobrecarregado: 429, 502, 503, 504 e os códigos da
+//     Cloudflare para servidor de origem inacessível (520 a 524);
 //   - resposta 2xx com HTML sem o logo do site: a página de espera
 //     (ver waitPage.js). JSON, texto puro e páginas 4xx/5xx não entram.
 // Se persistir, falha com "Site indisponível" e arma o disjuntor (ver
 // waitPage.js): a próxima instabilidade falha sem esperar. Os demais status seguem a regra
 // de sempre: com failOnStatusCode (padrão), 4xx/5xx falham o teste.
-const OVERLOAD_STATUSES = [429, 503]
+const UNAVAILABLE_STATUSES = [429, 502, 503, 504, 520, 521, 522, 523, 524]
 
 const normalizeRequestArgs = (args) => {
     if (typeof args[0] === 'object') return { ...args[0] }
@@ -62,7 +64,7 @@ Cypress.Commands.overwrite('request', (originalRequest, ...args) => {
             // o request original devolve uma promise, não uma cadeia: roda dentro de um .then
             .then({ timeout: timeoutMs }, () => originalRequest({ ...options, failOnStatusCode: false }))
             .then((response) => {
-                if (OVERLOAD_STATUSES.includes(response.status)) {
+                if (UNAVAILABLE_STATUSES.includes(response.status)) {
                     handleInstability(target, attempt, `HTTP ${response.status}`)
                     cy.wait(RETRY_DELAY_MS, { log: false })
                     return tryRequest(attempt + 1)
@@ -74,6 +76,10 @@ Cypress.Commands.overwrite('request', (originalRequest, ...args) => {
                     return tryRequest(attempt + 1)
                 }
                 markSiteAvailable()
+                // pagamento enviado por HTTP: entra no registro de pedidos (ver ../orders.js)
+                if ((options.method || 'GET').toUpperCase() === 'POST' && /\/payment\/?$/.test(options.url)) {
+                    recordPaymentResponse(response)
+                }
                 if (options.failOnStatusCode !== false && response.status >= 400) {
                     throw new Error(`${target} respondeu HTTP ${response.status}`)
                 }

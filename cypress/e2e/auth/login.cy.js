@@ -23,7 +23,7 @@ describe('Login', () => {
         })
 
         // CT-AUTH-LOGIN-01
-        it('credenciais válidas logam o usuário certo', () => {
+        it('credenciais válidas logam o usuário certo', { tags: ['@smoke'] }, () => {
             submitLogin(user.email, user.password)
 
             cy.loggedInUser().should('eq', user.name)

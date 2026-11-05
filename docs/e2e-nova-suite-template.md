@@ -56,7 +56,7 @@ Para cada item: **o que informar**, **por que importa** e **o que dá errado se 
    *Se faltar:* seletores frágeis, quebrando a cada mudança de layout.
 10. **Comportamentos conhecidos do ambiente.** Informe instabilidades (páginas de espera, 503, limite
     de requisições) e particularidades do contrato da API.
-    *Por que:* a suíte trata a página de espera (`cypress/support/waitPage.js`), o 503/429
+    *Por que:* a suíte trata a página de espera (`cypress/support/waitPage.js`), os códigos de site fora do ar (429, 502-504, 520-524)
     (`commands/protection.js`) e a API que sempre responde HTTP 200 (`commands/api.js`).
     *Se faltar:* falsos positivos (testes que passam na página errada) e falsos bugs.
 11. **Política para bugs conhecidos.** Diga se um bug encontrado deve virar teste que falha
@@ -106,6 +106,7 @@ Regras curtas, cada uma verificável por leitura ou busca no código.
 18. Catálogo grande: amostra por partição de equivalência mais 1 item sorteado e reproduzível; cobertura total pela API (`catalog.js:32-64`, `product-details.cy.js`).
 19. Testes locais só no Chrome; o CI roda Chrome, Firefox e Edge.
 20. Versões fixadas: Node pelo `.nvmrc`, `npm ci`, actions fixadas por SHA (`cypress.yml:28-41`).
+21. Tags de uma lista fechada, sempre como texto literal e conferidas no CI; toda tag que muda onde o teste roda tem uma regra verificada automaticamente (aqui, `@creates-order` é conferida com os pedidos de fato criados), e um filtro que não encontra nada falha.
 
 ---
 
@@ -201,8 +202,8 @@ A nova suíte atinge o mesmo nível quando todos os itens abaixo forem verdadeir
 6. **Estilo inconsistente (corrigido):** nomes de comandos misturavam inglês e português, e a indentação variava entre 2 e 4 espaços. Agora os identificadores estão em inglês (comentários e documentação em português) e o Prettier, conferido no CI, padroniza a formatação. Na nova suíte, defina o idioma dos identificadores e o formatador desde o primeiro commit.
 7. **Ordem confusa no `commands.js` (corrigido):** comandos de tela e de formulário ficavam no meio da seção de API. O arquivo foi dividido em `cypress/support/commands/`, um arquivo por assunto (proteção, sessão, carrinho, tela, formulários e API). Na nova suíte, comece já com essa divisão.
 8. **Tratamento de exceções de anúncios redundante (corrigido):** o `e2e.js` ignorava exceções de anúncios que o `blockHosts` já impedia de carregar, e nem reconheceria o caso mais comum ("Script error.", sem domínio). Agora nenhuma exceção é ignorada: a falha lista os scripts de terceiros que rodaram na página, para o domínio novo ir para o `blockHosts`. Na nova suíte, use um único mecanismo de bloqueio e falhas que apontem a origem.
-9. **Efeitos colaterais não limpáveis (documentado):** os testes de pagamento criam pedidos reais no site, sem forma de apagá-los (8 por execução completa do CI). Agora o README lista o que cada teste cria e como é limpo, e todo dado enviado é marcado como teste. Falta reduzir os pedidos por execução, o que depende de filtros por tag (fraqueza 10). Na nova suíte, informe desde o início o que não pode ser limpo e marque todo dado enviado.
-10. **Sem tags nem subconjunto rápido:** a separação é só por pasta (`known-bugs/`); não existe um conjunto de fumaça.
+9. **Efeitos colaterais não limpáveis (documentado):** os testes de pagamento criam pedidos reais no site, sem forma de apagá-los (8 por execução completa do CI). Agora o README lista o que cada teste cria e como é limpo, e todo dado enviado é marcado como teste. Os pedidos por PR caíram de 8 para 3 com a tag `@creates-order` (fraqueza 10). Na nova suíte, informe desde o início o que não pode ser limpo e marque todo dado enviado.
+10. **Sem tags nem subconjunto rápido (corrigido):** a separação era só por pasta. Agora há duas tags, `@smoke` (fumaça) e `@creates-order` (pula, nos PRs, os testes de bug que criam pedido), com proteções: lista de tags permitidas e literais (`scripts/check-tags.js`), a tag `@creates-order` conferida com os pedidos registrados na execução (`scripts/check-order-tags.js`), falha quando um filtro não encontra nada e resumo que avisa execução parcial. Na nova suíte, comece com poucas tags, cada uma com uma regra verificável.
 11. **Sem paralelismo dentro de um navegador:** o CI divide só por navegador; não há divisão de specs entre máquinas.
 12. **Só desktop:** viewport fixo em 1280x720 (`cypress.config.js:31-32`).
 13. **Análise de mutação sem ferramenta:** o README cita (`README.md:18`), mas ela é feita à mão; os comentários `// pega:` são o único registro.

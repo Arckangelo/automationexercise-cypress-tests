@@ -27,35 +27,39 @@ describe('Detalhes do produto', () => {
     // cada classe de equivalência (catalog.representatives) mais um sorteado, que
     // muda a cada execução. O formato de TODOS os produtos é conferido pela API
     // (CT-API-PRODUCTS-01). Para repetir um sorteio: --expose sampledProduct=<id>
-    it('a página mostra nome, preço, categoria e marca iguais aos da API (classes de equivalência + 1 sorteado)', () => {
-        expect(catalog.products, 'catálogo carregado').to.not.be.empty
+    it(
+        'a página mostra nome, preço, categoria e marca iguais aos da API (classes de equivalência + 1 sorteado)',
+        { tags: ['@smoke'] },
+        () => {
+            expect(catalog.products, 'catálogo carregado').to.not.be.empty
 
-        const representatives = catalog.representatives()
-        const sampledId =
-            Cypress.expose('sampledProduct') ||
-            catalog.pickRandom(
-                1,
-                representatives.map((r) => r.id),
-            )[0].id
-        const sample = [...representatives, { id: Number(sampledId), reasons: ['sorteado'] }]
-        cy.log(`amostra: ${sample.map((p) => p.id).join(', ')} (sorteado: ${sampledId})`)
+            const representatives = catalog.representatives()
+            const sampledId =
+                Cypress.expose('sampledProduct') ||
+                catalog.pickRandom(
+                    1,
+                    representatives.map((r) => r.id),
+                )[0].id
+            const sample = [...representatives, { id: Number(sampledId), reasons: ['sorteado'] }]
+            cy.log(`amostra: ${sample.map((p) => p.id).join(', ')} (sorteado: ${sampledId})`)
 
-        sample.forEach(({ id, reasons }) => {
-            const product = catalog.product(id)
-            expect(product, `produto ${id} existe no catálogo`).to.exist
+            sample.forEach(({ id, reasons }) => {
+                const product = catalog.product(id)
+                expect(product, `produto ${id} existe no catálogo`).to.exist
 
-            cy.request(`/product_details/${id}`)
-                .its('body')
-                .then((html) => {
-                    expect(readDetails(html), `produto ${id} (${reasons.join(', ')})`).to.deep.equal({
-                        name: product.name,
-                        price: product.price,
-                        category: catalog.categoryOf(product),
-                        brand: product.brand,
+                cy.request(`/product_details/${id}`)
+                    .its('body')
+                    .then((html) => {
+                        expect(readDetails(html), `produto ${id} (${reasons.join(', ')})`).to.deep.equal({
+                            name: product.name,
+                            price: product.price,
+                            category: catalog.categoryOf(product),
+                            brand: product.brand,
+                        })
                     })
-                })
-        })
-    })
+            })
+        },
+    )
 
     // CT-PRODUCTS-DETAILS-02
     // pega: link "View Product" apontando para o produto do card ao lado

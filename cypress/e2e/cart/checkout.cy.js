@@ -170,33 +170,37 @@ describe('Carrinho e Checkout', () => {
 
         // CT-CART-CHECKOUT-09
         // cartão fictício: o site é de prática e não processa pagamentos
-        it('compra completa: o pagamento confirma o pedido, a fatura traz o total e o carrinho esvazia', function () {
-            cy.addToCart('1')
-            cy.addToCart('2')
-            cy.visit('/checkout')
+        it(
+            'compra completa: o pagamento confirma o pedido, a fatura traz o total e o carrinho esvazia',
+            { tags: ['@smoke', '@creates-order'] },
+            function () {
+                cy.addToCart('1')
+                cy.addToCart('2')
+                cy.visit('/checkout')
 
-            cy.get('a[href="/payment"]').click()
-            cy.url().should('include', '/payment')
-            cy.pay(this.users.cards.valid)
+                cy.get('a[href="/payment"]').click()
+                cy.url().should('include', '/payment')
+                cy.pay(this.users.cards.valid)
 
-            const total = rupeesToNumber(catalog.product(1).price) + rupeesToNumber(catalog.product(2).price)
-            cy.get('[data-qa="order-placed"]').should('be.visible')
-            cy.url().should('include', `/payment_done/${total}`)
+                const total = rupeesToNumber(catalog.product(1).price) + rupeesToNumber(catalog.product(2).price)
+                cy.get('[data-qa="order-placed"]').should('be.visible')
+                cy.url().should('include', `/payment_done/${total}`)
 
-            // a fatura é do pedido (valor) e da conta (nome), não do nome digitado no cartão
-            cy.get(`a[href="/download_invoice/${total}"]`).should('be.visible')
-            cy.request(`/download_invoice/${total}`)
-                .its('body')
-                .should(
-                    'eq',
-                    `Hi ${account.firstname} ${account.lastname}, Your total purchase amount is ${total}. Thank you`,
-                )
+                // a fatura é do pedido (valor) e da conta (nome), não do nome digitado no cartão
+                cy.get(`a[href="/download_invoice/${total}"]`).should('be.visible')
+                cy.request(`/download_invoice/${total}`)
+                    .its('body')
+                    .should(
+                        'eq',
+                        `Hi ${account.firstname} ${account.lastname}, Your total purchase amount is ${total}. Thank you`,
+                    )
 
-            // o pedido consome o carrinho, também no servidor
-            cy.visit('/view_cart')
-            cartRows().should('not.exist')
-            cy.get('#empty_cart').should('be.visible')
-        })
+                // o pedido consome o carrinho, também no servidor
+                cy.visit('/view_cart')
+                cartRows().should('not.exist')
+                cy.get('#empty_cart').should('be.visible')
+            },
+        )
     })
 
     describe('Checkout (sem login)', () => {

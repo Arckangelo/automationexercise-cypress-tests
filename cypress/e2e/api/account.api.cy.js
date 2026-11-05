@@ -42,7 +42,7 @@ describe('API - Conta de usuário', () => {
 
     describe('criação', () => {
         // CT-API-ACCOUNT-01
-        it('criar conta retorna 201 e a senha cadastrada passa a funcionar', () => {
+        it('criar conta retorna 201 e a senha cadastrada passa a funcionar', { tags: ['@smoke'] }, () => {
             newAccountData().then((account) => {
                 cy.apiCreateAccount(account)
                     .its('body')

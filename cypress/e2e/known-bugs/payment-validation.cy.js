@@ -5,7 +5,7 @@ import { useTestUser } from '../../support/testUser'
 // servidor conferem o cartão. Qualquer texto confirma o pedido ("Order Placed!"),
 // inclusive pela própria tela, sem contornar nada. Os cartões vêm de
 // users.json > cards; o site é de prática e não processa pagamentos.
-describe('[BUG-20] Pagamento - dados de cartão inválidos confirmam o pedido', () => {
+describe('[BUG-20] Pagamento - dados de cartão inválidos confirmam o pedido', { tags: ['@creates-order'] }, () => {
     const user = useTestUser()
 
     beforeEach(() => {

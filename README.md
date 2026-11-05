@@ -118,13 +118,38 @@ marcado como teste (nome "QA Automatizado", e-mails `qa.*@teste.com`, textos com
 - **Contas:** criadas com e-mail único (`qa.<id>@teste.com`) e apagadas ao final de cada teste ou
   `describe`, por um hook que roda mesmo quando o teste falha. **Não ficam no site.**
 - **Carrinho:** fica preso à conta descartável ou à sessão do visitante e some com elas.
-- **Pedidos:** **ficam no site**, porque ele não oferece forma de apagá-los. Cada execução completa
-  do CI confirma 8 pedidos: 3 da compra completa (`checkout.cy.js`, um por navegador), 4 do BUG-20 e 1
-  do BUG-13 (bugs conhecidos). Todos são feitos com contas descartáveis, apagadas logo depois, e com o
-  cartão fictício de `users.json`.
+- **Pedidos:** **ficam no site**, porque ele não oferece forma de apagá-los. Todo teste que cria pedido
+  leva a tag `@creates-order` (ver a seção Tags), e a regra é conferida automaticamente. Num PR, o CI
+  confirma 3 pedidos (a compra completa de `checkout.cy.js`, um por navegador): os testes de bug que
+  pagam ficam de fora. No push na `main` e na execução diária são 8 (mais 4 do BUG-20 e 1 do BUG-13).
+  Todos são feitos com contas descartáveis, apagadas logo depois, e com o cartão fictício de `users.json`.
 - **Formulários (Contact Us, newsletter, avaliação):** hoje nada é enviado, porque esse é o próprio
   bug (BUG-08, 10 e 11). Quando o site corrigir, esses testes passarão a enviar mensagens reais a cada
   execução; o aviso está no cabeçalho de `forms-not-submitted.cy.js`.
+
+## 🏷️ Tags
+
+Os testes podem ter tags, filtradas com o [`@cypress/grep`](https://github.com/cypress-io/cypress/tree/develop/npm/grep).
+Só duas existem, e a lista é conferida no CI ([`scripts/test-tags.js`](scripts/test-tags.js)):
+
+| Tag | Significado | Onde vale |
+|---|---|---|
+| `@smoke` | Fluxo crítico: login, cadastro, busca, detalhe do produto, compra completa e criação de conta pela API (6 testes, ~1 min) | `npm run test:smoke`, para conferir rápido |
+| `@creates-order` | O teste confirma um pedido no site, que não pode ser apagado | Nos PRs, o job de bugs conhecidos pula esses testes (`npm run test:bugs:pr`). Push na `main`, execução diária e manual rodam todos. A suíte principal nunca filtra |
+
+Como marcar: `it('...', { tags: ['@smoke'] }, () => { ... })`, ou nas opções do `describe` para valer em
+todos os testes dele.
+
+**Proteções:**
+- **Só tags da lista, sempre como texto literal** (`npm run check:tags`, no CI): uma tag digitada errada
+  tiraria o teste do filtro sem ninguém perceber.
+- **`@creates-order` conferida pelo que aconteceu:** cada execução registra os testes que de fato
+  confirmaram um pedido (pela tela e por `cy.request`), e `npm run check:orders` compara com as tags do
+  código. Pedido sem a tag falha o CI; tag sem pedido gera aviso, para ela não sobrar. Os títulos gerados a
+  partir de listas são casados por padrão; um teste que não case com certeza também falha.
+- **Filtro sem resultados falha:** antes de abrir o navegador, se nenhum spec tiver teste com a tag, e
+  ao final, se nenhum teste tiver rodado. Uma execução filtrada nunca termina verde sem ter testado nada.
+- **Resumo honesto:** com filtro, o resumo dos bugs diz "execução parcial" e lista os bugs não avaliados.
 
 ## ✍️ Convenções do código
 
@@ -197,11 +222,15 @@ cypress/
     │   ├── forms.js             # formulários enviados sem a validação do navegador
     │   └── api.js               # cy.apiRequest e um comando por endpoint da API
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
+    ├── orders.js                # registra os pedidos que cada teste confirmou (conferido com a tag @creates-order)
     └── testUser.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/
 ├── cypress.js                   # roda o Cypress com um ambiente estável em qualquer sistema (usado pelos scripts npm)
 ├── bug-summary.js               # resumo teste a teste dos bugs conhecidos (usado no CI)
-└── flaky-summary.js          # testes da suíte principal que só passaram numa nova tentativa (usado no CI)
+├── check-order-tags.js          # confere a tag @creates-order com os pedidos registrados na execução (CI)
+├── check-tags.js                # só tags permitidas e como texto literal (CI)
+├── flaky-summary.js             # testes da suíte principal que só passaram numa nova tentativa (usado no CI)
+└── test-tags.js                 # lê testes e tags dos specs como código (usado pelos dois check-*)
 ```
 
 ## 🚀 Como rodar o projeto
@@ -226,7 +255,10 @@ npm ci
 npm test               # roda toda a suíte sem abrir o navegador (no Electron)
 npm run test:chrome    # a suíte no Chrome (também test:firefox e test:edge, como no CI)
 npm run test:open      # abre a interface do Cypress
+npm run test:smoke     # só os testes @smoke, no Chrome (~1 min)
 npm run test:bugs      # roda só os testes de bugs conhecidos (falham enquanto os bugs existirem)
+npm run test:bugs:pr   # bugs conhecidos sem os testes que criam pedido (como nos PRs)
+npm run check:tags     # confere as tags dos specs
 ```
 
 Os scripts passam pelo [`scripts/cypress.js`](scripts/cypress.js), que corrige duas variáveis de ambiente
@@ -243,9 +275,9 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 
 | Job | O que faz |
 |---|---|
-| Formatação | Confere com o Prettier se o código segue o padrão do projeto (`npm run format:check`) |
-| Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
-| Bugs conhecidos | Roda os 46 testes de regressão no Chrome, sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
+| Formatação e tags | Confere a formatação com o Prettier (`npm run format:check`) e as tags dos specs (`npm run check:tags`) |
+| Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador; confere a tag `@creates-order` com os pedidos criados |
+| Bugs conhecidos | Roda os 46 testes de regressão no Chrome (num PR, sem os de `@creates-order`), sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline
@@ -286,10 +318,10 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - O carrinho é limpo automaticamente antes de cada teste via requisição HTTP direta (`cy.request`), sem passar pela interface — mais rápido e estável que remover item por item na UI
 - Os testes de carrinho aguardam a confirmação real do servidor (`cy.intercept`/`cy.wait`) em vez de usar esperas fixas (`cy.wait(ms)`)
 - Seletores robustos (baseados em atributos `data-qa` e `href`) foram priorizados para reduzir flakiness
-- Só exceções de scripts de anúncio de terceiros são ignoradas (`cypress/support/e2e.js`); qualquer outro erro JavaScript do site falha o teste
+- Nenhum erro JavaScript da página é ignorado (`cypress/support/e2e.js`); quando vem de um script de terceiros, a falha lista os domínios de terceiros que rodaram na página
 - O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem 1 nova tentativa (`retries`), exceto os de bugs conhecidos, em que a falha é o resultado esperado. A instabilidade do próprio site é tratada antes, na requisição (veja abaixo)
 - Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.request` (e, por ele, a API e todo comando que lê páginas por HTTP) reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [waitPage.js](cypress/support/waitPage.js)
-- Quando o site responde `503` ou `429` (sobrecarga), o `cy.request` repete só aquela requisição, até 3 vezes, em vez de o Cypress repetir o teste inteiro. Depois que o site é declarado indisponível, um **disjuntor** faz as próximas falhas do mesmo tipo acontecerem na hora, sem novas esperas, até o site responder normalmente de novo
+- Quando o site está fora do ar ou sobrecarregado (`429`, `502`-`504` e os `520`-`524` da Cloudflare), o `cy.request` repete só aquela requisição, até 3 vezes, em vez de o Cypress repetir o teste inteiro. Depois que o site é declarado indisponível, um **disjuntor** faz as próximas falhas do mesmo tipo acontecerem na hora, sem novas esperas, até o site responder normalmente de novo
 - Testes que só passam numa nova tentativa (`retries`) aparecem no resumo do CI como **instáveis**, com aviso em destaque ([`scripts/flaky-summary.js`](scripts/flaky-summary.js)): a nova tentativa não esconde a instabilidade
 - Anúncios e rastreadores de terceiros são bloqueados (`blockHosts` no `cypress.config.js`): deixam as páginas mais lentas e não fazem parte do site testado. Nenhuma exceção da página é ignorada: se um script de terceiros lançar erro, a falha lista os domínios de terceiros que rodaram na página, para o novo provedor ser acrescentado ao `blockHosts`
 - Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.loginByRequest`; o login pela tela é coberto em `login.cy.js`

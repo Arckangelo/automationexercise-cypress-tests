@@ -9,6 +9,7 @@
 // fora dele, imprime o resumo no terminal. Nunca falha o job.
 
 const fs = require('fs')
+const { readAllSpecs } = require('./test-tags')
 
 const SUMMARY_FILE = 'cypress/reports/known-bugs/resumo.json'
 const WAIT_PAGE_FILE = 'cypress/reports/pagina-de-espera.html'
@@ -28,7 +29,7 @@ if (!fs.existsSync(SUMMARY_FILE)) {
     process.exit(0)
 }
 
-const { tests } = JSON.parse(fs.readFileSync(SUMMARY_FILE, 'utf8'))
+const { tests, filter } = JSON.parse(fs.readFileSync(SUMMARY_FILE, 'utf8'))
 
 // agrupa pelo ID no título do teste: "[BUG-15] ..."
 const bugs = new Map()
@@ -53,7 +54,33 @@ for (const [id, list] of sorted) {
     else reproducing += 1
 }
 
-addLine(`### 🐞 ${reproducing} de ${bugs.size} bugs conhecidos continuam reproduzindo`)
+// Execução com filtro (PR: -@creates-order): os bugs cujos testes foram todos
+// filtrados não aparecem no resultado. O resumo diz isso, em vez de mostrar um
+// total menor como se fosse o completo.
+const BUG_ID = /\[(BUG-\d+)\]/
+const bugsInCode = new Set(
+    readAllSpecs()
+        .tests.filter((t) => t.file.includes('known-bugs'))
+        .map((t) => (t.patterns[t.patterns.length - 1]?.source.match(BUG_ID) || [])[1])
+        .filter(Boolean),
+)
+const notEvaluated = [...bugsInCode]
+    .filter((id) => !bugs.has(id))
+    .sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }))
+
+if (filter) {
+    addLine(`### 🐞 ${reproducing} de ${bugs.size} bugs avaliados continuam reproduzindo (execução parcial)`)
+    addLine()
+    addLine(
+        `> Filtro desta execução: \`${filter}\`. ` +
+            (notEvaluated.length
+                ? `Não avaliados: ${notEvaluated.join(', ')} (todos os testes desses bugs foram filtrados). `
+                : '') +
+            'A execução diária roda todos os testes.',
+    )
+} else {
+    addLine(`### 🐞 ${reproducing} de ${bugs.size} bugs conhecidos continuam reproduzindo`)
+}
 
 if (fixed.length) {
     addLine()
