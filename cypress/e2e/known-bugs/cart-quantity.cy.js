@@ -2,35 +2,38 @@
 // Testes de regressão: descrevem o comportamento esperado e FALHAM enquanto
 // o bug existir. Passarão a passar quando o site validar a quantidade.
 describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
-
     beforeEach(() => {
-        cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
+        cy.intercept('GET', '/add_to_cart/*').as('addToCart')
     })
 
     // Cada teste começa com sessão nova (testIsolation), portanto com o
     // carrinho vazio — não é preciso limpar nada antes.
-    const adicionarComQuantidade = (quantidade) => {
+    const addWithQuantity = (quantity) => {
         cy.visit('/product_details/1')
-        cy.get('#quantity').clear().type(quantidade)
+        cy.get('#quantity').clear().type(quantity)
         cy.get('button.cart').click()
-        cy.wait('@adicionarAoCarrinho')
+        cy.wait('@addToCart')
         cy.visit('/view_cart')
     }
 
     // Uma correção válida pode tanto recusar o item (carrinho vazio) quanto
     // ajustá-lo para 1, então a checagem não exige que haja linhas na tabela:
     // exige apenas que nenhuma quantidade seja menor ou igual a zero nem total negativo.
-    const validarCarrinho = () => {
-        cy.get('#cart_items').then(($carrinho) => {
-            const quantidades = $carrinho.find('.cart_quantity button').toArray()
+    const assertCart = () => {
+        cy.get('#cart_items').then(($cart) => {
+            const quantities = $cart
+                .find('.cart_quantity button')
+                .toArray()
                 .map((el) => Number(el.textContent.trim()))
-            const totais = $carrinho.find('.cart_total_price').toArray()
+            const totals = $cart
+                .find('.cart_total_price')
+                .toArray()
                 .map((el) => el.textContent.trim())
 
-            quantidades.forEach((quantidade) => {
-                expect(quantidade, 'quantidade no carrinho').to.be.greaterThan(0)
+            quantities.forEach((quantity) => {
+                expect(quantity, 'quantidade no carrinho').to.be.greaterThan(0)
             })
-            totais.forEach((total) => {
+            totals.forEach((total) => {
                 expect(total, 'total do item').to.not.include('-')
             })
         })
@@ -40,14 +43,14 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
     // O input até declara min="1" no HTML, mas nem o front-end nem o
     // servidor aplicam a regra: GET /add_to_cart/1?quantity=-3 é aceito.
     it('[BUG-01] não deve aceitar quantidade negativa (-3)', () => {
-        adicionarComQuantidade('-3')
-        validarCarrinho()
+        addWithQuantity('-3')
+        assertCart()
     })
 
     // CT-BUGS-CART-QUANTITY-02
     it('[BUG-02] não deve aceitar quantidade zero (0)', () => {
-        adicionarComQuantidade('0')
-        validarCarrinho()
+        addWithQuantity('0')
+        assertCart()
     })
 })
 
@@ -57,28 +60,27 @@ describe('[BUG-01/02] Carrinho - quantidade inválida', () => {
 // validar e o servidor quebra (HTTP 500, página de debug do Django), enquanto
 // a tela não mostra nem o aviso "Added" nem um erro.
 describe('[BUG-09] Carrinho - quantidade não inteira derruba o servidor', () => {
-
     beforeEach(() => {
-        cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
+        cy.intercept('GET', '/add_to_cart/*').as('addToCart')
     })
 
-    const entradas = [
+    const inputs = [
         // CT-BUGS-CART-QUANTITY-03
-        { cenario: 'campo vazio', valor: '' },
+        { scenario: 'campo vazio', value: '' },
         // CT-BUGS-CART-QUANTITY-04
-        { cenario: 'decimal (2.5)', valor: '2.5' },
+        { scenario: 'decimal (2.5)', value: '2.5' },
         // CT-BUGS-CART-QUANTITY-05
-        { cenario: 'notação científica (1e2)', valor: '1e2' },
+        { scenario: 'notação científica (1e2)', value: '1e2' },
     ]
 
-    entradas.forEach(({ cenario, valor }) => {
-        it(`[BUG-09] ${cenario} não deve gerar erro 500`, () => {
+    inputs.forEach(({ scenario, value }) => {
+        it(`[BUG-09] ${scenario} não deve gerar erro 500`, () => {
             cy.visit('/product_details/5')
             cy.get('#quantity').clear()
-            if (valor) cy.get('#quantity').type(valor)
+            if (value) cy.get('#quantity').type(value)
             cy.get('button.cart').click()
 
-            cy.wait('@adicionarAoCarrinho').then(({ response }) => {
+            cy.wait('@addToCart').then(({ response }) => {
                 expect(response.statusCode, 'status HTTP de /add_to_cart').to.be.lessThan(500)
             })
         })

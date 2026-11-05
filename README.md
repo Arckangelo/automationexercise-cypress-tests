@@ -109,6 +109,12 @@ o comportamento correto e, por isso, **falham enquanto o bug existir**. Eles fic
 principal (`npm test`) e rodam num job separado do CI, que não quebra o pipeline e roda também
 **diariamente**, para acompanhar se algum bug foi corrigido. Localmente: `npm run test:bugs`.
 
+## ✍️ Convenções do código
+
+- **Idioma:** identificadores (variáveis, funções, comandos customizados, arquivos de código, chaves das fixtures) em inglês; comentários, títulos dos testes, mensagens, documentação, commits e PRs em português
+- **Formatação:** Prettier ([`.prettierrc.json`](.prettierrc.json)) e [`.editorconfig`](.editorconfig). Antes do commit: `npm run format`. O CI confere com `npm run format:check`
+- **IDs de caso de teste:** cada `it` tem um comentário `// CT-<ÁREA>-<ARQUIVO>-NN`; testes de bug conhecido começam com `[BUG-NN]`
+
 ## 📁 Estrutura do projeto
 ```
 .github/
@@ -121,7 +127,10 @@ docs/
 ├── Relatorio_de_Bugs.pdf        # relatório completo de bugs (gerado)
 ├── img/capa-relatorio.png       # capa do relatório usada neste README (gerada)
 └── relatorio/                   # fontes HTML do PDF e da capa, e o gerar.sh que os produz
+.editorconfig                    # padrão de formatação para o editor (igual ao Prettier)
+.git-blame-ignore-revs           # commits só de formatação, ignorados pelo git blame
 .nvmrc                           # versão do Node usada localmente e no CI
+.prettierrc.json                 # padrão de formatação do código (npm run format)
 .gitleaks.toml                   # regras do gitleaks e exceções comentadas para falsos positivos
 .pre-commit-config.yaml          # hook local opcional que bloqueia segredos antes do commit
 BUGS.md                          # resumo dos bugs encontrados
@@ -162,14 +171,14 @@ cypress/
 │   ├── apiData.json             # massa de dados dos testes de API
 │   └── users.json               # e-mails, senhas, e-mails inválidos e dados dos formulários; contas aleatórias seguem o modelo qa.{id}@teste.com
 └── support/
-    ├── catalogo.js              # carrega o catálogo da API, fonte do que busca, filtro e carrinho devem mostrar
+    ├── catalog.js              # carrega o catálogo da API, fonte do que busca, filtro e carrinho devem mostrar
     ├── commands.js              # comandos customizados: login, carrinho, leitura da tela, busca e API
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
-    └── usuarioDeTeste.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
+    └── testUser.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/
 ├── cypress.js                   # roda o Cypress com um ambiente estável em qualquer sistema (usado pelos scripts npm)
-├── resumo-bugs.js               # resumo teste a teste dos bugs conhecidos (usado no CI)
-└── resumo-instaveis.js          # testes da suíte principal que só passaram numa nova tentativa (usado no CI)
+├── bug-summary.js               # resumo teste a teste dos bugs conhecidos (usado no CI)
+└── flaky-summary.js          # testes da suíte principal que só passaram numa nova tentativa (usado no CI)
 ```
 
 ## 🚀 Como rodar o projeto
@@ -211,6 +220,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 
 | Job | O que faz |
 |---|---|
+| Formatação | Confere com o Prettier se o código segue o padrão do projeto (`npm run format:check`) |
 | Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador |
 | Bugs conhecidos | Roda os 46 testes de regressão no Chrome, sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
@@ -255,12 +265,12 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - Seletores robustos (baseados em atributos `data-qa` e `href`) foram priorizados para reduzir flakiness
 - Só exceções de scripts de anúncio de terceiros são ignoradas (`cypress/support/e2e.js`); qualquer outro erro JavaScript do site falha o teste
 - O site é público e às vezes responde *"heavy load (queue full)"*; por isso, no modo headless cada teste tem 1 nova tentativa (`retries`), exceto os de bugs conhecidos, em que a falha é o resultado esperado. A instabilidade do próprio site é tratada antes, na requisição (veja abaixo)
-- Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.request` (e, por ele, a API e todo comando que lê páginas por HTTP) reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [paginaDeEspera.js](cypress/support/paginaDeEspera.js)
+- Sob carga, o site também pode responder uma **página de espera** no lugar da página ou do JSON. `cy.visit` e `cy.request` (e, por ele, a API e todo comando que lê páginas por HTTP) reconhecem essa página (falta o logo do site), tentam de novo até 3 vezes e, se ela persistir, falham com *"Site indisponível"*: assim nenhum teste passa ou vira bug por causa dela. A página fica salva em `cypress/reports/pagina-de-espera.html` (artefato `pagina-de-espera-*` no CI). Ver [waitPage.js](cypress/support/waitPage.js)
 - Quando o site responde `503` ou `429` (sobrecarga), o `cy.request` repete só aquela requisição, até 3 vezes, em vez de o Cypress repetir o teste inteiro. Depois que o site é declarado indisponível, um **disjuntor** faz as próximas falhas do mesmo tipo acontecerem na hora, sem novas esperas, até o site responder normalmente de novo
-- Testes que só passam numa nova tentativa (`retries`) aparecem no resumo do CI como **instáveis**, com aviso em destaque ([`scripts/resumo-instaveis.js`](scripts/resumo-instaveis.js)): a nova tentativa não esconde a instabilidade
+- Testes que só passam numa nova tentativa (`retries`) aparecem no resumo do CI como **instáveis**, com aviso em destaque ([`scripts/flaky-summary.js`](scripts/flaky-summary.js)): a nova tentativa não esconde a instabilidade
 - Anúncios e rastreadores de terceiros são bloqueados (`blockHosts` no `cypress.config.js`): deixam as páginas mais lentas e não fazem parte do site testado
-- Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.entrarPorRequisicao`; o login pela tela é coberto em `login.cy.js`
-- **Os testes provisionam os próprios dados:** os specs que precisam de login criam uma conta descartável via API num `before()` e a removem num `after()` (`cypress/support/usuarioDeTeste.js`). Nenhuma credencial fica no repositório e a suíte não depende de uma conta fixa
+- Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.loginByRequest`; o login pela tela é coberto em `login.cy.js`
+- **Os testes provisionam os próprios dados:** os specs que precisam de login criam uma conta descartável via API num `before()` e a removem num `after()` (`cypress/support/testUser.js`). Nenhuma credencial fica no repositório e a suíte não depende de uma conta fixa
 
 ## 👤 Autor
 

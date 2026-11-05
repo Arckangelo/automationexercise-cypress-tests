@@ -1,28 +1,29 @@
-import { usarCatalogo } from '../../support/catalogo'
+import { useCatalog } from '../../support/catalog'
 
 describe('Filtro de produtos', () => {
-
     // catálogo da API: fonte independente para saber quais produtos cada filtro deve mostrar
-    const catalogo = usarCatalogo()
+    const catalog = useCatalog()
 
-    const tituloDaLista = () => cy.get('.features_items h2.title')
+    const listTitle = () => cy.get('.features_items h2.title')
 
-    const categorias = [
+    const categories = [
         // CT-PRODUCTS-FILTER-01
-        { painel: 'Women', categoria: 'Dress', href: '/category_products/1' },
+        { panel: 'Women', category: 'Dress', href: '/category_products/1' },
         // CT-PRODUCTS-FILTER-02
-        { painel: 'Men', categoria: 'Jeans', href: '/category_products/6' },
+        { panel: 'Men', category: 'Jeans', href: '/category_products/6' },
     ]
 
-    categorias.forEach(({ painel, categoria, href }) => {
-        it(`categoria ${painel} > ${categoria} mostra exatamente os produtos dessa categoria`, () => {
+    categories.forEach(({ panel, category, href }) => {
+        it(`categoria ${panel} > ${category} mostra exatamente os produtos dessa categoria`, () => {
             cy.visit('/products')
-            cy.get(`a[href="#${painel}"]`).click()
-            cy.get(`#${painel} a[href="${href}"]`).click()
+            cy.get(`a[href="#${panel}"]`).click()
+            cy.get(`#${panel} a[href="${href}"]`).click()
 
-            tituloDaLista().should('have.text', `${painel} - ${categoria} Products`)
-            cy.idsNaTela().should('deep.equal', catalogo.ids((p) =>
-                p.category.usertype.usertype === painel && p.category.category === categoria))
+            listTitle().should('have.text', `${panel} - ${category} Products`)
+            cy.idsOnScreen().should(
+                'deep.equal',
+                catalog.ids((p) => p.category.usertype.usertype === panel && p.category.category === category),
+            )
         })
     })
 
@@ -31,8 +32,11 @@ describe('Filtro de produtos', () => {
         cy.visit('/products')
         cy.get('.brands-name a[href="/brand_products/Polo"]').click()
 
-        tituloDaLista().should('have.text', 'Brand - Polo Products')
-        cy.idsNaTela().should('deep.equal', catalogo.ids((p) => p.brand === 'Polo'))
+        listTitle().should('have.text', 'Brand - Polo Products')
+        cy.idsOnScreen().should(
+            'deep.equal',
+            catalog.ids((p) => p.brand === 'Polo'),
+        )
     })
 
     // CT-PRODUCTS-FILTER-04
@@ -40,12 +44,14 @@ describe('Filtro de produtos', () => {
     it('quantidade de cada marca na lateral bate com o catálogo', () => {
         cy.visit('/products')
 
-        cy.get('.brands-name a[href^="/brand_products/"]').should('have.length.greaterThan', 0).each(($marca) => {
-            const nome = decodeURIComponent($marca.attr('href').replace('/brand_products/', ''))
-            const naLateral = Number($marca.find('span').text().replace(/\D/g, ''))
-            const noCatalogo = catalogo.ids((p) => p.brand === nome).length
+        cy.get('.brands-name a[href^="/brand_products/"]')
+            .should('have.length.greaterThan', 0)
+            .each(($brand) => {
+                const name = decodeURIComponent($brand.attr('href').replace('/brand_products/', ''))
+                const inSidebar = Number($brand.find('span').text().replace(/\D/g, ''))
+                const inCatalog = catalog.ids((p) => p.brand === name).length
 
-            expect(naLateral, `quantidade de ${nome}`).to.eq(noCatalogo)
-        })
+                expect(inSidebar, `quantidade de ${name}`).to.eq(inCatalog)
+            })
     })
 })

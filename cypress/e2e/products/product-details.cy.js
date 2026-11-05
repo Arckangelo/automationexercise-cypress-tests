@@ -1,50 +1,59 @@
-import { usarCatalogo } from '../../support/catalogo'
+import { useCatalog } from '../../support/catalog'
 
 describe('Detalhes do produto', () => {
-
     // catálogo da API: fonte independente do que cada página deve mostrar
-    const catalogo = usarCatalogo()
+    const catalog = useCatalog()
 
     // o que a página de detalhes mostra, no mesmo formato da API
-    const lerDetalhes = (html) => {
+    const readDetails = (html) => {
         const info = new DOMParser().parseFromString(html, 'text/html').querySelector('.product-information')
-        const textoDe = (seletor) => info.querySelector(seletor).textContent.trim()
-        const campo = (rotulo) => [...info.querySelectorAll('p')]
-            .find((p) => p.textContent.trim().startsWith(rotulo)).textContent.replace(rotulo, '').trim()
+        const textOf = (selector) => info.querySelector(selector).textContent.trim()
+        const field = (label) =>
+            [...info.querySelectorAll('p')]
+                .find((p) => p.textContent.trim().startsWith(label))
+                .textContent.replace(label, '')
+                .trim()
 
         return {
-            name: textoDe('h2'),
-            price: textoDe('span > span'),
-            category: campo('Category:'),
-            brand: campo('Brand:'),
+            name: textOf('h2'),
+            price: textOf('span > span'),
+            category: field('Category:'),
+            brand: field('Brand:'),
         }
     }
 
     // CT-PRODUCTS-DETAILS-01
     // A página é um template: em vez de todo o catálogo, confere um produto de
-    // cada classe de equivalência (catalogo.representantes) mais um sorteado, que
+    // cada classe de equivalência (catalog.representatives) mais um sorteado, que
     // muda a cada execução. O formato de TODOS os produtos é conferido pela API
-    // (CT-API-PRODUCTS-01). Para repetir um sorteio: --expose produtoSorteado=<id>
+    // (CT-API-PRODUCTS-01). Para repetir um sorteio: --expose sampledProduct=<id>
     it('a página mostra nome, preço, categoria e marca iguais aos da API (classes de equivalência + 1 sorteado)', () => {
-        expect(catalogo.produtos, 'catálogo carregado').to.not.be.empty
+        expect(catalog.products, 'catálogo carregado').to.not.be.empty
 
-        const representantes = catalogo.representantes()
-        const idSorteado = Cypress.expose('produtoSorteado') || catalogo.sortear(1, representantes.map((r) => r.id))[0].id
-        const amostra = [...representantes, { id: Number(idSorteado), motivos: ['sorteado'] }]
-        cy.log(`amostra: ${amostra.map((p) => p.id).join(', ')} (sorteado: ${idSorteado})`)
+        const representatives = catalog.representatives()
+        const sampledId =
+            Cypress.expose('sampledProduct') ||
+            catalog.pickRandom(
+                1,
+                representatives.map((r) => r.id),
+            )[0].id
+        const sample = [...representatives, { id: Number(sampledId), reasons: ['sorteado'] }]
+        cy.log(`amostra: ${sample.map((p) => p.id).join(', ')} (sorteado: ${sampledId})`)
 
-        amostra.forEach(({ id, motivos }) => {
-            const produto = catalogo.produto(id)
-            expect(produto, `produto ${id} existe no catálogo`).to.exist
+        sample.forEach(({ id, reasons }) => {
+            const product = catalog.product(id)
+            expect(product, `produto ${id} existe no catálogo`).to.exist
 
-            cy.request(`/product_details/${id}`).its('body').then((html) => {
-                expect(lerDetalhes(html), `produto ${id} (${motivos.join(', ')})`).to.deep.equal({
-                    name: produto.name,
-                    price: produto.price,
-                    category: catalogo.categoriaDe(produto),
-                    brand: produto.brand,
+            cy.request(`/product_details/${id}`)
+                .its('body')
+                .then((html) => {
+                    expect(readDetails(html), `produto ${id} (${reasons.join(', ')})`).to.deep.equal({
+                        name: product.name,
+                        price: product.price,
+                        category: catalog.categoryOf(product),
+                        brand: product.brand,
+                    })
                 })
-            })
         })
     })
 
@@ -60,25 +69,25 @@ describe('Detalhes do produto', () => {
 
         cy.get('.choose a[href="/product_details/2"]').click()
         cy.url().should('include', '/product_details/2')
-        cy.textoDe('.product-information h2').should('eq', catalogo.produto(2).name)
+        cy.textOf('.product-information h2').should('eq', catalog.product(2).name)
     })
 
     // CT-PRODUCTS-DETAILS-03
     it('"Add to cart" com quantidade 3 leva 3 unidades ao carrinho, com o total certo', () => {
-        const { name, price } = catalogo.produto(1)
+        const { name, price } = catalog.product(1)
         const total = `Rs. ${Number(price.replace(/\D/g, '')) * 3}`
-        cy.intercept('GET', '/add_to_cart/*').as('adicionarAoCarrinho')
+        cy.intercept('GET', '/add_to_cart/*').as('addToCart')
 
         cy.visit('/product_details/1')
         cy.get('#quantity').clear().type('3')
         cy.get('.product-information button.cart').click()
-        cy.wait('@adicionarAoCarrinho').its('response.statusCode').should('eq', 200)
+        cy.wait('@addToCart').its('response.statusCode').should('eq', 200)
 
         cy.get('#cartModal a[href="/view_cart"]').click()
         cy.get('#product-1').within(() => {
-            cy.textoDe('.cart_description h4 a').should('eq', name)
-            cy.textoDe('.cart_quantity button').should('eq', '3')
-            cy.textoDe('.cart_total_price').should('eq', total)
+            cy.textOf('.cart_description h4 a').should('eq', name)
+            cy.textOf('.cart_quantity button').should('eq', '3')
+            cy.textOf('.cart_total_price').should('eq', total)
         })
     })
 

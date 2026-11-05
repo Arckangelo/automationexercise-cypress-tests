@@ -16,21 +16,21 @@
 // A verificação fica só em dois lugares, nas sobrescritas de cy.visit e de
 // cy.request (commands.js). Comandos e testes não precisam repeti-la.
 
-export const TENTATIVAS = 3
-export const ESPERA_ENTRE_TENTATIVAS = 5000
-const ARQUIVO = 'cypress/reports/pagina-de-espera.html'
+export const MAX_ATTEMPTS = 3
+export const RETRY_DELAY_MS = 5000
+const WAIT_PAGE_FILE = 'cypress/reports/pagina-de-espera.html'
 
 // usado para respostas de cy.request (texto cru)
-export const htmlEhPaginaDeEspera = (texto) =>
-    typeof texto === 'string' && texto.trimStart().startsWith('<') && !texto.includes('class="logo')
+export const isWaitPageHtml = (text) =>
+    typeof text === 'string' && text.trimStart().startsWith('<') && !text.includes('class="logo')
 
 // usado depois de cy.visit (página já carregada)
-export const documentoEhPaginaDeEspera = (doc) => !doc.querySelector('.logo')
+export const isWaitPageDocument = (doc) => !doc.querySelector('.logo')
 
-export const erroSiteIndisponivel = (onde, motivo = 'página de espera') =>
+export const siteUnavailableError = (target, reason = 'página de espera') =>
     new Error(
-        `Site indisponível: ${motivo} em ${onde} após ${TENTATIVAS} tentativas.\n` +
-        'Não é resultado do teste. Rode novamente mais tarde.'
+        `Site indisponível: ${reason} em ${target} após ${MAX_ATTEMPTS} tentativas.\n` +
+            'Não é resultado do teste. Rode novamente mais tarde.',
     )
 
 // Disjuntor: depois que o site é declarado indisponível, as próximas respostas
@@ -38,29 +38,31 @@ export const erroSiteIndisponivel = (onde, motivo = 'página de espera') =>
 // meio da execução não faz cada teste seguinte esperar ~10 s (vezes as novas
 // tentativas do próprio teste). A primeira resposta normal desarma o disjuntor.
 // O estado vale para o spec em execução (o Cypress recarrega o suporte a cada spec).
-let siteForaDoAr = false
+let siteDown = false
 
-export const siteRespondeu = () => { siteForaDoAr = false }
+export const markSiteAvailable = () => {
+    siteDown = false
+}
 
 // Chamado a cada resposta instável (página de espera, 503, 429). Lança o erro
 // quando deve parar; se não lançar, quem chamou espera e tenta de novo.
-export const tratarInstabilidade = (onde, tentativa, motivo) => {
-    if (siteForaDoAr) {
+export const handleInstability = (target, attempt, reason) => {
+    if (siteDown) {
         throw new Error(
-            `Site indisponível: ${motivo} em ${onde}. O site já estava fora do ar nesta execução, ` +
-            'então não houve novas tentativas.\nNão é resultado do teste. Rode novamente mais tarde.'
+            `Site indisponível: ${reason} em ${target}. O site já estava fora do ar nesta execução, ` +
+                'então não houve novas tentativas.\nNão é resultado do teste. Rode novamente mais tarde.',
         )
     }
-    if (tentativa >= TENTATIVAS) {
-        siteForaDoAr = true
-        throw erroSiteIndisponivel(onde, motivo)
+    if (attempt >= MAX_ATTEMPTS) {
+        siteDown = true
+        throw siteUnavailableError(target, reason)
     }
 }
 
 // guarda a primeira ocorrência da execução para análise (sai junto do relatório no CI)
-let jaGuardada = false
-export const guardarPaginaDeEspera = (html, onde) => {
-    if (jaGuardada) return
-    jaGuardada = true
-    cy.writeFile(ARQUIVO, `<!-- ${onde} · ${new Date().toISOString()} -->\n${html}`, { log: false })
+let alreadySaved = false
+export const saveWaitPage = (html, target) => {
+    if (alreadySaved) return
+    alreadySaved = true
+    cy.writeFile(WAIT_PAGE_FILE, `<!-- ${target} · ${new Date().toISOString()} -->\n${html}`, { log: false })
 }

@@ -2,7 +2,9 @@
 
 Extraído da suíte `automationexercise-cypress-tests` (commit `30a7700`, 04/11/2026). Serve para pedir
 uma nova suíte com o mesmo padrão de qualidade. As referências `arquivo:linha` apontam para a
-implementação de cada padrão neste repositório.
+implementação de cada padrão naquele commit. Depois dele, os identificadores e os arquivos de código
+foram traduzidos para o inglês (por exemplo, `paginaDeEspera.js` virou `waitPage.js`) e o código foi
+formatado; os nomes citados aqui já são os atuais, mas os números de linha podem ter mudado.
 
 ---
 
@@ -26,17 +28,17 @@ Para cada item: **o que informar**, **por que importa** e **o que dá errado se 
    *Se faltar:* testes que passam com a mensagem de sucesso mesmo quando nada foi gravado.
 4. **Fonte de verdade independente.** Indique uma API, banco ou arquivo de referência para
    comparar com a tela.
-   *Por que:* os valores esperados vêm da API, não da tela testada (`cypress/support/catalogo.js:1-3`,
+   *Por que:* os valores esperados vêm da API, não da tela testada (`cypress/support/catalog.js:1-3`,
    `checkout.cy.js:12-14`).
    *Se faltar:* a tela é comparada com ela mesma, e um erro de dado passa como correto.
 5. **Perfis de usuário e como criá-los e apagá-los.** Diga quais papéis existem e qual API ou rotina
    cria e remove cada conta.
-   *Por que:* cada spec cria a própria conta e a remove ao final (`cypress/support/usuarioDeTeste.js:27-49`).
+   *Por que:* cada spec cria a própria conta e a remove ao final (`cypress/support/testUser.js:27-49`).
    *Se faltar:* a suíte passa a depender de contas fixas, que podem ser apagadas ou alteradas por terceiros.
 6. **Dados de teste e limpeza.** Diga quais dados podem ser fixos, quais precisam ser únicos por
    execução, e o que **não** pode ser limpo (pedidos, e-mails enviados).
    *Por que:* os modelos ficam em fixtures com `{id}` aleatório (`cypress/fixtures/users.json`,
-   `usuarioDeTeste.js:6-14`).
+   `testUser.js:6-14`).
    *Se faltar:* colisões entre execuções e lixo permanente no ambiente.
 7. **Regras de negócio e casos de borda.** Informe formatos válidos, campos obrigatórios, limites,
    valores proibidos e classes de equivalência.
@@ -54,7 +56,7 @@ Para cada item: **o que informar**, **por que importa** e **o que dá errado se 
    *Se faltar:* seletores frágeis, quebrando a cada mudança de layout.
 10. **Comportamentos conhecidos do ambiente.** Informe instabilidades (páginas de espera, 503, limite
     de requisições) e particularidades do contrato da API.
-    *Por que:* a suíte trata a página de espera (`cypress/support/paginaDeEspera.js`), o 503/429
+    *Por que:* a suíte trata a página de espera (`cypress/support/waitPage.js`), o 503/429
     (`commands.js:24-58`) e a API que sempre responde HTTP 200 (`commands.js:161-172`).
     *Se faltar:* falsos positivos (testes que passam na página errada) e falsos bugs.
 11. **Política para bugs conhecidos.** Diga se um bug encontrado deve virar teste que falha
@@ -101,7 +103,7 @@ Regras curtas, cada uma verificável por leitura ou busca no código.
 15. Bug conhecido: spec em `known-bugs/`, título começando por `[BUG-NN]`, descrevendo o comportamento **correto**, sem retries.
 16. Quando não for óbvio, um comentário `// pega:` diz qual defeito a asserção detecta (`checkout.cy.js:65`).
 17. Senha digitada com `{ log: false }`.
-18. Catálogo grande: amostra por partição de equivalência mais 1 item sorteado e reproduzível; cobertura total pela API (`catalogo.js:32-64`, `product-details.cy.js`).
+18. Catálogo grande: amostra por partição de equivalência mais 1 item sorteado e reproduzível; cobertura total pela API (`catalog.js:32-64`, `product-details.cy.js`).
 19. Testes locais só no Chrome; o CI roda Chrome, Firefox e Edge.
 20. Versões fixadas: Node pelo `.nvmrc`, `npm ci`, actions fixadas por SHA (`cypress.yml:28-41`).
 
@@ -158,9 +160,9 @@ RASTREABILIDADE
 REAPROVEITE (adaptando ao novo sistema)
 - scripts/cypress.js (ambiente do navegador em qualquer SO)
 - cypress.config.js (reporter, separação de known-bugs, blockHosts, retries)
-- cypress/support/paginaDeEspera.js e as sobrescritas de cy.visit/cy.request em commands.js
-- cypress/support/usuarioDeTeste.js (conta descartável por describe)
-- cypress/support/catalogo.js (fonte de verdade, partição de equivalência, sorteio)
+- cypress/support/waitPage.js e as sobrescritas de cy.visit/cy.request em commands.js
+- cypress/support/testUser.js (conta descartável por describe)
+- cypress/support/catalog.js (fonte de verdade, partição de equivalência, sorteio)
 - .github/workflows/cypress.yml, security.yml, codeql.yml e dependabot.yml
 
 ENTREGA
@@ -190,13 +192,13 @@ A nova suíte atinge o mesmo nível quando todos os itens abaixo forem verdadeir
 
 ## 5. Fraquezas da suíte atual que não devem ser copiadas
 
-1. **Guarda da página de espera espalhada (corrigido):** cada comando conferia a página por conta própria, e dois (`limparCarrinho` e `enviarSignupSemNavegador`) não conferiam. A guarda foi movida para a sobrescrita do `cy.request`. Na nova suíte, comece já com ela centralizada.
-2. **Resumo do CI só detectava correção total (corrigido):** o job de bugs conhecidos olhava o resultado geral e só avisava quando todos passavam. Agora `scripts/resumo-bugs.js` lista teste a teste cada bug que parou de reproduzir. Na nova suíte, comece já com o resumo por teste.
+1. **Guarda da página de espera espalhada (corrigido):** cada comando conferia a página por conta própria, e dois (`clearCart` e `submitSignupWithoutBrowser`) não conferiam. A guarda foi movida para a sobrescrita do `cy.request`. Na nova suíte, comece já com ela centralizada.
+2. **Resumo do CI só detectava correção total (corrigido):** o job de bugs conhecidos olhava o resultado geral e só avisava quando todos passavam. Agora `scripts/bug-summary.js` lista teste a teste cada bug que parou de reproduzir. Na nova suíte, comece já com o resumo por teste.
 3. **IDs CT só em comentário:** eles não aparecem no título do teste nem no relatório HTML, então a rastreabilidade não chega ao relatório. Na nova suíte, coloque o ID no título.
-4. **Duas camadas de repetição (corrigido):** o `cy.request` repetia até 3 vezes e o Cypress repetia o teste inteiro 2 vezes. Agora há um disjuntor (`paginaDeEspera.js`), o teste é repetido só 1 vez (`cypress.config.js`) e o resumo do CI mostra quem precisou da repetição. Na nova suíte, comece já assim.
-5. **Comentário desatualizado (corrigido):** `entrarPelaTela` dizia servir ao carrinho entre sessões, que passou a usar `entrarPorRequisicao`. O comentário agora diz que ele serve para quando o próprio login pela tela faz parte do teste. Na nova suíte, revise os comentários sempre que um comando mudar de uso.
-6. **Estilo inconsistente:** nomes de comandos em inglês e português (`apiCreateAccount` e `adicionarAoCarrinho`), indentação de 2 espaços no `commands.js` e de 4 nos specs, e indentação quebrada em `usuarioDeTeste.js:30-40`.
-7. **Ordem confusa no `commands.js`:** comandos de tela e de formulário (`enviarSignupSemNavegador`, `pagar`) ficam no meio da seção “Comandos de API” (`commands.js:246-296`).
+4. **Duas camadas de repetição (corrigido):** o `cy.request` repetia até 3 vezes e o Cypress repetia o teste inteiro 2 vezes. Agora há um disjuntor (`waitPage.js`), o teste é repetido só 1 vez (`cypress.config.js`) e o resumo do CI mostra quem precisou da repetição. Na nova suíte, comece já assim.
+5. **Comentário desatualizado (corrigido):** `loginViaUi` dizia servir ao carrinho entre sessões, que passou a usar `loginByRequest`. O comentário agora diz que ele serve para quando o próprio login pela tela faz parte do teste. Na nova suíte, revise os comentários sempre que um comando mudar de uso.
+6. **Estilo inconsistente (corrigido):** nomes de comandos misturavam inglês e português, e a indentação variava entre 2 e 4 espaços. Agora os identificadores estão em inglês (comentários e documentação em português) e o Prettier, conferido no CI, padroniza a formatação. Na nova suíte, defina o idioma dos identificadores e o formatador desde o primeiro commit.
+7. **Ordem confusa no `commands.js`:** comandos de tela e de formulário (`submitSignupWithoutBrowser`, `pagar`) ficam no meio da seção “Comandos de API” (`commands.js:246-296`).
 8. **Tratamento de exceções de anúncios redundante:** `e2e.js:5-11` ignora erros de anúncios que o `blockHosts` (`cypress.config.js:22-30`) já impede de carregar. Mantenha só um mecanismo, ou documente por que existem os dois.
 9. **Efeitos colaterais não limpáveis:** os testes de pagamento criam pedidos reais no site (`payment-validation.cy.js`, `checkout.cy.js:169-193`) sem forma de apagá-los.
 10. **Sem tags nem subconjunto rápido:** a separação é só por pasta (`known-bugs/`); não existe um conjunto de fumaça.

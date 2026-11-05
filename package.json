@@ -11,9 +11,17 @@
     "test:open": "node scripts/cypress.js open",
     "test:headed": "node scripts/cypress.js run --headed",
     "test:bugs": "node scripts/cypress.js run --env knownBugs=true --spec \"cypress/e2e/known-bugs/**\"",
-    "test:bugs:open": "node scripts/cypress.js open --e2e --env knownBugs=true"
+    "test:bugs:open": "node scripts/cypress.js open --e2e --env knownBugs=true",
+    "format": "prettier --write \"cypress/**/*.{js,json}\" \"scripts/*.js\" cypress.config.js",
+    "format:check": "prettier --check \"cypress/**/*.{js,json}\" \"scripts/*.js\" cypress.config.js"
   },
-  "keywords": ["cypress", "e2e", "api-testing", "qa", "automation"],
+  "keywords": [
+    "cypress",
+    "e2e",
+    "api-testing",
+    "qa",
+    "automation"
+  ],
   "author": "Angelo Roque (https://github.com/Arckangelo)",
   "repository": {
     "type": "git",
@@ -23,7 +31,8 @@
   "type": "commonjs",
   "devDependencies": {
     "cypress": "^16.2.1",
-    "cypress-mochawesome-reporter": "^5.0.0"
+    "cypress-mochawesome-reporter": "^5.0.0",
+    "prettier": "3.9.10"
   },
   "engines": {
     "node": ">=24"

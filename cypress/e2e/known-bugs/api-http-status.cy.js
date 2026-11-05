@@ -1,43 +1,42 @@
-import { gerarCredenciais } from '../../support/usuarioDeTeste'
+import { generateCredentials } from '../../support/testUser'
 
 // BUG-04 e BUG-05 (ver BUGS.md)
 // Os testes em cypress/e2e/api/ contornam essas falhas de propósito (checam
 // responseCode no corpo e fazem o parse manual do JSON). Aqui elas são
 // tratadas como o que são: violações do protocolo HTTP.
 describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
-
     // Status HTTP real esperado = responseCode que a própria API devolve no corpo
-    const requisicoesDeErro = [
+    const errorRequests = [
         // CT-BUGS-API-HTTP-STATUS-01
-        { method: 'POST', url: '/api/productsList', esperado: 405 },
+        { method: 'POST', url: '/api/productsList', expected: 405 },
         // CT-BUGS-API-HTTP-STATUS-02
-        { method: 'PUT', url: '/api/brandsList', esperado: 405 },
+        { method: 'PUT', url: '/api/brandsList', expected: 405 },
         // CT-BUGS-API-HTTP-STATUS-03
-        { method: 'DELETE', url: '/api/verifyLogin', esperado: 405 },
+        { method: 'DELETE', url: '/api/verifyLogin', expected: 405 },
         // CT-BUGS-API-HTTP-STATUS-04
-        { method: 'POST', url: '/api/searchProduct', cenario: 'sem parâmetro', esperado: 400 },
+        { method: 'POST', url: '/api/searchProduct', scenario: 'sem parâmetro', expected: 400 },
         // CT-BUGS-API-HTTP-STATUS-05
         // a API só lê os campos do corpo do formulário; na query string eles são ignorados
         {
             method: 'POST',
             url: '/api/verifyLogin',
-            credenciaisNaQuery: true,
-            cenario: 'com parâmetros na query string',
-            esperado: 400,
+            credentialsInQuery: true,
+            scenario: 'com parâmetros na query string',
+            expected: 400,
         },
     ]
 
-    requisicoesDeErro.forEach(({ method, url, credenciaisNaQuery, cenario, esperado }) => {
-        const titulo = [method, url, cenario].filter(Boolean).join(' ')
+    errorRequests.forEach(({ method, url, credentialsInQuery, scenario, expected }) => {
+        const title = [method, url, scenario].filter(Boolean).join(' ')
 
-        it(`[BUG-04] ${titulo} deve retornar HTTP ${esperado}`, function () {
-            const qs = credenciaisNaQuery ? gerarCredenciais(this.users.contaAleatoria) : undefined
+        it(`[BUG-04] ${title} deve retornar HTTP ${expected}`, function () {
+            const qs = credentialsInQuery ? generateCredentials(this.users.randomAccount) : undefined
 
             cy.apiRequest({ method, url, qs }).then((response) => {
                 // garante que a API realmente sinaliza esse erro no corpo,
                 // para o teste falhar só pelo status HTTP
-                expect(response.body.responseCode, 'responseCode no corpo').to.eq(esperado)
-                expect(response.status, 'status HTTP').to.eq(esperado)
+                expect(response.body.responseCode, 'responseCode no corpo').to.eq(expected)
+                expect(response.status, 'status HTTP').to.eq(expected)
             })
         })
     })
@@ -55,10 +54,15 @@ describe('[BUG-04/05] API - status HTTP e Content-Type incorretos', () => {
     // CT-BUGS-API-HTTP-STATUS-07
     // O cabeçalho Allow anuncia GET, PUT e DELETE, que o próprio endpoint recusa.
     it('[BUG-04] OPTIONS /api/verifyLogin: o cabeçalho Allow deve anunciar só os métodos aceitos', () => {
-        cy.request({ method: 'OPTIONS', url: '/api/verifyLogin' }).its('headers.allow').then((allow) => {
-            const metodos = allow.split(',').map((m) => m.trim()).sort()
-            expect(metodos, 'métodos anunciados').to.deep.equal(['OPTIONS', 'POST'])
-        })
+        cy.request({ method: 'OPTIONS', url: '/api/verifyLogin' })
+            .its('headers.allow')
+            .then((allow) => {
+                const methods = allow
+                    .split(',')
+                    .map((m) => m.trim())
+                    .sort()
+                expect(methods, 'métodos anunciados').to.deep.equal(['OPTIONS', 'POST'])
+            })
     })
 
     // CT-BUGS-API-HTTP-STATUS-08

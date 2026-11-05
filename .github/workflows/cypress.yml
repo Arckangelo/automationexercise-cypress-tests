@@ -15,6 +15,28 @@ permissions:
   contents: read
 
 jobs:
+  formatacao:
+    name: Formatação (Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # só o Prettier: não precisa baixar o Cypress
+      - name: Conferir a formatação
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+        run: |
+          npm ci
+          npm run format:check
+
   suite:
     name: Suíte principal (${{ matrix.browser }})
     runs-on: ubuntu-latest
@@ -45,7 +67,7 @@ jobs:
       # testes que só passaram numa nova tentativa (retries) aparecem no resumo
       - name: Resumo de testes instáveis
         if: always()
-        run: node scripts/resumo-instaveis.js ${{ matrix.browser }}
+        run: node scripts/flaky-summary.js ${{ matrix.browser }}
 
       - name: Salvar screenshots das falhas
         if: failure()
@@ -62,7 +84,7 @@ jobs:
           name: relatorio-suite-${{ matrix.browser }}
           path: cypress/reports/suite
 
-      # só existe se o site respondeu a página de espera (ver cypress/support/paginaDeEspera.js)
+      # só existe se o site respondeu a página de espera (ver cypress/support/waitPage.js)
       - name: Salvar página de espera do site
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -117,7 +139,7 @@ jobs:
       # outros continuem falhando (o resultado geral do job esconderia isso)
       - name: Resumo
         if: always()
-        run: node scripts/resumo-bugs.js
+        run: node scripts/bug-summary.js
 
       - name: Salvar relatório HTML
         if: always()
@@ -126,7 +148,7 @@ jobs:
           name: relatorio-known-bugs
           path: cypress/reports/known-bugs
 
-      # só existe se o site respondeu a página de espera (ver cypress/support/paginaDeEspera.js)
+      # só existe se o site respondeu a página de espera (ver cypress/support/waitPage.js)
       - name: Salvar página de espera do site
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

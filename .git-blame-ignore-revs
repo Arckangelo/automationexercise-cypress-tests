@@ -1,0 +1,5 @@
+# Commits só de formatação: o git blame os ignora para mostrar quem mudou a lógica.
+# Uso local: git config blame.ignoreRevsFile .git-blame-ignore-revs (o GitHub já lê este arquivo)
+
+# Formata o código com o Prettier
+450bd076d3c68f0997382b2c7011881391d42cb1

@@ -1,68 +1,68 @@
 {
-  "contaAleatoria": {
+  "randomAccount": {
     "email": "qa.{id}@teste.com",
     "password": "Qa@{id}"
   },
-  "senhaIncorreta": "senhaerrada",
-  "nomeAlternativo": "Outro Nome",
-  "emailsInvalidos": {
-    "semArroba": "qa.{id}",
-    "semDominio": "qa.{id}@",
-    "semUsuario": "@qa{id}.com",
-    "comEspaco": "qa {id}@teste.com",
-    "arrobaDuplo": "qa.{id}@@teste.com"
+  "wrongPassword": "senhaerrada",
+  "alternativeName": "Outro Nome",
+  "invalidEmails": {
+    "noAt": "qa.{id}",
+    "noDomain": "qa.{id}@",
+    "noUser": "@qa{id}.com",
+    "withSpace": "qa {id}@teste.com",
+    "doubleAt": "qa.{id}@@teste.com"
   },
-  "cartoes": {
-    "valido": {
-      "nome": "QA Automatizado",
-      "numero": "4111111111111111",
+  "cards": {
+    "valid": {
+      "name": "QA Automatizado",
+      "number": "4111111111111111",
       "cvc": "123",
-      "mes": "12",
-      "ano": "2099"
+      "month": "12",
+      "year": "2099"
     },
-    "numeroComLetras": {
-      "nome": "QA Automatizado",
-      "numero": "abcd efgh ijkl",
+    "numberWithLetters": {
+      "name": "QA Automatizado",
+      "number": "abcd efgh ijkl",
       "cvc": "123",
-      "mes": "12",
-      "ano": "2099"
+      "month": "12",
+      "year": "2099"
     },
-    "vencido": {
-      "nome": "QA Automatizado",
-      "numero": "4111111111111111",
+    "expired": {
+      "name": "QA Automatizado",
+      "number": "4111111111111111",
       "cvc": "123",
-      "mes": "01",
-      "ano": "2000"
+      "month": "01",
+      "year": "2000"
     },
-    "formatoInvalido": {
-      "nome": "QA Automatizado",
-      "numero": "4111111111111111",
+    "invalidFormat": {
+      "name": "QA Automatizado",
+      "number": "4111111111111111",
       "cvc": "xyz",
-      "mes": "13",
-      "ano": "2099"
+      "month": "13",
+      "year": "2099"
     },
-    "vazio": {
-      "nome": "",
-      "numero": "",
+    "empty": {
+      "name": "",
+      "number": "",
       "cvc": "",
-      "mes": "",
-      "ano": ""
+      "month": "",
+      "year": ""
     }
   },
-  "formularios": {
-    "contato": {
-      "nome": "QA Automatizado",
+  "forms": {
+    "contact": {
+      "name": "QA Automatizado",
       "email": "qa.contato@teste.com",
-      "assunto": "Teste de regressão",
-      "mensagem": "Mensagem de teste do BUG-08."
+      "subject": "Teste de regressão",
+      "message": "Mensagem de teste do BUG-08."
     },
     "newsletter": {
       "email": "qa.newsletter@teste.com"
     },
-    "avaliacao": {
-      "nome": "QA Automatizado",
+    "review": {
+      "name": "QA Automatizado",
       "email": "qa.avaliacao@teste.com",
-      "texto": "Avaliação de teste do BUG-11."
+      "text": "Avaliação de teste do BUG-11."
     }
   }
 }
