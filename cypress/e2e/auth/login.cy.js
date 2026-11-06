@@ -23,6 +23,7 @@ describe('Login', () => {
         })
 
         // CT-AUTH-LOGIN-01
+        // pega: outro nome em "Logged in as" (mutante M05)
         it('credenciais válidas logam o usuário certo', { tags: ['@smoke'] }, () => {
             submitLogin(user.email, user.password)
 

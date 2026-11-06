@@ -2,6 +2,7 @@ describe('API - Produtos e marcas', () => {
     const assertNotEmpty = (value, field) => expect(value, field).to.be.a('string').and.not.be.empty
 
     // CT-API-PRODUCTS-01
+    // pega: campo faltando num produto (mutante M09)
     it('lista de produtos: todos os itens têm formato válido e IDs únicos', () => {
         cy.apiGetProductsList().then(({ body }) => {
             expect(body.responseCode).to.eq(200)

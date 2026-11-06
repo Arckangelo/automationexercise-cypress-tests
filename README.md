@@ -15,7 +15,7 @@ Suíte de testes automatizados end-to-end para o site [AutomationExercise](https
 - **59 testes** na suíte principal: 36 de interface (login, logout, cadastro, exclusão de conta, busca, filtros, detalhes do produto, carrinho e compra completa) e 23 de API.
 - **21 bugs encontrados** no site e na API (7 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
 - **Testes independentes e sem dados fixos:** cada execução cria um usuário descartável pela API e o remove ao final. O carrinho é preparado por HTTP, para que um teste não dependa de outro.
-- **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e asserções reforçadas por análise de mutação.
+- **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e uma **análise de mutação semanal** que injeta defeitos no site (preço errado, quantidade que não soma, produto a mais na busca...) e confere que os testes os pegam.
 - **CI no GitHub Actions:** a suíte roda no Chrome, no Firefox e no Edge a cada push e diariamente, o relatório HTML é publicado no GitHub Pages e o pipeline tem verificações de segurança (gitleaks, npm audit, CodeQL).
 
 > Veja também meu [projeto em Python + Playwright](https://github.com/Arckangelo/saucedemo-playwright-python), com testes E2E do SauceDemo.
@@ -152,6 +152,31 @@ todos os testes dele.
   ao final, se nenhum teste tiver rodado. Uma execução filtrada nunca termina verde sem ter testado nada.
 - **Resumo honesto:** com filtro, o resumo dos bugs diz "execução parcial" e lista os bugs não avaliados.
 
+## 🧬 Análise de mutação
+
+Confere se os testes **pegam defeitos de verdade**, e não só passam. Como o site é de terceiros e não
+há código para mutar, os defeitos são injetados na resposta do site antes de ela chegar ao teste: o
+preço do carrinho vem com Rs. 1 a mais, a busca traz um produto que não contém o termo, a fatura vem
+com outro valor etc. O catálogo fica em [`cypress/mutations/catalog.js`](cypress/mutations/catalog.js):
+cada defeito diz o que simula, que alteração faz e quais testes devem pegá-lo.
+
+```bash
+npm run test:mutation            # o catálogo inteiro (~7 min)
+npm run test:mutation -- M02 M09 # só alguns defeitos
+```
+
+- **Linha de base primeiro:** os testes indicados rodam sem defeito e precisam passar; senão uma falha
+  qualquer contaria como defeito pego.
+- **Vereditos:** *pego* (algum teste falhou), *sobreviveu* (o teste não percebeu: reforce a asserção),
+  *não aplicado* (a alteração não casou com o site: atualize o catálogo; nunca conta como pego) e
+  *inconclusivo* (site indisponível).
+- **No CI:** workflow [`mutation.yml`](.github/workflows/mutation.yml), toda segunda-feira e manual. Falha
+  se algum defeito sobreviver ou não se aplicar. Cria 2 pedidos por rodada (linha de base e M07, da
+  compra completa).
+- Os comentários `// pega:` dos testes citam o defeito correspondente (por exemplo, `M02`).
+- **Limite:** defeitos de estado no servidor (logout que não invalida a sessão, carrinho que não
+  persiste) não dão para simular alterando respostas e ficam de fora.
+
 ## ✍️ Convenções do código
 
 - **Idioma:** identificadores (variáveis, funções, comandos customizados, arquivos de código, chaves das fixtures) em inglês; comentários, títulos dos testes, mensagens, documentação, commits e PRs em português
@@ -210,6 +235,8 @@ cypress/
 │       ├── filter.cy.js         # cenários de teste de filtro de produtos
 │       ├── product-details.cy.js # página de detalhes comparada à API
 │       └── search.cy.js         # cenários de teste de busca de produtos
+├── mutations/
+│   └── catalog.js               # catálogo de defeitos simulados da análise de mutação
 ├── fixtures/
 │   ├── apiData.json             # massa de dados dos testes de API
 │   └── users.json               # e-mails, senhas, e-mails inválidos e dados dos formulários; contas aleatórias seguem o modelo qa.{id}@teste.com
@@ -223,6 +250,7 @@ cypress/
     │   ├── forms.js             # formulários enviados sem a validação do navegador
     │   └── api.js               # cy.apiRequest e um comando por endpoint da API
     ├── e2e.js                   # configurações globais; carrega users.json no alias @users antes de cada teste
+    ├── mutations.js             # aplica o defeito simulado da análise de mutação (só com --expose mutant)
     ├── orders.js                # registra os pedidos que cada teste confirmou (conferido com a tag @creates-order)
     └── testUser.js        # gera credenciais aleatórias a partir de users.json e cria/remove a conta descartável dos testes com login
 scripts/
@@ -231,6 +259,7 @@ scripts/
 ├── check-order-tags.js          # confere a tag @creates-order com os pedidos registrados na execução (CI)
 ├── check-tags.js                # só tags permitidas e como texto literal (CI)
 ├── flaky-summary.js             # testes da suíte principal que só passaram numa nova tentativa (usado no CI)
+├── mutation-run.js              # análise de mutação: linha de base e cada defeito do catálogo
 └── test-tags.js                 # lê testes e tags dos specs como código (usado pelos dois check-*)
 ```
 
@@ -259,6 +288,7 @@ npm run test:open      # abre a interface do Cypress
 npm run test:smoke     # só os testes @smoke, no Chrome (~1 min)
 npm run test:smoke:mobile  # os testes @smoke numa tela de celular (375x667)
 npm run test:mobile    # a suíte inteira numa tela de celular (no CI, só na execução diária)
+npm run test:mutation  # análise de mutação: defeitos injetados que os testes precisam pegar
 npm run test:bugs      # roda só os testes de bugs conhecidos (falham enquanto os bugs existirem)
 npm run test:bugs:pr   # bugs conhecidos sem os testes que criam pedido (como nos PRs)
 npm run check:tags     # confere as tags dos specs

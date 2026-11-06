@@ -1,0 +1,42 @@
+name: Análise de mutação
+
+# Roda cada defeito simulado de cypress/mutations/catalog.js contra os testes que
+# deveriam pegá-lo (scripts/mutation-run.js). Semanal e manual: não roda em PR.
+on:
+  schedule:
+    # toda segunda-feira às 07:00 (UTC)
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutacao:
+    name: Análise de mutação
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # linha de base e um processo do Cypress por defeito; o resumo vai para a
+      # página da execução e falha se algum defeito sobreviver ou não se aplicar
+      - name: Rodar a análise de mutação
+        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        with:
+          command: npm run test:mutation
+
+      - name: Salvar resultado e logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutacao-resultado
+          path: cypress/reports/mutation-results
+          if-no-files-found: ignore

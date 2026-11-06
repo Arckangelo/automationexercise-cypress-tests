@@ -50,6 +50,7 @@ describe('Carrinho e Checkout', () => {
         })
 
         // CT-CART-CHECKOUT-01
+        // pega: preço do item diferente do catálogo (mutante M01)
         it('adicionar pela listagem mostra o produto no carrinho', () => {
             cy.visit('/products')
             cy.get('.productinfo a.add-to-cart[data-product-id="1"]').click()
@@ -62,7 +63,7 @@ describe('Carrinho e Checkout', () => {
         })
 
         // CT-CART-CHECKOUT-02
-        // pega: linha duplicada, quantidade sobrescrita em vez de somada, total errado
+        // pega: linha duplicada, quantidade sobrescrita em vez de somada, total errado (mutante M02)
         it('adicionar o mesmo produto duas vezes soma quantidade e total', () => {
             cy.addToCart('1')
             cy.addToCart('1')
@@ -147,6 +148,7 @@ describe('Carrinho e Checkout', () => {
         // CT-CART-CHECKOUT-08
         // compara cada linha do endereço com o campo certo do cadastro
         // (antes comparava com "name", que só batia por coincidência)
+        // pega: endereço de entrega diferente do cadastro (mutante M06)
         it('checkout mostra o endereço cadastrado do usuário', () => {
             cy.addToCart('1')
             cy.visit('/checkout')
@@ -170,6 +172,7 @@ describe('Carrinho e Checkout', () => {
 
         // CT-CART-CHECKOUT-09
         // cartão fictício: o site é de prática e não processa pagamentos
+        // pega: fatura com valor diferente do pedido (mutante M07)
         it(
             'compra completa: o pagamento confirma o pedido, a fatura traz o total e o carrinho esvazia',
             { tags: ['@smoke', '@creates-order'] },

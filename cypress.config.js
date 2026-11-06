@@ -3,6 +3,7 @@ const path = require('path')
 const { defineConfig } = require('cypress')
 const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib')
 const { plugin: cypressGrepPlugin } = require('@cypress/grep/plugin')
+const mutationCatalog = require('./cypress/mutations/catalog')
 
 // Specs de bugs conhecidos descrevem o comportamento CORRETO e por isso
 // falham enquanto o bug existir. Ficam fora da suíte padrão (e do CI) e só
@@ -12,6 +13,7 @@ const KNOWN_BUGS_SPECS = 'cypress/e2e/known-bugs/**'
 const BUG_SUMMARY_FILE = 'cypress/reports/known-bugs/resumo.json'
 const SUITE_SUMMARY_FILE = 'cypress/reports/suite/resumo.json'
 const MOBILE_SUMMARY_FILE = 'cypress/reports/mobile/resumo.json'
+const MUTATION_SUMMARY_FILE = 'cypress/reports/mutation/resumo.json'
 // tela de celular (--env mobile=true): tamanho de um iPhone
 const MOBILE_VIEWPORT = { width: 375, height: 667 }
 // lido por scripts/cypress.js: filtro ativo e nenhum teste executado = falha
@@ -31,7 +33,7 @@ const testKey = (file, titlePath) => [file, ...titlePath].join('\u0000')
 //   numa nova tentativa, para que o retries não esconda instabilidade.
 // - pedidos (scripts/check-order-tags.js): quais testes criaram pedido, para
 //   conferir com a tag @creates-order.
-const writeSummary = (file, results, { filter, ordersByTest }) => {
+const writeSummary = (file, results, { filter, ordersByTest, mutation }) => {
     const tests = (results?.runs || []).flatMap((run) =>
         run.tests.map((test) => ({
             file: run.spec.relative,
@@ -44,7 +46,7 @@ const writeSummary = (file, results, { filter, ordersByTest }) => {
         })),
     )
     fs.mkdirSync(path.dirname(file), { recursive: true })
-    fs.writeFileSync(file, JSON.stringify({ filter, tests }, null, 2))
+    fs.writeFileSync(file, JSON.stringify({ filter, mutation, tests }, null, 2))
 }
 
 module.exports = defineConfig({
@@ -99,6 +101,22 @@ module.exports = defineConfig({
                 config.reporterOptions.reportPageTitle = 'AutomationExercise - Relatório de testes (celular)'
             }
 
+            // Análise de mutação (scripts/mutation-run.js): --expose mutant=<id> roda só os
+            // testes que devem pegar o defeito (grep pelos títulos do catálogo), sem novas
+            // tentativas, com relatório e resumo em pasta própria. "baseline" roda os
+            // mesmos testes sem defeito nenhum, como controle.
+            const mutantId = config.expose?.mutant
+            if (mutantId) {
+                const mutants =
+                    mutantId === 'baseline' ? mutationCatalog : mutationCatalog.filter((m) => m.id === mutantId)
+                if (!mutants.length) throw new Error(`Defeito "${mutantId}" não existe em cypress/mutations/catalog.js`)
+                config.expose.grep = [...new Set(mutants.flatMap((m) => m.tests))].join('; ')
+                config.expose.grepFilterSpecs = false
+                config.retries = 0
+                config.reporterOptions.reportDir = 'cypress/reports/mutation'
+                config.reporterOptions.reportPageTitle = `AutomationExercise - Mutação (${mutantId})`
+            }
+
             // Filtro por tags. Se nenhum spec casar, o plugin não falha: volta a rodar
             // todos e filtra teste a teste (o que terminaria com zero testes). Como as
             // tags são sempre texto literal (scripts/check-tags.js), a leitura do plugin
@@ -117,7 +135,13 @@ module.exports = defineConfig({
 
             // pedidos que cada teste criou, enviados por cypress/support/orders.js
             const ordersByTest = new Map()
+            // alterações de resposta aplicadas pelo defeito simulado (cypress/support/mutations.js)
+            let mutationApplied = 0
             on('task', {
+                recordMutationApplied(count) {
+                    mutationApplied += count
+                    return null
+                },
                 recordOrders({ file, titlePath, count }) {
                     const key = testKey(file, titlePath)
                     ordersByTest.set(key, (ordersByTest.get(key) || 0) + count)
@@ -136,14 +160,17 @@ module.exports = defineConfig({
             on('after:run', async (results) => {
                 // resumo e registro antes do relatório HTML: o gerador do relatório
                 // quebra quando nenhum teste rodou, e isso não pode esconder a falha
-                const summaryFile = config.env.knownBugs
-                    ? BUG_SUMMARY_FILE
-                    : config.env.mobile
-                      ? MOBILE_SUMMARY_FILE
-                      : SUITE_SUMMARY_FILE
+                const summaryFile = mutantId
+                    ? MUTATION_SUMMARY_FILE
+                    : config.env.knownBugs
+                      ? BUG_SUMMARY_FILE
+                      : config.env.mobile
+                        ? MOBILE_SUMMARY_FILE
+                        : SUITE_SUMMARY_FILE
                 writeSummary(summaryFile, results, {
                     filter,
                     ordersByTest,
+                    mutation: mutantId ? { id: mutantId, applied: mutationApplied } : null,
                 })
                 // segunda proteção: filtro ativo e nenhum teste executado (scripts/cypress.js falha)
                 if (filter && !results?.totalTests) {
