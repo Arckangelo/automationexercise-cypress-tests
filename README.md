@@ -203,6 +203,7 @@ docs/
 .gitleaks.toml                   # regras do gitleaks e exceções comentadas para falsos positivos
 .pre-commit-config.yaml          # hook local opcional que bloqueia segredos antes do commit
 BUGS.md                          # resumo dos bugs encontrados
+CLAUDE.md                        # regras para agentes de IA (o Claude Code lê automaticamente)
 SECURITY.md                      # política de reporte de vulnerabilidades
 cypress/
 ├── e2e/
