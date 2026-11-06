@@ -34,16 +34,35 @@ if (unknown.length) {
 fs.rmSync(RESULTS_DIR, { recursive: true, force: true })
 fs.mkdirSync(RESULTS_DIR, { recursive: true })
 
+// lê o resumo da execução direto, sem conferir antes se existe (conferir e depois
+// ler deixa o arquivo mudar no meio); sem resumo, a execução não terminou
+const readSummary = () => {
+    try {
+        return JSON.parse(fs.readFileSync(SUMMARY_FILE, 'utf8'))
+    } catch (err) {
+        if (err.code === 'ENOENT') return null
+        throw err
+    }
+}
+
 // roda o Cypress pelo mesmo lançador dos scripts npm; saída num log por execução
 const runCypress = (id, specs) => {
     const log = path.join(RESULTS_DIR, `${id}.log`)
     const started = Date.now()
-    const { status } = spawnSync(
-        process.execPath,
-        ['scripts/cypress.js', 'run', '--browser', 'chrome', '--spec', specs.join(','), '--expose', `mutant=${id}`],
-        { stdio: ['ignore', fs.openSync(log, 'w'), fs.openSync(log, 'a')] },
-    )
-    const summary = fs.existsSync(SUMMARY_FILE) ? JSON.parse(fs.readFileSync(SUMMARY_FILE, 'utf8')) : null
+    // um só descritor para a saída normal e a de erros (abrir o arquivo duas vezes
+    // é uma condição de corrida, apontada pelo CodeQL)
+    const logFd = fs.openSync(log, 'w')
+    let status
+    try {
+        ;({ status } = spawnSync(
+            process.execPath,
+            ['scripts/cypress.js', 'run', '--browser', 'chrome', '--spec', specs.join(','), '--expose', `mutant=${id}`],
+            { stdio: ['ignore', logFd, logFd] },
+        ))
+    } finally {
+        fs.closeSync(logFd)
+    }
+    const summary = readSummary()
     fs.rmSync(SUMMARY_FILE, { force: true })
     return { status, summary, seconds: Math.round((Date.now() - started) / 1000), log }
 }
