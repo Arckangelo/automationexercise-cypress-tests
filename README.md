@@ -364,6 +364,15 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.loginByRequest`; o login pela tela é coberto em `login.cy.js`
 - **Os testes provisionam os próprios dados:** os specs que precisam de login criam uma conta descartável via API num `before()` e a removem num `after()` (`cypress/support/testUser.js`). Nenhuma credencial fica no repositório e a suíte não depende de uma conta fixa
 
+## 🤖 Uso de IA
+
+Este projeto foi desenvolvido com auxílio do [Claude Code](https://claude.com/claude-code), assistente de programação com IA da Anthropic.
+
+- **O que a IA fez:** propôs e escreveu código, testes e documentação, investigou o comportamento do site e rodou os testes.
+- **O que eu fiz:** defini o que testar e as regras do projeto, decidi entre as propostas (aceitando, ajustando ou recusando), revisei cada mudança e aprovei cada PR antes do merge.
+- **Como o resultado é validado:** nenhuma mudança entra sem os testes rodados; toda proteção nova é testada simulando a falha que ela deveria pegar; a [análise de mutação](#-análise-de-mutação) confere se os testes pegam defeitos de verdade; e o CI roda a suíte em três navegadores.
+- As regras que a IA segue neste repositório estão no [CLAUDE.md](CLAUDE.md), em ordem de prioridade.
+
 ## 👤 Autor
 
 **Angelo Roque** · [GitHub](https://github.com/Arckangelo) · [LinkedIn](https://www.linkedin.com/in/angelo-roque-223b6b259/)
