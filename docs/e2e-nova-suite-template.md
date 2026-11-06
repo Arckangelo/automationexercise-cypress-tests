@@ -159,6 +159,7 @@ RASTREABILIDADE
 - Prefixo dos casos de teste: CT-<ÁREA>-<ARQUIVO>-NN
 
 REAPROVEITE (adaptando ao novo sistema)
+- CLAUDE.md (regras para o agente de IA: o que nunca fazer sem pedido, como validar, idioma, rastreabilidade)
 - scripts/cypress.js (ambiente do navegador em qualquer SO)
 - cypress.config.js (reporter, separação de known-bugs, blockHosts, retries)
 - cypress/support/waitPage.js e cypress/support/commands/protection.js (sobrescritas de cy.visit e cy.request)
