@@ -6,7 +6,7 @@
 
 [![CodeQL](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/codeql.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/codeql.yml)
 
-📊 [Relatório HTML da última execução](https://arckangelo.github.io/automationexercise-cypress-tests/) (gerado e publicado pelo CI) · 🐞 [Relatório de bugs (PDF)](docs/Relatorio_de_Bugs.pdf) · [BUGS.md](BUGS.md)
+📊 [Relatório HTML da última execução](https://arckangelo.github.io/automationexercise-cypress-tests/) (gerado e publicado pelo CI) · 🐞 [Relatório de bugs (PDF)](docs/Relatorio_de_Bugs.pdf) · [BUGS.md](BUGS.md) · 📋 [Casos de teste](docs/casos-de-teste.md)
 
 Suíte de testes automatizados end-to-end para o site [AutomationExercise](https://automationexercise.com), um e-commerce fictício criado para prática de automação de testes.
 
@@ -193,6 +193,7 @@ npm run test:mutation -- M02 M09 # só alguns defeitos
     └── codeql.yml               # análise estática do JavaScript e dos workflows
 docs/
 ├── Relatorio_de_Bugs.pdf        # relatório completo de bugs (gerado)
+├── casos-de-teste.md            # um caso de teste por teste automatizado, com o mesmo ID CT do código
 ├── img/capa-relatorio.png       # capa do relatório usada neste README (gerada)
 └── relatorio/                   # fontes HTML do PDF e da capa, e o gerar.sh que os produz
 .editorconfig                    # padrão de formatação para o editor (igual ao Prettier)
