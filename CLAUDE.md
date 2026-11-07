@@ -52,7 +52,10 @@ para quando o assunto aparecer.
     - nenhum dado fixo no teste: use `users.json`/`apiData.json`, com `{id}` para valores únicos, e
       limpe o que criar num hook que aceita "já removido";
     - preparação por API ou HTTP; a tela só para o que está sendo testado;
-    - valor esperado de fonte independente (API), valores exatos e efeito conferido no servidor;
+    - valor esperado de fonte independente da tela, lida **na hora do teste** (API): nunca da própria
+      tela nem de tabela fixa de preços ou estoque, que envelhece quando o site muda; da fonte saem só
+      os dados, as regras (total = soma dos itens, quantidade × preço) ficam no teste e nunca são
+      copiadas do código do site; valores exatos e efeito conferido no servidor;
     - a proteção contra instabilidade fica só em `cypress/support/commands/protection.js`; não repita
       guardas em comandos ou testes;
     - comandos novos no arquivo do assunto em `cypress/support/commands/`.
