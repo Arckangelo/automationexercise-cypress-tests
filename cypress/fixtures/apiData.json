@@ -18,5 +18,146 @@
     "city": "Sao Paulo",
     "zipcode": "00000-000",
     "mobile_number": "11999999999"
+  },
+  "referenceCatalog": {
+    "checkedOn": "07/11/2026",
+    "products": {
+      "1": {
+        "name": "Blue Top",
+        "price": "Rs. 500"
+      },
+      "2": {
+        "name": "Men Tshirt",
+        "price": "Rs. 400"
+      },
+      "3": {
+        "name": "Sleeveless Dress",
+        "price": "Rs. 1000"
+      },
+      "4": {
+        "name": "Stylish Dress",
+        "price": "Rs. 1500"
+      },
+      "5": {
+        "name": "Winter Top",
+        "price": "Rs. 600"
+      },
+      "6": {
+        "name": "Summer White Top",
+        "price": "Rs. 400"
+      },
+      "7": {
+        "name": "Madame Top For Women",
+        "price": "Rs. 1000"
+      },
+      "8": {
+        "name": "Fancy Green Top",
+        "price": "Rs. 700"
+      },
+      "11": {
+        "name": "Sleeves Printed Top - White",
+        "price": "Rs. 499"
+      },
+      "12": {
+        "name": "Half Sleeves Top Schiffli Detailing - Pink",
+        "price": "Rs. 359"
+      },
+      "13": {
+        "name": "Frozen Tops For Kids",
+        "price": "Rs. 278"
+      },
+      "14": {
+        "name": "Full Sleeves Top Cherry - Pink",
+        "price": "Rs. 679"
+      },
+      "15": {
+        "name": "Printed Off Shoulder Top - White",
+        "price": "Rs. 315"
+      },
+      "16": {
+        "name": "Sleeves Top and Short - Blue & Pink",
+        "price": "Rs. 478"
+      },
+      "18": {
+        "name": "Little Girls Mr. Panda Shirt",
+        "price": "Rs. 1200"
+      },
+      "19": {
+        "name": "Sleeveless Unicorn Patch Gown - Pink",
+        "price": "Rs. 1050"
+      },
+      "20": {
+        "name": "Cotton Mull Embroidered Dress",
+        "price": "Rs. 1190"
+      },
+      "21": {
+        "name": "Blue Cotton Indie Mickey Dress",
+        "price": "Rs. 1530"
+      },
+      "22": {
+        "name": "Long Maxi Tulle Fancy Dress Up Outfits -Pink",
+        "price": "Rs. 1600"
+      },
+      "23": {
+        "name": "Sleeveless Unicorn Print Fit & Flare Net Dress - Multi",
+        "price": "Rs. 1100"
+      },
+      "24": {
+        "name": "Colour Blocked Shirt – Sky Blue",
+        "price": "Rs. 849"
+      },
+      "28": {
+        "name": "Pure Cotton V-Neck T-Shirt",
+        "price": "Rs. 1299"
+      },
+      "29": {
+        "name": "Green Side Placket Detail T-Shirt",
+        "price": "Rs. 1000"
+      },
+      "30": {
+        "name": "Premium Polo T-Shirts",
+        "price": "Rs. 1500"
+      },
+      "31": {
+        "name": "Pure Cotton Neon Green Tshirt",
+        "price": "Rs. 850"
+      },
+      "33": {
+        "name": "Soft Stretch Jeans",
+        "price": "Rs. 799"
+      },
+      "35": {
+        "name": "Regular Fit Straight Jeans",
+        "price": "Rs. 1200"
+      },
+      "37": {
+        "name": "Grunt Blue Slim Fit Jeans",
+        "price": "Rs. 1400"
+      },
+      "38": {
+        "name": "Rose Pink Embroidered Maxi Dress",
+        "price": "Rs. 2300"
+      },
+      "39": {
+        "name": "Cotton Silk Hand Block Print Saree",
+        "price": "Rs. 3000"
+      },
+      "40": {
+        "name": "Rust Red Linen Saree",
+        "price": "Rs. 3500"
+      },
+      "41": {
+        "name": "Beautiful Peacock Blue Cotton Linen Saree",
+        "price": "Rs. 5000"
+      },
+      "42": {
+        "name": "Lace Top For Women",
+        "price": "Rs. 1400"
+      },
+      "43": {
+        "name": "GRAPHIC DESIGN MEN T SHIRT - BLUE",
+        "price": "Rs. 1389"
+      }
+    }
   }
 }

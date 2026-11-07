@@ -55,7 +55,9 @@ para quando o assunto aparecer.
     - valor esperado de fonte independente da tela, lida **na hora do teste** (API): nunca da própria
       tela nem de tabela fixa de preços ou estoque, que envelhece quando o site muda; da fonte saem só
       os dados, as regras (total = soma dos itens, quantidade × preço) ficam no teste e nunca são
-      copiadas do código do site; valores exatos e efeito conferido no servidor;
+      copiadas do código do site; a referência fixa (`referenceCatalog` em `apiData.json`) só no teste de
+      guarda `api/catalog.api.cy.js`, cuja falha se confirma com quem define os preços antes de
+      atualizar a referência (engano é bug novo, regra 5); valores exatos e efeito conferido no servidor;
     - a proteção contra instabilidade fica só em `cypress/support/commands/protection.js`; não repita
       guardas em comandos ou testes;
     - comandos novos no arquivo do assunto em `cypress/support/commands/`.
