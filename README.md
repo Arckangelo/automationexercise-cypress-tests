@@ -12,7 +12,7 @@ Suíte de testes automatizados end-to-end para o site [AutomationExercise](https
 
 **Resumo**
 
-- **59 testes** na suíte principal: 36 de interface (login, logout, cadastro, exclusão de conta, busca, filtros, detalhes do produto, carrinho e compra completa) e 23 de API.
+- **60 testes** na suíte principal: 36 de interface (login, logout, cadastro, exclusão de conta, busca, filtros, detalhes do produto, carrinho e compra completa) e 24 de API.
 - **21 bugs encontrados** no site e na API (7 de severidade alta), cada um com um teste de regressão que falha enquanto o bug existir. Estão documentados em [BUGS.md](BUGS.md) e no [relatório em PDF](docs/Relatorio_de_Bugs.pdf).
 - **Testes independentes e sem dados fixos:** cada execução cria um usuário descartável pela API e o remove ao final. O carrinho é preparado por HTTP, para que um teste não dependa de outro.
 - **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e uma **análise de mutação semanal** que injeta defeitos no site (preço errado, quantidade que não soma, produto a mais na busca...) e confere que os testes os pegam.
@@ -61,13 +61,14 @@ validam isso explicitamente, em vez de confiar no status HTTP.
 | Arquivo | Cobertura |
 |---|---|
 | `products.api.cy.js` | Formato de **todos** os produtos e marcas (campos, IDs únicos, padrão de preço), marcas coerentes com o catálogo e rejeição de método não suportado |
+| `catalog.api.cy.js` | Teste de guarda: o catálogo da API comparado com a referência conferida, com a variação de cada preço e a marca SUSPEITO acima de 50% (ver Observações) |
 | `search.api.cy.js` | Busca em que **cada** resultado contém o termo, busca sem resultados e erro 400 sem o parâmetro |
 | `login.api.cy.js` | Verificação de login: credenciais válidas, senha incorreta, usuário inexistente, e-mail ou senha faltando e recusa de GET, PUT, DELETE e PATCH |
 | `account.api.cy.js` | Criar, consultar, atualizar e remover conta, conferindo o efeito no servidor; permissões (atualizar ou apagar com senha errada não altera a conta), e-mail duplicado e cada campo obrigatório ausente. Cada teste usa a própria conta descartável |
 
-**Total: 23 testes automatizados**
+**Total: 24 testes automatizados**
 
-**Suíte completa: 59 testes (36 de UI + 23 de API)**
+**Suíte completa: 60 testes (36 de UI + 24 de API)**
 
 ### 🐞 Bugs conhecidos
 
@@ -209,6 +210,7 @@ cypress/
 ├── e2e/
 │   ├── api/
 │   │   ├── account.api.cy.js    # cenários da API de conta (criar, consultar, atualizar, remover)
+│   │   ├── catalog.api.cy.js    # teste de guarda: o catálogo mudou em relação à referência conferida?
 │   │   ├── login.api.cy.js      # cenários de login via API
 │   │   ├── products.api.cy.js   # cenários de produtos via API
 │   │   └── search.api.cy.js     # cenários de busca via API
@@ -311,7 +313,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Job | O que faz |
 |---|---|
 | Formatação e tags | Confere a formatação com o Prettier (`npm run format:check`) e as tags dos specs (`npm run check:tags`) |
-| Suíte principal | Roda os 59 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador; confere a tag `@creates-order` com os pedidos criados. No Chrome, roda também os testes `@smoke` numa tela de celular (375x667) |
+| Suíte principal | Roda os 60 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador; confere a tag `@creates-order` com os pedidos criados. No Chrome, roda também os testes `@smoke` numa tela de celular (375x667) |
 | Suíte no celular (diária) | Roda a suíte inteira numa tela de celular, só na execução diária e na manual |
 | Bugs conhecidos | Roda os 46 testes de regressão no Chrome (num PR, sem os de `@creates-order`), sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
 | Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
@@ -362,6 +364,8 @@ Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 - Testes que só passam numa nova tentativa (`retries`) aparecem no resumo do CI como **instáveis**, com aviso em destaque ([`scripts/flaky-summary.js`](scripts/flaky-summary.js)): a nova tentativa não esconde a instabilidade
 - Anúncios e rastreadores de terceiros são bloqueados (`blockHosts` no `cypress.config.js`): deixam as páginas mais lentas e não fazem parte do site testado. Nenhuma exceção da página é ignorada: se um script de terceiros lançar erro, a falha lista os domínios de terceiros que rodaram na página, para o novo provedor ser acrescentado ao `blockHosts`
 - Nos testes em que o login é só preparação (`cy.login`, carrinho entre sessões), ele é feito por HTTP com `cy.loginByRequest`; o login pela tela é coberto em `login.cy.js`
+- **Preço esperado lido da API na hora, com um teste de guarda:** os testes de busca, filtros, detalhes e carrinho comparam a tela com o catálogo da API (`cypress/support/catalog.js`), lido no `before()`, e fazem as contas (quantidade × preço, soma dos itens) no próprio teste. Assim, uma mudança de preço no site não os derruba: eles passam a esperar o preço novo, como num software real. Só o teste de guarda (`api/catalog.api.cy.js`) compara o catálogo com a referência conferida em 07/11/2026 (`referenceCatalog` em `cypress/fixtures/apiData.json`) e falha dizendo o quê e quanto mudou ("Blue Top: Rs. 500 → Rs. 535 (+7%)"). Como ele é a única defesa contra um preço errado na própria API, que os outros testes aceitariam, a falha não manda simplesmente atualizar a referência: pede para confirmar com quem define os preços e lembra que, se foi engano, é bug do site. Uma variação acima de 50%, para mais ou para menos, vem marcada como **SUSPEITO** ("Rs. 500 → Rs. 50 (-90%, SUSPEITO)"), porque mais parece erro de digitação do que reajuste
+- **Se o preço passar a ser dinâmico:** a comparação com a referência deixaria de fazer sentido, mas a defesa contra o preço errado não pode sumir junto. No lugar do teste de guarda entraria uma regra de variação máxima, aplicada onde o preço é definido (uma alteração acima do limite exige aprovação), e o acompanhamento do valor dos pedidos em produção
 - **Os testes provisionam os próprios dados:** os specs que precisam de login criam uma conta descartável via API num `before()` e a removem num `after()` (`cypress/support/testUser.js`). Nenhuma credencial fica no repositório e a suíte não depende de uma conta fixa
 
 ## 🤖 Uso de IA

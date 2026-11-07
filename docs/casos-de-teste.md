@@ -16,6 +16,7 @@ Um caso de teste para cada teste automatizado, na mesma ordem em que os testes a
 | API | [api/account.api.cy.js](#apiaccountapicyjs) | 10 |
 | API | [api/login.api.cy.js](#apiloginapicyjs) | 6 |
 | API | [api/products.api.cy.js](#apiproductsapicyjs) | 4 |
+| API | [api/catalog.api.cy.js](#apicatalogapicyjs) | 1 |
 | API | [api/search.api.cy.js](#apisearchapicyjs) | 3 |
 | Autenticação | [auth/login.cy.js](#authlogincyjs) | 6 |
 | Autenticação | [auth/signup.cy.js](#authsignupcyjs) | 3 |
@@ -38,7 +39,7 @@ Um caso de teste para cada teste automatizado, na mesma ordem em que os testes a
 | Bugs conhecidos | [known-bugs/product-not-found.cy.js](#known-bugsproduct-not-foundcyjs) | 2 |
 | Bugs conhecidos | [known-bugs/required-fields.cy.js](#known-bugsrequired-fieldscyjs) | 5 |
 | Bugs conhecidos | [known-bugs/search-input.cy.js](#known-bugssearch-inputcyjs) | 2 |
-| **Total** | | **105** |
+| **Total** | | **106** |
 
 ## API
 
@@ -348,6 +349,22 @@ Um caso de teste para cada teste automatizado, na mesma ordem em que os testes a
 | **Resultado esperado** | Os dois conjuntos, sem repetição e em ordem alfabética, são iguais. |
 | **Status** | Passou |
 | **Observações** | Compara só o conjunto de nomes, então vale com ou sem o BUG-14 (marcas repetidas). |
+
+### api/catalog.api.cy.js
+
+#### CT-API-CATALOG-01 — Catálogo da API igual à referência conferida (teste de guarda)
+
+| Campo | Descrição |
+|---|---|
+| **Módulo / Área** | API › Catálogo › Teste de guarda |
+| **Tipo de teste** | Funcional – consistência |
+| **Prioridade** | Média |
+| **Objetivo** | Avisar, num teste só, que o catálogo da API mudou, e dizer o quê e quanto. |
+| **Dados de teste** | referenceCatalog em apiData.json: id, nome e preço dos 34 produtos, conferidos na API em 07/11/2026. |
+| **Passos** | 1. Enviar GET /api/productsList.<br>2. Comparar cada id, nome e preço com a referência. |
+| **Resultado esperado** | Nenhuma diferença. Se houver, a falha lista cada uma com a variação (ex.: "Blue Top: Rs. 500 → Rs. 535 (+7%)") e marca como SUSPEITO a variação acima de 50% (ex.: "Rs. 500 → Rs. 50 (-90%, SUSPEITO)"), produto que entrou ou saiu e nome trocado. |
+| **Status** | Passou |
+| **Observações** | Os outros casos leem o preço esperado da API na hora, então uma mudança de preço não os derruba: só este caso falha. É também a única defesa contra um preço errado na própria API: por isso a falha pede para confirmar com quem define os preços antes de atualizar a referência, e um engano vira bug do site. Num catálogo com preço dinâmico, a comparação com a referência daria lugar a uma regra de variação máxima na origem do preço. |
 
 ### api/search.api.cy.js
 

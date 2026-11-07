@@ -26,8 +26,10 @@ Para cada item: **o que informar**, **por que importa** e **o que dá errado se 
    *Por que:* os testes confirmam o efeito no servidor, não só a mensagem
    (`checkout.cy.js:76-87`, `signup.cy.js:63-66`).
    *Se faltar:* testes que passam com a mensagem de sucesso mesmo quando nada foi gravado.
-4. **Fonte de verdade independente.** Indique uma API, banco ou arquivo de referência para
-   comparar com a tela.
+4. **Fonte de verdade independente.** Indique uma API, banco ou outra fonte que o teste consiga
+   ler na hora para comparar com a tela. Sem API, procure o dado que a própria aplicação carrega
+   (ex.: o catálogo no JavaScript do site); uma tabela fixa só como teste de guarda, que avisa
+   quando o dado muda.
    *Por que:* os valores esperados vêm da API, não da tela testada (`cypress/support/catalog.js:1-3`,
    `checkout.cy.js:12-14`).
    *Se faltar:* a tela é comparada com ela mesma, e um erro de dado passa como correto.
@@ -93,7 +95,7 @@ Regras curtas, cada uma verificável por leitura ou busca no código.
 5. Todo dado criado é removido em `after`/`afterEach`, que aceita “já removido” (200 ou 404) (`account.api.cy.js:27-31`).
 6. Preparação por API ou HTTP; a tela só é usada para o que está sendo testado (`checkout.cy.js:4-6`, `commands/cart.js`).
 7. Login reaproveitado com `cy.session` e `validate` (`commands/session.js`).
-8. Valor esperado vem de fonte independente (API, banco), nunca da própria tela testada.
+8. Valor esperado vem de fonte independente (API, banco), lida na hora do teste, nunca da própria tela testada nem de tabela fixa; da fonte saem os dados, e as regras de cálculo ficam no teste.
 9. Valor conhecido é comparado de forma exata (`eq`, `deep.equal`), não com `contain`.
 10. Efeito no servidor confirmado depois da ação (recarregar a página ou consultar a API), não só a mensagem de sucesso.
 11. Asserção negativa (“não aparece”) só depois de garantir que a página certa carregou: a guarda da página de espera no `cy.visit` (`commands/protection.js`) ou um controle positivo (`login.cy.js:93-96`).
