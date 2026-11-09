@@ -37,7 +37,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@babel/parser": "7.29.9",
+    "@babel/parser": "8.1.0",
     "@cypress/grep": "7.0.0",
     "cypress": "^16.2.1",
     "cypress-mochawesome-reporter": "^5.0.0",
