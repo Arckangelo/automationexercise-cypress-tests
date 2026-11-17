@@ -1,12 +1,12 @@
 # Automation Exercise - Testes E2E com Cypress
 
-[![Cypress Tests](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/cypress.yml)
+[![Cypress Tests](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/actions/workflows/cypress.yml/badge.svg)](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/actions/workflows/cypress.yml)
 
-[![Security](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/security.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/security.yml)
+[![Security](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/actions/workflows/security.yml/badge.svg)](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/actions/workflows/security.yml)
 
-[![CodeQL](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/codeql.yml/badge.svg)](https://github.com/Arckangelo/automationexercise-cypress-tests/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/actions/workflows/codeql.yml/badge.svg)](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/actions/workflows/codeql.yml)
 
-📊 [Relatório HTML da última execução](https://arckangelo.github.io/automationexercise-cypress-tests/) (gerado e publicado pelo CI) · 🐞 [Relatório de bugs (PDF)](docs/Relatorio_de_Bugs.pdf) · [BUGS.md](BUGS.md) · 📋 [Casos de teste](docs/casos-de-teste.md)
+📊 [Relatório HTML da última execução](https://angelo-roque-barbosa.github.io/automationexercise-cypress-tests/) (gerado e publicado pelo CI) · 🐞 [Relatório de bugs (PDF)](docs/Relatorio_de_Bugs.pdf) · [BUGS.md](BUGS.md) · 📋 [Casos de teste](docs/casos-de-teste.md) · 🗺️ [Plano de testes](docs/planos-de-testes.md)
 
 Suíte de testes automatizados end-to-end para o site [AutomationExercise](https://automationexercise.com), um e-commerce fictício criado para prática de automação de testes.
 
@@ -18,7 +18,7 @@ Suíte de testes automatizados end-to-end para o site [AutomationExercise](https
 - **Checagens que pegam erros reais:** valores exatos em vez de "contém", persistência conferida depois de recarregar a página e uma **análise de mutação semanal** que injeta defeitos no site (preço errado, quantidade que não soma, produto a mais na busca...) e confere que os testes os pegam.
 - **CI no GitHub Actions:** a suíte roda no Chrome, no Firefox e no Edge a cada push e diariamente, o relatório HTML é publicado no GitHub Pages e o pipeline tem verificações de segurança (gitleaks, npm audit, CodeQL).
 
-> Veja também meu [projeto em Python + Playwright](https://github.com/Arckangelo/saucedemo-playwright-python), com testes E2E do SauceDemo.
+> Veja também meu [projeto em Python + Playwright](https://github.com/angelo-roque-barbosa/saucedemo-playwright-python), com testes E2E do SauceDemo.
 
 ## 🎯 Objetivo
 
@@ -195,6 +195,7 @@ npm run test:mutation -- M02 M09 # só alguns defeitos
 docs/
 ├── Relatorio_de_Bugs.pdf        # relatório completo de bugs (gerado)
 ├── casos-de-teste.md            # um caso de teste por teste automatizado, com o mesmo ID CT do código
+├── planos-de-testes.md          # plano de testes: escopo, estratégia, critérios, cronograma e riscos
 ├── img/capa-relatorio.png       # capa do relatório usada neste README (gerada)
 └── relatorio/                   # fontes HTML do PDF e da capa, e o gerar.sh que os produz
 .editorconfig                    # padrão de formatação para o editor (igual ao Prettier)
@@ -274,7 +275,7 @@ instalado; sem eles, os testes rodam no Electron, que já vem com o Cypress.
 
 1. Clone o repositório
 ```bash
-git clone https://github.com/Arckangelo/automationexercise-cypress-tests.git
+git clone https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests.git
 cd automationexercise-cypress-tests
 ```
 
@@ -316,7 +317,7 @@ O workflow [`cypress.yml`](.github/workflows/cypress.yml) roda a cada push e pul
 | Suíte principal | Roda os 60 testes no Chrome, no Firefox e no Edge, em paralelo; salva as screenshots das falhas e um relatório HTML por navegador; confere a tag `@creates-order` com os pedidos criados. No Chrome, roda também os testes `@smoke` numa tela de celular (375x667) |
 | Suíte no celular (diária) | Roda a suíte inteira numa tela de celular, só na execução diária e na manual |
 | Bugs conhecidos | Roda os 46 testes de regressão no Chrome (num PR, sem os de `@creates-order`), sem quebrar o pipeline, e lista no resumo, teste a teste, cada bug que parou de reproduzir (com aviso em destaque), mesmo que os outros continuem falhando |
-| Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
+| Publicar relatório | Publica os relatórios HTML (um por navegador e o dos bugs conhecidos) no [GitHub Pages](https://angelo-roque-barbosa.github.io/automationexercise-cypress-tests/) (só a partir da `main`) |
 
 ## 🔒 Segurança do pipeline
 
@@ -379,4 +380,4 @@ Este projeto foi desenvolvido com auxílio do [Claude Code](https://claude.com/c
 
 ## 👤 Autor
 
-**Angelo Roque** · [GitHub](https://github.com/Arckangelo) · [LinkedIn](https://www.linkedin.com/in/angelo-roque-223b6b259/)
+**Angelo Roque** · [GitHub](https://github.com/angelo-roque-barbosa) · [LinkedIn](https://www.linkedin.com/in/angelo-roque-223b6b259/)

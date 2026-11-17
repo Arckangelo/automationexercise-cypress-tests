@@ -15,7 +15,7 @@ Este repositório contém uma suíte de testes automatizados (Cypress) para o si
 **Não abra uma issue pública** para relatar uma vulnerabilidade.
 
 Use o reporte privado do GitHub: aba **Security** → **Report a vulnerability**
-([link direto](https://github.com/Arckangelo/automationexercise-cypress-tests/security/advisories/new)).
+([link direto](https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests/security/advisories/new)).
 
 Inclua, se possível:
 

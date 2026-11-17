@@ -29,10 +29,10 @@
     "qa",
     "automation"
   ],
-  "author": "Angelo Roque (https://github.com/Arckangelo)",
+  "author": "Angelo Roque (https://github.com/angelo-roque-barbosa)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Arckangelo/automationexercise-cypress-tests.git"
+    "url": "git+https://github.com/angelo-roque-barbosa/automationexercise-cypress-tests.git"
   },
   "license": "ISC",
   "type": "commonjs",
