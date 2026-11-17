@@ -65,7 +65,7 @@ jobs:
 
       # a action instala as dependências com "npm ci", exatamente como no package-lock.json
       - name: Rodar testes Cypress
-        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        uses: cypress-io/github-action@18016a55674bd02cabf197de5762a1710cb5577c # v7.4.9
         with:
           command: npm run test:${{ matrix.browser }}
 
@@ -108,7 +108,7 @@ jobs:
       # execução. Relatório e resumo ficam em cypress/reports/mobile.
       - name: Fumaça no celular
         if: ${{ !cancelled() && matrix.browser == 'chrome' }}
-        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        uses: cypress-io/github-action@18016a55674bd02cabf197de5762a1710cb5577c # v7.4.9
         with:
           install: false
           command: npm run test:smoke:mobile
@@ -169,7 +169,7 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Rodar a suíte no celular
-        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        uses: cypress-io/github-action@18016a55674bd02cabf197de5762a1710cb5577c # v7.4.9
         with:
           command: npm run test:mobile
 
@@ -224,7 +224,7 @@ jobs:
       - name: Rodar testes de bugs conhecidos
         id: bugs
         continue-on-error: true
-        uses: cypress-io/github-action@4ce68f262a3888d22cf3175d62010a145ba737ee # v7.4.8
+        uses: cypress-io/github-action@18016a55674bd02cabf197de5762a1710cb5577c # v7.4.9
         with:
           # os bugs são do site, não do navegador: basta um. Em PR, os testes que
           # criam pedido (@creates-order) ficam de fora; push na main, execução
