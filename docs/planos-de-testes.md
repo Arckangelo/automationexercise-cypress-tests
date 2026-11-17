@@ -217,7 +217,7 @@ Os 21 bugs se dividem em 7 de severidade alta, 7 média e 7 baixa ([BUGS.md](../
 
 | Entregável | Onde |
 |---|---|
-| Relatório HTML de cada execução (por navegador, celular e bugs conhecidos) | [GitHub Pages](https://arckangelo.github.io/automationexercise-cypress-tests/) e artefatos do CI |
+| Relatório HTML de cada execução (por navegador, celular e bugs conhecidos) | [GitHub Pages](https://angelo-roque-barbosa.github.io/automationexercise-cypress-tests/) e artefatos do CI |
 | Resumos do CI: instáveis, bugs que pararam de reproduzir, pedidos | Resumo de cada job no GitHub Actions |
 | Casos de teste | [docs/casos-de-teste.md](casos-de-teste.md) |
 | Bugs | [BUGS.md](../BUGS.md) e [relatório PDF](Relatorio_de_Bugs.pdf) |
