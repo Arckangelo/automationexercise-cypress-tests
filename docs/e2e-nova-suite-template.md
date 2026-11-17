@@ -100,7 +100,7 @@ Regras curtas, cada uma verificável por leitura ou busca no código.
 10. Efeito no servidor confirmado depois da ação (recarregar a página ou consultar a API), não só a mensagem de sucesso.
 11. Asserção negativa (“não aparece”) só depois de garantir que a página certa carregou: a guarda da página de espera no `cy.visit` (`commands/protection.js`) ou um controle positivo (`login.cy.js:93-96`).
 12. Asserções com mensagem: `expect(valor, 'o que é').to...`.
-13. A guarda contra página inválida fica só nas sobrescritas de `cy.visit` e `cy.request` (`commands/protection.js`), nunca espalhada pelos comandos; assim todo comando novo já nasce protegido.
+13. A guarda contra página inválida fica só em `commands/protection.js`, nunca espalhada pelos comandos: nas sobrescritas de `cy.visit` e `cy.request` (status de site fora do ar e página de espera) e, para a navegação por formulário ou clique, num handler de `fail` que reconhece a página de indisponibilidade pelo texto (a falta do logo sozinha não basta: testes de API rodam em `about:blank`). Assim todo comando novo já nasce protegido.
 14. Instabilidade do ambiente termina em “Site indisponível”, nunca em teste aprovado nem em bug.
 15. Bug conhecido: spec em `known-bugs/`, título começando por `[BUG-NN]`, descrevendo o comportamento **correto**, sem retries.
 16. Quando não for óbvio, um comentário `// pega:` diz qual defeito a asserção detecta (`checkout.cy.js:65`).
