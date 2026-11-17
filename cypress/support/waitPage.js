@@ -13,8 +13,9 @@
 // página de espera: tentamos de novo algumas vezes e, se ela persistir, o
 // teste falha com "Site indisponível", nunca passa nem vira bug.
 //
-// A verificação fica só em dois lugares, nas sobrescritas de cy.visit e de
-// cy.request (commands/protection.js). Comandos e testes não precisam repeti-la.
+// A verificação fica só em commands/protection.js: nas sobrescritas de cy.visit e de
+// cy.request e, para a navegação que não passa por elas (envio de formulário,
+// clique), no handler de falha. Comandos e testes não precisam repeti-la.
 
 export const MAX_ATTEMPTS = 3
 export const RETRY_DELAY_MS = 5000
@@ -26,6 +27,30 @@ export const isWaitPageHtml = (text) =>
 
 // usado depois de cy.visit (página já carregada)
 export const isWaitPageDocument = (doc) => !doc.querySelector('.logo')
+
+// Página de site indisponível que chega por uma navegação da própria página (envio de
+// formulário, clique em link), sem passar por cy.visit nem por cy.request. Aqui a falta do
+// logo não basta: um teste de API roda em about:blank e a página de debug do Django
+// (BUG-09) também não tem logo. Por isso a página precisa trazer também o texto de uma
+// página de indisponibilidade: as duas já vistas no site e as de erro de servidor
+// sobrecarregado ou fora do ar (inclusive as da Cloudflare, "Error code 52x").
+const UNAVAILABLE_PAGE_TEXTS = [
+    'under heavy load', // "This website is under heavy load (queue full)"
+    'request is being verified', // "Please wait while your request is being verified..."
+    'service unavailable',
+    'service temporarily unavailable',
+    'bad gateway',
+    'gateway time',
+    'too many requests',
+    'error code 52',
+]
+
+// devolve o texto reconhecido, ou null se a página não for de site indisponível
+export const unavailablePageText = (doc) => {
+    if (!doc?.documentElement || doc.querySelector('.logo')) return null
+    const text = `${doc.title} ${doc.body?.textContent || ''}`.toLowerCase()
+    return UNAVAILABLE_PAGE_TEXTS.find((marker) => text.includes(marker)) || null
+}
 
 export const siteUnavailableError = (target, reason = 'página de espera') =>
     new Error(
@@ -42,6 +67,12 @@ let siteDown = false
 
 export const markSiteAvailable = () => {
     siteDown = false
+}
+
+// arma o disjuntor quando a indisponibilidade aparece fora das sobrescritas (ver o
+// handler de falha em commands/protection.js)
+export const markSiteDown = () => {
+    siteDown = true
 }
 
 // Chamado a cada resposta instável (página de espera, 503, 429). Lança o erro
